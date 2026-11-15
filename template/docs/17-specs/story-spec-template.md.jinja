@@ -16,6 +16,9 @@ created: YYYY-MM-DD
 > One implementable slice: small enough to review in one sitting, complete enough to ship on
 > its own. An agent implementing it reads **only** this file, its parent, and the documents in
 > `## Standards to read`. Everything it needs must be here or named here.
+>
+> Cross-references to a rule use the `docs/`-relative path and the rule number, for example
+> `08-reliability/timeouts-retries.md` R3. Never a bare file name.
 
 ## Parent context
 
@@ -23,7 +26,11 @@ created: YYYY-MM-DD
 
 ## Scope of this change
 
-**Parts touched:**
+**Components touched:** <!-- component and kind, as in the Components table of `03-architecture/system.md`; kinds: service, daemon, cli, library, ui, batch -->
+
+| Component | Kind | Change |
+| --- | --- | --- |
+| | | |
 
 **Explicitly out of scope:**
 
@@ -52,6 +59,27 @@ created: YYYY-MM-DD
 
 <!-- Known constraints, the decided approach, anything deliberately deferred. -->
 
+{% if 'data-store' in packs %}
+## Schema and migration plan
+
+<!-- Each migration in this story as expand, migrate or contract, its order, and how it is
+     verified against existing data (`packs/data-store/migrations.md`). `None` if no schema change. -->
+{% endif %}{% if 'domain-model' in packs %}
+## Aggregates and invariants
+
+<!-- The aggregate this story changes and the invariants its tests must prove
+     (`packs/domain-model/aggregates.md`). `None` if no domain change. -->
+{% endif %}{% if 'web-ui' in packs %}
+## Browser surface
+
+<!-- Routes, pages and browser-side storage this story touches, and the states each view must
+     show (`packs/web-ui/`). `None` if no browser change. -->
+{% endif %}{% if 'cli' in packs %}
+## Commands, flags, exit codes, output contract
+
+<!-- Commands and flags added or changed, each exit code, standard output versus standard error,
+     and the machine-readable output shape (`packs/cli/`). `None` if the interface is unchanged. -->
+{% endif %}
 ## Open questions
 
 <!-- A question with Blocks? = Yes and no recorded answer blocks approval. -->

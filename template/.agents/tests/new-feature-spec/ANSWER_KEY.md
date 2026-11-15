@@ -1,7 +1,9 @@
 # Answer key: new-feature-spec
 
 - [ ] The id comes from `node scripts/tracker/cli.mjs next-number --kind feat` and is `FEAT-004`
-      (highest + 1; the gap at FEAT-002 is not reused).
+      (highest + 1; the gap at FEAT-002 is not reused). With `tracker: none` the spec files are the whole
+      registry. If a tracker were configured but unreachable, the skill would report the answer as
+      offline and ask before allocating from it.
 - [ ] The file is `docs/17-specs/FEAT-004-<slug>.md`, copied from the template, `status: draft`.
 - [ ] "Who may configure them" appears as a `[NEEDS CLARIFICATION: ...]` marker and as an
       `## Open questions` row with `Blocks?` filled in. The skill did not pick an actor.
