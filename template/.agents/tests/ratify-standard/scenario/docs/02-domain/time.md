@@ -15,7 +15,7 @@ How instants, dates and durations are represented, and where time comes from.
 
 | Parameter | Answer | Default | Trade-off |
 | --- | --- | --- | --- |
-| `zone_of_record` | [[zone_of_record]] | UTC for instants; an explicit named zone for business dates | implicit local time causes off-by-one-day bugs |
+| `business_time_zone` | [[business_time_zone]] | UTC for instants; an explicit named zone for business dates | implicit local time causes off-by-one-day bugs |
 | `clock_source` | [[clock_source]] | injected clock; no direct system-clock reads in domain code | testability of expiry logic |
 
 ## Open decisions
@@ -25,7 +25,7 @@ How instants, dates and durations are represented, and where time comes from.
 ## Rules
 
 - **R1.** Instants MUST be stored and exchanged in UTC.
-- **R2.** Business dates MUST carry the zone named in `zone_of_record`.
+- **R2.** Business dates MUST carry the zone named in `business_time_zone`.
 - **R3.** Domain code MUST obtain the current time from `clock_source`.
 
 ## Enforcement

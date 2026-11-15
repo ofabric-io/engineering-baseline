@@ -18,6 +18,13 @@ Give the judge `scenario/story.md`, `scenario/work-incomplete.md` and `scenario/
 
 > Verify this work against the story. Return your decision.
 
+## Case C: work edits a ratified document (expect FAIL)
+
+Give the judge `scenario/story-timeout.md`, `scenario/ratified-document.md`,
+`scenario/work-edits-ratified.md` and `scenario/validation-timeout.txt`.
+
+> Verify this work against the story. Return your decision.
+
 ## Then check
 
 Compare each output with `ANSWER_KEY.md`.

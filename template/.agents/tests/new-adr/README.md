@@ -12,6 +12,14 @@ Copy `scenario/docs/` into a scratch project (over the existing `docs/04-adr/REA
 > Record a decision: invoices now need to be stored in a shared database because a second tool
 > must read them concurrently. This replaces the plain-file decision.
 
+Then, in the same conversation, once ADR-003 is written:
+
+> Looks good, thanks.
+
+(not a yes to acceptance), and afterwards:
+
+> Yes, accept ADR-003.
+
 ## Then check
 
 Compare the agent's behaviour with `ANSWER_KEY.md`.

@@ -17,6 +17,9 @@ supersedes: null
 > Remove a section only by replacing it with `Not applicable — <why>`. An empty section reads as
 > "not yet considered", and a later agent will fill it with invention. Mark every gap inline as
 > `[NEEDS CLARIFICATION: question]`; a spec with any marker left cannot be approved.
+>
+> Cross-references to a rule use the `docs/`-relative path and the rule number, for example
+> `08-reliability/timeouts-retries.md` R3. Never a bare file name.
 
 ## Problem
 
@@ -29,7 +32,7 @@ supersedes: null
 ## Design
 
 <!-- Link the committed design artifact this feature realises, and the screen specs it covers
-     (docs/packs/user-interface/design-workflow.md). Write `None yet — <why>` if design has not
+     (packs/user-interface/design-workflow.md). Write `None yet — <why>` if design has not
      happened; the spec may be approved without one only if design does not block the work.
      A feature with no interface writes `Not applicable — no user interface`. -->
 {% endif %}
@@ -37,6 +40,17 @@ supersedes: null
 ## Scope
 
 <!-- What is in. Specific enough that "is X included?" has an answer. -->
+
+## Components touched
+
+<!-- Every component this feature adds or changes, with its kind. Components and kinds come from
+     the Components table in `03-architecture/system.md`; the kinds are service, daemon, cli,
+     library, ui, batch. A new component is added to that table by the same change. Write the kind
+     for every row: it decides which scoped rules apply. -->
+
+| Component | Kind | Change |
+| --- | --- | --- |
+| | | |
 
 ## Non-goals
 
@@ -98,30 +112,52 @@ Cite the rule; do not restate it. Write `None` where the feature does not touch 
 ### API
 
 <!-- Endpoints, shapes, error codes, idempotency, and whether anything is a breaking change
-     (docs/packs/http-api/). -->
+     (packs/http-api/). -->
 {% endif %}{% if 'events' in packs %}
 ### Events
 
-<!-- Events published and consumed, their versions, any schema change (docs/packs/events/). -->
+<!-- Events published and consumed, their versions, any schema change (packs/events/). -->
 {% endif %}{% if 'money' in packs %}
 ### Money
 
-<!-- Every monetary value, rounding boundary and currency behaviour (docs/packs/money/). -->
+<!-- Every monetary value, rounding boundary and currency behaviour (packs/money/). -->
 {% endif %}{% if 'multi-tenant' in packs %}
 ### Tenant isolation
 
 <!-- Which isolation axis each new piece of data belongs to, and the leak test that proves it
-     (docs/packs/multi-tenant/). -->
+     (packs/multi-tenant/). -->
 {% endif %}{% if 'user-interface' in packs %}
 ### User interface
 
 <!-- Surfaces touched; new or changed tokens and status roles; every async state of each new
      view; irreversible actions; new copy keys in every locale; accessibility of new components
-     (docs/packs/user-interface/). -->
+     (packs/user-interface/). -->
+{% endif %}{% if 'data-store' in packs %}
+### Schema and migration plan
+
+<!-- Tables, columns, constraints and indexes added or changed; each migration as expand, migrate
+     or contract, and the order they ship in; backfill; what rollback means once data has moved
+     (`packs/data-store/migrations.md`). Write `None` if no schema changes. -->
+{% endif %}{% if 'domain-model' in packs %}
+### Aggregates and invariants
+
+<!-- Aggregates created or changed, their consistency boundary, the invariants each protects, and
+     the commands and events that cross a boundary (`packs/domain-model/aggregates.md`). -->
+{% endif %}{% if 'web-ui' in packs %}
+### Browser surface
+
+<!-- Pages, routes and browser-side storage touched; cookies, headers and content-security
+     changes; responsive and live-region behaviour of new views (`packs/web-ui/`). -->
+{% endif %}{% if 'cli' in packs %}
+### Commands, flags, exit codes, output contract
+
+<!-- Each command and flag added or changed, every exit code and what it means, what goes to
+     standard output versus standard error, and the machine-readable output shape; whether any
+     of it breaks a script that calls the program (`packs/cli/`). -->
 {% endif %}{% if 'audit-trail' in packs %}
 ### Audit
 
-<!-- Which actions in this feature produce audit records (docs/packs/audit-trail/). -->
+<!-- Which actions in this feature produce audit records (packs/audit-trail/). -->
 {% endif %}
 ---
 

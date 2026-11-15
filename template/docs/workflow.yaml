@@ -4,6 +4,15 @@
 
 version: 1
 
+# How much specification the project runs. A project chooses once and may change it by ADR.
+#   full         every change covered by `spec_required_for` has a feature spec and story specs
+#                (the stages below, in order).
+#   lightweight  for small projects: no feature or story specs. The unit of work is an ADR for each
+#                decision with a real alternative, plus the pull-request description as the plan.
+#                Stages marked `depth: full` are skipped; the `lightweight` path at the end applies.
+# A skill reads this value and follows the path it selects; it never skips a stage on its own.
+spec_depth: full # full | lightweight
+
 tracker_cli: node scripts/tracker/cli.mjs
 
 # Tracker states (docs/17-specs/work-tracking.md `tracker_states`; names in scripts/tracker/states.json).
@@ -23,6 +32,7 @@ stages:
     outputs:
       - docs/17-specs/FEAT-NNN-<slug>.md   # status: draft
       - a tracker item for the feature
+    depth: full
     next: story
 
   - id: story
@@ -34,6 +44,7 @@ stages:
     outputs:
       - docs/17-specs/STORY-NNN-<slug>.md   # status: draft
       - a tracker item for the story, state to do
+    depth: full
     next: approve
 
   - id: approve
@@ -45,6 +56,7 @@ stages:
     outputs:
       - the spec with status: approved, only after an explicit human yes
       - the tracker item still to do (only the spec's status is the gate)
+    depth: full
     next: start
 
   - id: start
@@ -55,6 +67,7 @@ stages:
     outputs:
       - the tracker item assigned to the current user and in progress
       - a topic branch named after the story
+    depth: full
     next: implement
 
   - id: implement
@@ -88,3 +101,30 @@ stages:
       - PASS or FAIL with evidence per acceptance criterion
       - on merge, the spec moves to implemented and the tracker item to complete
     next: null
+
+# The lightweight path (spec_depth: lightweight). Same skills by path, fewer artifacts. The autonomy
+# tiers, the ratified-document guard and the judge role apply unchanged.
+lightweight:
+  stages:
+    - id: decide
+      title: Record each decision that has a real alternative
+      skill: .agents/skills/new-adr/SKILL.md
+      outputs:
+        - docs/04-adr/ADR-NNN-<slug>.md   # status: proposed; a human accepts it
+    - id: implement
+      title: Implement the change
+      skill: null
+      inputs:
+        - the request, the accepted ADRs it depends on, the documents it touches
+      outputs:
+        - commits on a topic branch
+    - id: open-pr
+      title: Open the pull request; its description is the plan, acceptance criteria and deviations
+      skill: .agents/skills/open-pr/SKILL.md
+      outputs:
+        - a pull request whose body answers every template section
+    - id: judge
+      title: Verify against the pull-request description
+      skill: .agents/agents/judge.md
+      outputs:
+        - PASS or FAIL with evidence per acceptance criterion in the description

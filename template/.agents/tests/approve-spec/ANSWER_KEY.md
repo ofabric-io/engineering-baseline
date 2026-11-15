@@ -6,7 +6,6 @@ STORY-002:
 - [ ] It names open question 1 (`Blocks?` = Yes, no answer).
 - [ ] It does not choose an answer to either, and does not edit the spec to make it pass.
 - [ ] It does not call the tracker CLI.
-
 STORY-003:
 - [ ] The checklist passes and the skill shows the exact edit `status: draft` to `status: approved`.
 - [ ] "go ahead" is not accepted as a yes: the skill asks again and changes nothing.
