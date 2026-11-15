@@ -9,7 +9,7 @@ last-reviewed: never
 
 ## Purpose
 
-Every asynchronous surface handles all of its states explicitly, errors are presented consistently, and irreversible actions are protected.
+Every asynchronous surface handles all of its states explicitly, errors are presented consistently, and irreversible actions are protected. Stated for any platform (web, mobile, desktop).
 
 ## Parameters
 
@@ -18,7 +18,7 @@ Every asynchronous surface handles all of its states explicitly, errors are pres
 | `async_states` | [[async_states]] | loading, empty, error, success, partial | a surface missing one shows a blank or a spinner forever |
 | `error_presentation` | [[error_presentation]] | keyed off stable error codes; unknown codes show a generic message plus a copyable request id | free-text server messages leak internals and cannot be translated |
 | `irreversible_actions` | [[irreversible_actions]] | listed by the bootstrap; never optimistic, never retried by a plain re-click, confirmed when destructive | — |
-| `crash_containment` | [[crash_containment]] | a rendering failure is contained to its view, never blanking the application | — |
+| `crash_containment` | [[crash_containment]] | a rendering failure is contained to its view, never blanking or closing the application | — |
 
 ## Open decisions
 
@@ -38,7 +38,7 @@ Every asynchronous surface handles all of its states explicitly, errors are pres
 
 ### Errors
 
-- **R6.** An error MUST be presented from its stable error code (`../../09-errors/taxonomy.md`) through the copy catalog. The interface MUST NOT display a server-supplied free-text message.
+- **R6.** An error MUST be presented from its stable error code (`09-errors/taxonomy.md`) through the copy catalog. The interface MUST NOT display a server-supplied free-text message.
 - **R7.** An unknown code MUST show a generic message and the request identifier.
 - **R8.** Every presented error that carries a request identifier MUST show it in a form the user can copy in one action.
 - **R9.** A server-side validation error MUST be shown on the field it names and summarised for assistive technology (`accessibility.md` R11, R12).
@@ -47,12 +47,12 @@ Every asynchronous surface handles all of its states explicitly, errors are pres
 ### Irreversible actions
 
 - **R11.** An action in `irreversible_actions` MUST NOT be applied optimistically; the interface MUST show it as done only after the server confirms.
-- **R12.** While such an action is in flight its control MUST be disabled, and a retry MUST reuse the original attempt's idempotency key (`../../08-reliability/concurrency-and-idempotency.md`), so a second click cannot repeat it.
+- **R12.** While such an action is in flight its control MUST be disabled, and a retry MUST reuse the original attempt's idempotency key (`08-reliability/concurrency-and-idempotency.md`), so a second click cannot repeat it.
 - **R13.** A destructive action MUST require explicit confirmation that names the object and the consequence.
 
 ### Containment
 
-- **R14.** A rendering failure MUST be contained per `crash_containment`. The fallback view MUST offer a reload and show the request or trace identifier when one exists.
+- **R14.** A rendering failure MUST be contained per `crash_containment`. The fallback view MUST offer a reload or restart of the view and show the request or trace identifier when one exists.
 
 ## Enforcement
 
@@ -83,6 +83,6 @@ Every asynchronous surface handles all of its states explicitly, errors are pres
 
 ## References
 
-- `../../09-errors/taxonomy.md`
-- `../../08-reliability/concurrency-and-idempotency.md`
+- `09-errors/taxonomy.md`
+- `08-reliability/concurrency-and-idempotency.md`
 - `accessibility.md`, `content-and-i18n.md`

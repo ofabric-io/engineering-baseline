@@ -9,19 +9,19 @@ last-reviewed: never
 
 ## Purpose
 
-Where interface text lives, how it is translated and formatted, and how its wording stays consistent with the domain language.
+Where interface text lives, how it is translated and formatted, and how its wording stays consistent with the domain language. Locales are identified by BCP 47 language tags.
 
 ## Parameters
 
 | Parameter | Answer | Default | Trade-off |
 | --- | --- | --- | --- |
-| `locales` | [[locales]] | one, named by the bootstrap | each added locale is a catalog to keep in parity |
+| `locales` | [[locales]] | one, named by the bootstrap as a BCP 47 tag (for example `en-US`, `pt-BR`) | each added locale is a catalog to keep in parity |
 | `catalog_layout` | [[catalog_layout]] | one directory of catalogs; one file per locale per namespace, nested keys; location chosen in `13-technology/` | one big file per locale is simpler and merges badly |
 | `hardcoded_copy` | [[hardcoded_copy]] | forbidden: every visible or assistive string comes from a catalog | — |
 | `catalog_parity` | [[catalog_parity]] | every key present in every locale; checked in CI | — |
-| `locale_resolution` | [[locale_resolution]] | explicit user choice → stored preference → browser/OS → default | locale in the URL is better for SEO and worse for sharing |
+| `locale_resolution` | [[locale_resolution]] | explicit user choice → stored preference → platform setting → default | locale in the URL is better for SEO and worse for sharing |
 | `formatting` | [[formatting]] | numbers, dates, durations and amounts through shared formatters, never through translation strings | — |
-| `wording` | [[wording]] | UI labels come from the glossary's UI-label column | the same thing named two ways confuses users and support |
+| `wording` | [[wording]] | UI labels come from the glossary's "UI label (<locale>)" columns | the same thing named two ways confuses users and support |
 | `voice_and_tone` | [[voice_and_tone]] | decided by the project, written down here | — |
 
 ## Open decisions
@@ -42,18 +42,18 @@ Where interface text lives, how it is translated and formatted, and how its word
 
 ### Catalogs and locales
 
-- **R6.** The catalogs MUST follow `catalog_layout`, and every locale in `locales` MUST have every key present in every namespace (`catalog_parity`).
+- **R6.** Each locale MUST be a BCP 47 language tag, used unchanged as its catalog directory name. The catalogs MUST follow `catalog_layout`, and every locale in `locales` MUST have every key present in every namespace (`catalog_parity`).
 - **R7.** Adding a locale MUST add a complete catalog in the same change; a partial catalog MUST NOT be released.
-- **R8.** The active locale MUST be resolved by `locale_resolution` and MUST set the document's language and text direction.
+- **R8.** The active locale MUST be resolved by `locale_resolution` and MUST set the interface's language and text direction.
 
 ### Formatting
 
 - **R9.** Numbers, dates, times, durations and monetary amounts MUST be rendered through shared formatters that take the active locale. A formatted value MUST NOT live in a translation string.
-- **R10.** Date, time and amount rendering MUST follow `../../02-domain/time.md`; a project with a money pack also follows its rules.
+- **R10.** Date, time and amount rendering MUST follow `02-domain/time.md`; a project with a money pack also follows its rules.
 
 ### Wording
 
-- **R11.** A domain term shown to users MUST use the glossary's UI-label column (`../../02-domain/glossary.md`) for that locale, and MUST NOT use a forbidden synonym.
+- **R11.** A domain term shown to users MUST use the glossary's "UI label (<locale>)" column for that locale (`02-domain/glossary.md`), and MUST NOT use a forbidden synonym.
 - **R12.** Error and status copy MUST be keyed by error code or status role, not by message text (`ux-states.md` R6).
 - **R13.** The project MUST record its `voice_and_tone` in this document's project copy, and new copy MUST follow it.
 
@@ -80,11 +80,11 @@ Where interface text lives, how it is translated and formatted, and how its word
 - Never write a visible or assistive string in code; add a catalog key.
 - Add a new key to every locale in the same change.
 - Never concatenate strings or format numbers, dates or amounts by hand.
-- Use the glossary's UI label for a domain term, never a synonym.
+- Use the glossary's UI label for the locale for a domain term, never a synonym.
 
 ## References
 
 - [Unicode CLDR](https://cldr.unicode.org/) — locale data behind plural and format rules
 - [BCP 47 / RFC 5646](https://www.rfc-editor.org/info/rfc5646) — language tags
-- `../../02-domain/glossary.md`, `../../02-domain/time.md`
+- `02-domain/glossary.md`, `02-domain/time.md`
 - `ux-states.md`, `accessibility.md`

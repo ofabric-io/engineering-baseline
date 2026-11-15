@@ -9,7 +9,7 @@ last-reviewed: never
 
 ## Purpose
 
-How designs are produced, stored and handed to implementation, and how the implementation is checked against them. Tool-neutral.
+How designs are produced, stored and handed to implementation, and how the implementation is checked against them. Tool-neutral and platform-neutral.
 
 ## Parameters
 
@@ -26,19 +26,19 @@ How designs are produced, stored and handed to implementation, and how the imple
 ## Open decisions
 
 - [ ] Ratify this document with the project (`.agents/skills/ratify-standard/SKILL.md`).
-- [ ] Which viewports and themes does a fidelity check cover?
+- [ ] Which screen sizes, form factors and themes does a fidelity check cover?
 - [ ] What tolerance counts as a match, and who may accept a deviation?
 
 ## Rules
 
 ### Designs
 
-- **R1.** A story that adds or changes a screen MUST link a design artifact in its Design section (`../../17-specs/feature-spec-template.md`).
+- **R1.** A story that adds or changes a screen MUST link a design artifact in its Design section (`17-specs/feature-spec-template.md`).
 - **R2.** The artifact MUST be exported and committed at `design_artifact_location`. A link to a live canvas MUST NOT be the source of truth (`design_source_of_truth`).
 - **R3.** When the design changes, the committed artifact MUST be refreshed before implementation continues; an implementation MUST be built against the committed copy.
 - **R4.** A design MUST take every value from the project's tokens (`tokens_in_design`). A value with no token MUST be added to the token source first (`design-tokens.md` R16).
 - **R5.** A design MUST show the states in `ux-states.md` R1 for every data-driven surface, and MUST show each theme.
-- **R6.** Copy in a design MUST use the glossary's UI labels (`content-and-i18n.md` R11).
+- **R6.** Copy in a design MUST use the glossary's UI labels for each locale shown (`content-and-i18n.md` R11).
 
 ### Screen specs
 
@@ -48,7 +48,7 @@ How designs are produced, stored and handed to implementation, and how the imple
 ### Fidelity
 
 - **R9.** A design/code mismatch MUST be resolved explicitly by changing the token, the design or the code, and the resolution MUST be recorded in the story.
-- **R10.** Before a story that changes a screen is done, the implementation MUST be checked against its committed artifact in every theme and the viewports named in its screen spec (`fidelity_check`), and the result MUST be attached to the change.
+- **R10.** Before a story that changes a screen is done, the implementation MUST be checked against its committed artifact in every theme and the screen sizes named in its screen spec (`fidelity_check`), and the result MUST be attached to the change.
 - **R11.** A deviation accepted from the design MUST be recorded with who accepted it; it MUST NOT be left as an unexplained difference.
 - **R12.** No rule in this document may depend on `design_tool`; changing tools MUST NOT change the artifacts' location or the fidelity check's inputs.
 
@@ -56,7 +56,7 @@ How designs are produced, stored and handed to implementation, and how the imple
 
 | Rule | Mechanism | Status |
 | --- | --- | --- |
-| R1 | PR template checklist; spec lint for a missing Design section (`../../17-specs/spec-lifecycle.md`) | ⬜ scheduled |
+| R1 | PR template checklist; spec lint for a missing Design section (`17-specs/spec-lifecycle.md`) | ⬜ scheduled |
 | R2 | check that the linked artifact path exists in the repository | ⬜ scheduled |
 | R3 | PR review comparing artifact and story dates | ❌ review-only |
 | R4 | design-to-token validation chosen with `design_tool` | ⬜ scheduled |
@@ -80,4 +80,4 @@ How designs are produced, stored and handed to implementation, and how the imple
 
 - [W3C Design Tokens Community Group format](https://www.designtokens.org/)
 - `design-tokens.md`, `ux-states.md`, `content-and-i18n.md`
-- `../../17-specs/feature-spec-template.md`, `../../17-specs/spec-lifecycle.md`
+- `17-specs/feature-spec-template.md`, `17-specs/spec-lifecycle.md`
