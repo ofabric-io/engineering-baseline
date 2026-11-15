@@ -1,0 +1,83 @@
+#!/usr/bin/env node
+// Check plugin (user-interface pack): every key path exists in every locale.
+// Config: .baseline/ui.json  { "catalogs": "<dir>", "locales": ["en", ...] }
+// Layout: <catalogs>/<locale>/<namespace>.json, nested objects; arrays and scalars are leaves.
+// Absent config (or no "catalogs") = pass. Output: one `path: message` per problem; exit 1 on any.
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
+import { join as pjoin } from 'node:path';
+const join = (...a) => pjoin(...a).replaceAll('\\', '/');
+
+const problems = [];
+const configPath = '.baseline/ui.json';
+
+function readJson(path) {
+  try {
+    return JSON.parse(readFileSync(path, 'utf8'));
+  } catch (e) {
+    problems.push(`${path}: cannot read as JSON (${e.message})`);
+    return null;
+  }
+}
+
+function keyPaths(value, prefix = '', acc = new Set()) {
+  if (value && typeof value === 'object' && !Array.isArray(value)) {
+    for (const [k, v] of Object.entries(value)) keyPaths(v, prefix ? `${prefix}.${k}` : k, acc);
+  } else if (prefix) {
+    acc.add(prefix);
+  }
+  return acc;
+}
+
+function main() {
+  if (!existsSync(configPath)) return;
+  const config = readJson(configPath);
+  if (!config || !config.catalogs) return;
+  const root = String(config.catalogs).replace(/\/+$/, '');
+  const locales = Array.isArray(config.locales) ? config.locales : [];
+  if (!existsSync(root)) {
+    problems.push(`${root}: catalogs directory configured in ${configPath} does not exist`);
+    return;
+  }
+  if (locales.length === 0) {
+    problems.push(`${configPath}: "locales" must list at least one locale when "catalogs" is set`);
+    return;
+  }
+
+  // namespace -> locale -> Set of key paths (null = file missing)
+  const namespaces = new Map();
+  for (const locale of locales) {
+    const dir = join(root, locale);
+    if (!existsSync(dir)) {
+      problems.push(`${dir}: locale directory is missing`);
+      continue;
+    }
+    for (const file of readdirSync(dir).filter((f) => f.endsWith('.json'))) {
+      const ns = file.slice(0, -'.json'.length);
+      const data = readJson(join(dir, file));
+      if (data === null) continue;
+      if (!namespaces.has(ns)) namespaces.set(ns, new Map());
+      namespaces.get(ns).set(locale, keyPaths(data));
+    }
+  }
+
+  for (const [ns, byLocale] of namespaces) {
+    const union = new Set();
+    for (const keys of byLocale.values()) for (const k of keys) union.add(k);
+    for (const locale of locales) {
+      if (!existsSync(join(root, locale))) continue; // already reported
+      const file = join(root, locale, `${ns}.json`);
+      const keys = byLocale.get(locale);
+      if (!keys) {
+        if (!existsSync(file)) problems.push(`${file}: namespace "${ns}" is missing for locale "${locale}"`);
+        continue;
+      }
+      for (const k of [...union].sort()) {
+        if (!keys.has(k)) problems.push(`${file}: missing key "${k}" present in another locale`);
+      }
+    }
+  }
+}
+
+main();
+for (const p of problems) console.log(p);
+process.exit(problems.length ? 1 : 0);

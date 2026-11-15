@@ -1,0 +1,105 @@
+#!/usr/bin/env node
+// Check plugin (user-interface pack): declared text/background pairs meet the contrast minimum
+// in every theme.
+// Config: .baseline/ui.json
+//   "tokens":        { "<theme>": "<W3C DTCG JSON file>", ... }
+//   "contrastPairs": [["text-token", "background-token"], ...]   (dotted token paths)
+//   "minContrast":   4.5   (optional)
+// Colours must be hex (#rgb, #rrggbb) or an object with a "hex" field; aliases ({a.b}) are resolved.
+// Absent config (or no "tokens"/"contrastPairs") = pass. Output: `path: message` per problem.
+import { existsSync, readFileSync } from 'node:fs';
+
+const problems = [];
+const configPath = '.baseline/ui.json';
+
+function readJson(path) {
+  try {
+    return JSON.parse(readFileSync(path, 'utf8'));
+  } catch (e) {
+    problems.push(`${path}: cannot read as JSON (${e.message})`);
+    return null;
+  }
+}
+
+// Flatten a DTCG tree into dotted name -> raw $value.
+function flatten(node, prefix = '', acc = new Map()) {
+  if (!node || typeof node !== 'object') return acc;
+  if ('$value' in node) {
+    acc.set(prefix, node.$value);
+    return acc;
+  }
+  for (const [k, v] of Object.entries(node)) {
+    if (k.startsWith('$')) continue;
+    flatten(v, prefix ? `${prefix}.${k}` : k, acc);
+  }
+  return acc;
+}
+
+function resolve(tokens, name, seen = []) {
+  if (seen.includes(name)) throw new Error(`alias cycle: ${[...seen, name].join(' -> ')}`);
+  if (!tokens.has(name)) throw new Error(`token "${name}" does not exist`);
+  const v = tokens.get(name);
+  if (typeof v === 'string') {
+    const m = v.match(/^\{([^}]+)\}$/);
+    if (m) return resolve(tokens, m[1], [...seen, name]);
+  }
+  return v;
+}
+
+function toRgb(value) {
+  const raw = value && typeof value === 'object' ? value.hex : value;
+  if (typeof raw !== 'string') throw new Error('colour is not hex (only hex colours are supported)');
+  const m = raw.match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i);
+  if (!m) throw new Error(`colour "${raw}" is not #rgb or #rrggbb (alpha and other formats are not supported)`);
+  let h = m[1];
+  if (h.length === 3) h = [...h].map((c) => c + c).join('');
+  return [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16));
+}
+
+function luminance([r, g, b]) {
+  const f = (c) => {
+    const s = c / 255;
+    return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+  };
+  return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b);
+}
+
+function contrast(a, b) {
+  const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x);
+  return (hi + 0.05) / (lo + 0.05);
+}
+
+function main() {
+  if (!existsSync(configPath)) return;
+  const config = readJson(configPath);
+  if (!config || !config.tokens || !config.contrastPairs) return;
+  const min = typeof config.minContrast === 'number' ? config.minContrast : 4.5;
+  const pairs = config.contrastPairs;
+  if (!Array.isArray(pairs) || pairs.some((p) => !Array.isArray(p) || p.length !== 2)) {
+    problems.push(`${configPath}: "contrastPairs" must be a list of [text-token, background-token] pairs`);
+    return;
+  }
+  for (const [theme, file] of Object.entries(config.tokens)) {
+    if (!existsSync(file)) {
+      problems.push(`${file}: token file for theme "${theme}" does not exist`);
+      continue;
+    }
+    const tree = readJson(file);
+    if (!tree) continue;
+    const tokens = flatten(tree);
+    for (const [fg, bg] of pairs) {
+      try {
+        const ratio = contrast(toRgb(resolve(tokens, fg)), toRgb(resolve(tokens, bg)));
+        if (ratio < min) {
+          problems.push(`${file}: theme "${theme}": ${fg} on ${bg} has contrast ${ratio.toFixed(2)}:1, below the minimum ${min}:1`);
+        }
+      } catch (e) {
+        problems.push(`${file}: theme "${theme}": pair ${fg} / ${bg}: ${e.message}`);
+      }
+    }
+  }
+}
+
+main();
+for (const p of problems) console.log(p);
+process.exit(problems.length ? 1 : 0);
