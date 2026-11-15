@@ -3,7 +3,8 @@ story: STORY-NNN
 parent: FEAT-NNN # required
 status: draft # draft | approved | implemented | superseded | abandoned
 tier: TBD # 1 | 2 | 3 | 4 (docs/16-ai/autonomy-and-context.md)
-tracker: null
+tracker: null # work item reference written by the tracker CLI
+branch: null # topic branch, written when the story is started
 pr: null # required to move to `implemented`
 depends-on: [] # STORY-NNN / FEAT-NNN this cannot start before; [] = none
 owner: TBD
@@ -50,6 +51,13 @@ created: YYYY-MM-DD
 ## Implementation notes
 
 <!-- Known constraints, the decided approach, anything deliberately deferred. -->
+
+## Open questions
+
+<!-- A question with Blocks? = Yes and no recorded answer blocks approval. -->
+
+| # | Question | Blocks? | Answer or where it is decided |
+| --- | --- | --- | --- |
 
 ## Verification
 

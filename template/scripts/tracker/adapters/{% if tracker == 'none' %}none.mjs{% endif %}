@@ -1,0 +1,68 @@
+// Tracker adapter: Markdown queue. Works fully offline; the queue is docs/17-specs/QUEUE.md.
+// Contract (shared by every adapter): list() get(id) create(req) setStatus(id, status) assign(id, email)
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { join } from 'node:path';
+
+const QUEUE = join(process.cwd(), 'docs', '17-specs', 'QUEUE.md');
+const HEADER = '| ID | Title | Kind | Parent | Status | Assignee | Spec |';
+const SEPARATOR = '| --- | --- | --- | --- | --- | --- | --- |';
+
+const cell = (s) => String(s ?? '-').replace(/\|/g, '/').replace(/\s+/g, ' ').trim() || '-';
+
+function load() {
+  const text = existsSync(QUEUE) ? readFileSync(QUEUE, 'utf8').replace(/\r\n/g, '\n') : `# Work queue\n\n${HEADER}\n${SEPARATOR}\n`;
+  const lines = text.split('\n');
+  const start = lines.findIndex((l) => l.trim() === HEADER);
+  if (start === -1) throw new Error('docs/17-specs/QUEUE.md: the table header row is missing or was edited');
+  let end = start + 2;
+  while (end < lines.length && lines[end].trim().startsWith('|')) end++;
+  const rows = lines.slice(start + 2, end).map((l) => {
+    const c = l.trim().replace(/^\||\|$/g, '').split('|').map((x) => x.trim());
+    return { id: c[0], title: c[1], kind: c[2], parent: c[3], status: c[4], assignee: c[5] === '-' ? '' : c[5], spec: c[6] };
+  });
+  return { lines, start, end, rows };
+}
+
+function save({ lines, start, end }, rows) {
+  const body = rows.map((r) => `| ${cell(r.id)} | ${cell(r.title)} | ${cell(r.kind)} | ${cell(r.parent)} | ${cell(r.status)} | ${cell(r.assignee)} | ${cell(r.spec)} |`);
+  writeFileSync(QUEUE, [...lines.slice(0, start + 2), ...body, ...lines.slice(end)].join('\n'));
+}
+
+function selfEmail() {
+  try { return execFileSync('git', ['config', 'user.email'], { encoding: 'utf8' }).trim(); } catch { return ''; }
+}
+
+const shape = (r) => ({
+  id: r.id, title: r.title, status: r.status, assignee: r.assignee,
+  assigneeIsSelf: Boolean(r.assignee) && r.assignee === selfEmail(), ref: `docs/17-specs/QUEUE.md#${r.id}`,
+});
+
+export async function list() { return load().rows.map(shape); }
+
+export async function get(id) {
+  const row = load().rows.find((r) => r.id === id);
+  return row ? shape(row) : null;
+}
+
+export async function create(req) {
+  const q = load();
+  q.rows.push({ id: req.id, title: req.title.replace(`${req.id} — `, ''), kind: req.kind, parent: req.parent?.id ?? '-', status: req.status, assignee: '', spec: req.spec });
+  save(q, q.rows);
+  return { id: req.id, ref: `docs/17-specs/QUEUE.md#${req.id}` };
+}
+
+export async function setStatus(id, status) {
+  const q = load();
+  const row = q.rows.find((r) => r.id === id);
+  row.status = status;
+  save(q, q.rows);
+}
+
+export async function assign(id, email) {
+  const q = load();
+  const row = q.rows.find((r) => r.id === id);
+  if (row.assignee) throw new Error(`${id} already has an assignee`);
+  row.assignee = email;
+  save(q, q.rows);
+}

@@ -67,6 +67,27 @@ tracker:
     ClickUp: clickup
   default: none
 
+clickup_workspace_id:
+  type: str
+  help: ClickUp workspace (team) id. The API token is never stored here; set CLICKUP_TOKEN in your environment.
+  default: ""
+  when: "{{ tracker == 'clickup' }}"
+
+clickup_space_id:
+  type: str
+  help: ClickUp space id that holds the epics (folders) and feature lists. Leave empty to skip list scanning.
+  default: ""
+  when: "{{ tracker == 'clickup' }}"
+
+git_host:
+  type: str
+  help: Where the repository is hosted (decides which pull-request template files exist)
+  choices:
+    GitHub: github
+    GitLab: gitlab
+    Other (no host-specific files): other
+  default: github
+
 ci:
   type: str
   help: CI provider that runs the baseline checks
