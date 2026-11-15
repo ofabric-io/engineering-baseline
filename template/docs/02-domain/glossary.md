@@ -1,6 +1,6 @@
 ---
 layer: 02-domain
-status: not-started # not-started | proposed | in-progress | ratified
+status: proposed # not-started | proposed | in-progress | ratified
 owner: TBD
 last-reviewed: never
 ---
@@ -9,7 +9,7 @@ last-reviewed: never
 
 ## Purpose
 
-The words the project uses, one meaning each, and the words it forbids. Code, schemas, APIs, events and logs use these terms.
+The words the project uses, one meaning each, and the words it forbids. Code, schemas, interfaces, events and logs use these terms. The terms themselves belong to the project; this document fixes how they are defined and enforced.
 
 ## Parameters
 
@@ -30,16 +30,46 @@ user interface; leave it empty otherwise. Forbidden synonyms are also listed in
 ## Open decisions
 
 - [ ] Ratify this document with the project (`.agents/skills/ratify-standard/SKILL.md`).
+- [ ] Which external vocabularies (a partner's API, a legal or industry phrase) legitimately use a forbidden synonym, and at which boundary is each mapped to the project's term?
 
 ## Rules
 
-<!-- baseline: proposed default rules land here in a later baseline release. -->
+- **R1.** Every term MUST have exactly one meaning, and every concept exactly one term.
+- **R2.** Code identifiers, database schemas, interface payloads, event names and log fields MUST use glossary terms.
+- **R3.** Each term MUST list its forbidden synonyms, and each forbidden synonym MUST be added to `.baseline/forbidden-terms.txt` in the same change.
+- **R4.** A word that names two different things MUST be split into two terms or banned as a domain term.
+- **R5.** A forbidden synonym MAY appear only where it is external vocabulary (quoting a third-party payload, or a legal or industry phrase), only at an adapter boundary, and MUST be mapped to the glossary term on the way in.
+- **R6.** A new concept MUST be added to the glossary in the change that introduces it; a term used in code but absent from the glossary is a defect.
+- **R7.** Renaming a term MUST be one change that updates the glossary, the forbidden list and every use, and MUST NOT leave the old name as an alias.
+- **R8.** A qualifier that disambiguates a term across aggregates (for example a field called `status`) MUST be part of the identifier, not left bare in a shared type or an event payload.
+- **R9.** Where the project has a user interface, the UI label MAY differ from the term; the term MUST NOT change to match a label.
 
 ## Enforcement
 
 | Rule | Mechanism | Status |
 | --- | --- | --- |
+| R1 | Review of new rows | ❌ review-only |
+| R2 | Term search in code, schemas, docs and logs by `scripts/check.mjs` against `.baseline/forbidden-terms.txt` | ◐ partial |
+| R3 | `scripts/check.mjs` fails on any forbidden synonym outside this document and `.baseline/` | ✅ automated |
+| R4 | Review | ❌ review-only |
+| R5 | Review at the adapter boundary; adapters are the only place an external word may appear | ❌ review-only |
+| R6 | Review; unknown-term detection is not automated | ❌ review-only |
+| R7 | `scripts/check.mjs` fails on the retired name once it is in the forbidden list | ◐ partial |
+| R8 | Identifier-naming lint rule (tool chosen in `13-technology/`) | ⬜ scheduled |
+| R9 | Review | ❌ review-only |
 
 ## AI guardrails
 
+```text
+Use glossary terms in code, schemas, interfaces, events and logs. Never invent a synonym.
+Never use a forbidden synonym; scripts/check.mjs fails the build on it.
+A new concept goes in the glossary in the SAME change. If you are unsure of a term, ASK.
+A forbidden word is allowed only when quoting external vocabulary at an adapter, and is
+mapped to the glossary term on the way in.
+```
+
 ## References
+
+- `03-architecture/system.md` — the boundaries that own terms
+- `11-style/naming-and-style.md` — naming conventions
+- [Ubiquitous Language (Domain-Driven Design)](https://martinfowler.com/bliki/UbiquitousLanguage.html)
