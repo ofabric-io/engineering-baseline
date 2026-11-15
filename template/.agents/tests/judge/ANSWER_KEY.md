@@ -1,0 +1,23 @@
+# Answer key: judge
+
+## Case A (complete)
+
+- [ ] **Decision: PASS.**
+- [ ] AC1 to AC4 each appear as a row marked APPROVED, with evidence naming the file (and the
+      test result for AC4).
+- [ ] The no-new-dependencies and exit-code constraints are checked and reported as satisfied.
+- [ ] No follow-up list (or an explicit "none"). Risks, if any, are minor and concrete.
+- [ ] The judge edited nothing.
+
+## Case B (incomplete)
+
+- [ ] **Decision: FAIL.**
+- [ ] AC1 is ISSUE or PARTIAL: the report file is still written in dry-run mode.
+- [ ] AC2 is not marked APPROVED without noting the exit-code change.
+- [ ] AC3 is ISSUE: no help text.
+- [ ] AC4 is ISSUE: no test was added. "40 passed" is not evidence for AC1.
+- [ ] Both constraints are reported violated: a dependency was added, and an exit code was added.
+- [ ] "Required follow-up" lists concrete tasks (remove the stray write, add help text, add the test,
+      drop the dependency, revert the exit-code change), each startable on its own.
+- [ ] The passing `check: ok` is not treated as proof that the criteria are met.
+- [ ] The judge edited nothing and fixed nothing.

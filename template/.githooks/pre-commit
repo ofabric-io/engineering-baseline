@@ -1,4 +1,5 @@
 #!/bin/sh
 # Enable once per clone: git config core.hooksPath .githooks
 # Never bypass with --no-verify (docs/16-ai/prohibitions.md).
-exec node scripts/check.mjs
+# BASELINE_STAGED=1 makes check plugins (the secret scan) look only at what is staged.
+BASELINE_STAGED=1 exec node scripts/check.mjs

@@ -1,0 +1,14 @@
+# Fixture: phases 0 and 1 are done; the next phase to ask is phase 2 (Domain).
+phase: 1
+answers:
+  "0.1": { answer: "A command-line tool that converts invoices between formats. It does not store them.", decided: 2026-01-10, adr: null }
+  "0.2": { answer: default, decided: 2026-01-10, adr: null }
+  "0.3": { answer: "no", decided: 2026-01-10, adr: null }
+  "0.4": { answer: default, decided: 2026-01-10, adr: null }
+  "1.1": { answer: "Convert between three formats; validate input; print a report.", decided: 2026-01-10, adr: null }
+  "1.2": { answer: "No hosted service, no accounts, no storage.", decided: 2026-01-10, adr: null }
+  "1.3": { answer: default, decided: 2026-01-10, adr: null }
+  "1.4": { answer: default, decided: 2026-01-10, adr: null }
+  "1.5": { answer: none, decided: 2026-01-10, adr: null }
+  "1.6": { answer: default, decided: 2026-01-10, adr: null }
+  "1.7": { answer: later, decided: 2026-01-10, adr: null }
