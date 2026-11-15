@@ -1,6 +1,6 @@
 ---
 layer: 15-delivery
-status: not-started # not-started | proposed | in-progress | ratified
+status: proposed
 owner: TBD
 last-reviewed: never
 ---
@@ -9,27 +9,101 @@ last-reviewed: never
 
 ## Purpose
 
-Which checks run on every change and which must pass before merge.
+The automated definition of "good enough to merge": which checks run on every change, which must
+pass before merge, and how the pipeline itself is kept honest. The CI system and the concrete
+commands are technology choices recorded in `13-technology/`; deployment is in
+`deployments-and-rollback.md`.
 
 ## Parameters
 
 | Parameter | Answer | Default | Trade-off |
 | --- | --- | --- | --- |
-| `required_checks` | [[required_checks]] | baseline checks, lint, type check, tests, security scan | set per technology in 13-technology/ |
+| `required_checks` | [[required_checks]] | baseline checks, format, lint, type check, tests at every level, build, security scan | set per technology in 13-technology/; every extra check costs pipeline time |
+| `job_time_budget_minutes` | [[job_time_budget_minutes]] | 15 per pipeline job | a larger budget tolerates slow suites; a smaller one forces sharding sooner |
+| `quarantine_expiry_days` | [[quarantine_expiry_days]] | 7 | a longer window lets a flaky test linger; a shorter one forces a fix or a delete |
+| `full_run_triggers` | [[full_run_triggers]] | after merge to `main`; on change to a lockfile or shared tool configuration | a nightly full run catches drift at the cost of compute |
 
 ## Open decisions
 
 - [ ] Ratify this document with the project (`.agents/skills/ratify-standard/SKILL.md`).
+- [ ] Which gates exist today and which are blocked on infrastructure? Record each with its blocker.
+- [ ] Which lint rules, if any, are advisory rather than blocking (R6)?
 
 ## Rules
 
-<!-- baseline: proposed default rules land here in a later baseline release. -->
+### Gates
+
+- **R1.** Every check in `required_checks` MUST be blocking on a pull request. At minimum the set
+  MUST cover: the baseline checks (`scripts/check.mjs`), formatting, linting, type checking where
+  the language has it, one gate per level in `12-testing/strategy.md` `test_levels`, build, and a
+  security scan (dependency audit and secret scan).
+- **R2.** Each gate's command MUST be defined once and invoked by both the pull-request and the
+  `main` pipelines; the two MAY differ only in scope (R7).
+- **R3.** Every check run by a local hook MUST be repeated in CI, because a hook can be bypassed.
+- **R4.** A gate MUST NOT be non-blocking (`continue-on-error` or equivalent); a gate that does not
+  block is a report and MUST be labelled as one.
+- **R5.** A required check MUST NOT be removed from the protection list to unblock a change;
+  removing a gate needs its own change and review.
+- **R6.** Every lint rule MUST be an error or be switched off. Advisory (warning-level) rules MUST be
+  an explicit list in the technology document, and no rule outside it may be downgraded.
+- **R7.** A pull request MAY run only the checks affected by its diff; the full suite MUST run per
+  `full_run_triggers`.
+- **R8.** A gate MUST be shown to fail against a deliberate violation before it is relied on; a
+  check that matches nothing passes silently.
+
+### Environments in CI
+
+- **R9.** End-to-end tests on a pull request MUST run against an ephemeral environment created for
+  that run, never a shared one, so that concurrent runs cannot interfere.
+- **R10.** An external system's own hosted test environment MUST NOT be called from the
+  pull-request path; it MAY be called from a scheduled job.
+
+### Migrations in CI
+
+- **R11.** A migration-safety check MUST reject, within a single release: dropping a column or
+  table, renaming, narrowing a type, adding a non-null constraint without a default or backfill,
+  and building an index in a way that blocks writes.
+- **R12.** Modifying a migration already merged to `main` MUST be rejected by a hook and again in CI.
+
+### Flakiness and budget
+
+- **R13.** A flaky test MUST be quarantined with a named owner and an expiry no further out than
+  `quarantine_expiry_days`; on expiry it is fixed or deleted.
+- **R14.** The quarantine list MUST NOT grow for two consecutive weeks.
+- **R15.** Each pipeline job MUST finish within `job_time_budget_minutes`; exceeding it is a defect
+  with an owner, fixed by sharding or speeding up, not by raising the budget.
+- **R16.** Build and dependency caching MUST be enabled; a cold cache is not a reason to relax R15.
 
 ## Enforcement
 
 | Rule | Mechanism | Status |
 | --- | --- | --- |
+| R1 | Pipeline definition; the baseline-checks workflow already runs `scripts/check.mjs` | ◐ partial |
+| R2 | Gate commands in one shared script invoked by both pipelines | ⬜ scheduled |
+| R3 | Hooks call the same scripts CI runs (`scripts/check.mjs`) | ◐ partial |
+| R4 | Pipeline-definition lint banning non-blocking steps | ⬜ scheduled |
+| R5 | Branch protection on the hosting platform; PR review | ⬜ scheduled |
+| R6 | Check that resolves the effective lint configuration and fails on an unlisted warning | ⬜ scheduled |
+| R7 | Pipeline scope flag | ⬜ scheduled |
+| R8 | A fixture of deliberate violations run in CI | ⬜ scheduled |
+| R9, R10 | Pipeline definition; credentials exist only in the scheduled job | ⬜ scheduled |
+| R11, R12 | Migration-safety script run in CI and in the pre-commit hook (tool chosen in `13-technology/`) | ⬜ scheduled |
+| R13, R14 | Quarantine list file with expiry dates; a CI job fails an expired entry | ⬜ scheduled |
+| R15 | Per-job timeout in the pipeline definition | ⬜ scheduled |
+| R16 | Cache configuration in the pipeline definition | ⬜ scheduled |
 
 ## AI guardrails
 
+- Never mark a gate non-blocking. Never remove a required check to unblock your change.
+- Never downgrade a lint rule to a warning to pass.
+- Never call an external test environment from the pull-request path.
+- Never edit a migration already in `main`; add a new one.
+- A flaky test is quarantined with an owner and an expiry, then fixed or deleted. Never retried.
+- Prove a new gate fails on a deliberate violation before relying on it.
+
 ## References
+
+- `12-testing/strategy.md` — what each test gate runs
+- `14-git/git.md` — pull-request requirements these gates back
+- `15-delivery/deployments-and-rollback.md` — what happens after merge
+- `13-technology/README.md` — CI system and commands
