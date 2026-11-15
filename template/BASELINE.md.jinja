@@ -19,7 +19,7 @@ Keep every asset where it is unless this table says otherwise.
 | `docs/13-technology/` | fill: one document per stack decision | ADRs | `node scripts/check.mjs` |
 | `docs/DECISION-QUEUE.md` | maintain | — | review |
 {% for p in packs %}| `docs/packs/{{ p }}/` | ratify via the bootstrap (phase 4P) | the core layers | `node scripts/check.mjs` |
-{% endfor %}| `bootstrap/questionnaire.md`, `.baseline/answers.yaml` | answer once; resumable | — | bootstrap "Done when" |
+{% endfor %}| `bootstrap/questionnaire.md`, `.baseline/answers.yaml`, `.baseline/recommendations.md` | answer once; resumable | — | bootstrap "Done when" |
 | `.agents/skills/` | keep; extend with project skills | `AGENTS.md` | `node scripts/sync-adapters.mjs --check` |
 | `.agents/agents/` | keep; extend | `docs/16-ai/model-routing.md` | review |
 | `scripts/check.mjs`, `scripts/sync-adapters.mjs`, `scripts/lib.mjs` | keep (Node ≥ 20, no dependencies) | — | `node scripts/check.mjs` |

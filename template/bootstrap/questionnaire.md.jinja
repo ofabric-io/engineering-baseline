@@ -4,92 +4,145 @@ Every decision this project must make before its standards are binding. It works
 tool or with none: answer in `.baseline/answers.yaml` (same ids), then apply the answers to the
 documents named in **Writes to**. Paths in this file are relative to `docs/`.
 
-How to answer each question: `default`, a value, or `later`. `later` is always allowed. The
-question is then recorded in `docs/DECISION-QUEUE.md` and is never guessed. **An answer equal to
-the default is an answer; only an explicit `later` leaves `[[...]]` in a document.**
+## How it runs
 
-Questions are asked **one phase at a time**, numbered, with the recommended default and its
-trade-off. A phase is finished when every question in it is answered or deferred. A phase with
-more than about 25 items is split into numbered batches.
+1. **Brief (0.1).** One free-text description of the project and its requirements. Everything
+   else starts from it.
+2. **Foundation gaps.** Questions marked ⚑ shape every later recommendation. Each one the brief
+   does not settle is asked now, before anything is recommended.
+3. **Recommendation sheet.** `node scripts/recommend.mjs` lists every open decision — each
+   headline question below and every open parameter in `docs/` — in
+   `.baseline/recommendations.md`. Each row gets a recommended answer and its source:
+   - `brief`: the brief settles it, and the row quotes the brief;
+   - `derived`: it follows from another answer, and the row names that answer;
+   - `default`: the baseline default, because the brief says nothing against it;
+   - `ask`: there is no default, or the brief is silent on a ⚑ question;
+   - `n/a`: the component kinds make it moot.
 
-**Order:** 0 → 1 → 2 → 3 → **4P (packs)** → 4 → 5 → 6. Packs come before phase 4 because a
-pack's `PACK.md` `amends:` list names core documents it changes; each amendment is applied to the
-amended document *before* that document is offered in its own phase.
+   A recommendation departs from the default only when the brief *says* something that calls for
+   it. A plausible guess is not a reason. `node scripts/recommend.mjs --check` passes when every
+   row is complete.
+4. **How to proceed (0.6).** Choose one:
+   - `all`: accept every recommendation;
+   - `all except <ids>`: those ids are asked too;
+   - `review`: go phase by phase with the recommendations pre-filled.
+
+   In every mode the `ask` rows are asked, in numbered batches of about 25.
+5. **Write, then confirm.** The documents and ADRs are written phase by phase on a branch. Before
+   anything is ratified or an ADR accepted, the user gets one explicit question for each.
+
+An answer is `default`, a value, or `later`. `later` is always allowed: the question is recorded
+in `docs/DECISION-QUEUE.md` and never guessed, and its parameter stays `[[...]]`. Accepting a
+recommendation is an answer, given by the user, for the rows they were shown. A row the user
+never saw is not answered.
+
+**Order of the phases:** 0 → 1 → 2 → 3 → **4P (packs)** → 4 → 5 → 6. Packs come before phase 4
+because a pack's `PACK.md` `amends:` list names core documents it changes. Each amendment is
+applied to the amended document *before* that document is written.
 
 **Component kinds scope everything.** Question 0.5 records what the product consists of and what
-kind each component is: `service` (request/response network service), `daemon` (long-running
-process without request/response), `cli` (command-line program), `library` (code consumed by
-other code), `ui` (an interface a person uses), `batch` (a job or pipeline that runs and ends).
-A later question that concerns only kinds the product lacks is skipped, and a rule that applies
-only to some kinds carries an `_(applies to: …)_` tag. A document whose `applies-to` kinds are all
-absent may be set `status: not-applicable` with a `reason:`.
+kind each component is:
+- `service`: a request/response network service;
+- `daemon`: a long-running process without request/response;
+- `cli`: a command-line program;
+- `library`: code consumed by other code;
+- `ui`: an interface a person uses;
+- `batch`: a job or pipeline that runs and ends.
+
+A decision that concerns only kinds the product lacks is `n/a`. A rule that applies only to some
+kinds carries an `_(applies to: …)_` tag. A document whose `applies-to` kinds are all absent may
+be set `status: not-applicable` with a `reason:`.
 
 **A pointer is an answer once its target is.** A rule that says "decided in `13-technology/`"
 counts as answered when the matching area is answered, or explicitly deferred, in phase 5. Until
 then a document that points there is not ratified.
 
-The rows below are the **headline** questions. Every document also has a `## Parameters` table;
-its remaining open parameters are offered in the same phase as one bulk list — "accept all
-defaults, or name the ones to change". `node scripts/params.mjs <path>` prints that list for the
-documents a phase writes to.
-
-Answer ids in `.baseline/answers.yaml`: `<question id>` for a headline question (`1.3`), and
-`<question id>/<doc path>/<param>` for a bulk parameter (`4.2/06-security/authn-authz.md/actor_types`).
+**Writes to** names each document a question writes, followed by the parameters the question
+sets in it. A document's other open parameters belong to the last question that offers the
+document. Their answer id is `<question id>/<doc path>/<param>`, e.g.
+`4.2/06-security/authn-authz.md/actor_types`. `node scripts/recommend.mjs` fails if this file
+names a parameter that does not exist, or if a document with open parameters is offered by no
+question.
 
 ---
 
-## Phase 0 — Intake
+## Phase 0 — Brief and intake
+
+| Step | Question | Writes to |
+| --- | --- | --- |
+| 0.1 | **The brief.** In your own words, as long as it needs to be — see the checklist below. {% if project_description %}What was given when the project was generated: "{{ project_description }}"{% endif %} | `AGENTS.md` "What this project is" (a two- or three-sentence summary of it), `.baseline/answers.yaml` `brief` |
+| 0.6 | **How to proceed**, asked once the recommendation sheet is complete: `all`, `all except <ids>`, or `review` | `.baseline/answers.yaml` `mode` |
+
+Checklist for the brief. Cover what you know, say "don't know" where you don't, and skip what
+does not apply:
+
+- **What and for whom.** What the product does, who uses it, and what it deliberately does not
+  do.
+- **The first release.** What must be in it.
+- **Shape.** What it consists of: a service, a background process, a command-line tool, a
+  library, an interface, a batch job. How it is delivered: hosted, installed, published to a
+  registry.
+- **Team.** How many people, who decides on standards, whether it is a solo project, and how much
+  AI agents are expected to do.
+- **Stage.** Whether anything is in production yet, and how soon it will be.
+- **Data.** Personal data, payment cards, health or other regulated data; where data must live;
+  the laws or certifications that apply.
+- **Customers.** One organization or many, and whether their data must be isolated from each
+  other.
+- **Money.** Whether it handles amounts, currencies, balances or bookkeeping.
+- **Integrations.** Other systems it calls or that call it, events or webhooks, public interfaces
+  others will build on.
+- **Expectations.** Availability, scale and performance, and what a failure costs.
+- **Already decided.** Technology, hosting, tools, conventions.
 
 | Id | Question | Default | Writes to |
 | --- | --- | --- | --- |
-| 0.1 | In two or three sentences: what does the product do, for whom, and what does it deliberately not do? | {{ project_description or '— (required)' }} | `AGENTS.md` |
-| 0.2 | Who decides on standards and ADRs (names or handles)? Shown is the value given when the project was generated: confirm or change it | {{ owner }} | frontmatter `owner`, ADR `deciders` |
-| 0.3 | Is anything already in production? | no | `04-adr/README.md` governance mode |
-| 0.4 | ADR governance mode: `pre-production` (amend in place until first production deploy) or `immutable`? | `pre-production` if 0.3 is no, else `immutable` | `04-adr/README.md` |
-| 0.5 | Which components does the product have, and what kind is each (service, daemon, cli, library, ui, batch)? | one `service` | `03-architecture/system.md` Components table; scopes later phases |
+| 0.2 | ⚑ Who decides on standards and ADRs (names or handles)? Shown is the value given when the project was generated | {{ owner }} | frontmatter `owner`, ADR `deciders` |
+| 0.3 | ⚑ Is anything already in production? | no | `04-adr/README.md` |
+| 0.4 | ADR governance mode: `pre-production` (amend in place until first production deploy) or `immutable`? | `pre-production` if 0.3 is no, else `immutable` | `04-adr/README.md` `adr_governance_mode` |
+| 0.5 | ⚑ Which components does the product have, and what kind is each (service, daemon, cli, library, ui, batch)? | one `service` | `03-architecture/system.md` `component_kinds` |
 
 ## Phase 1 — Business
 
 | Id | Question | Default | Writes to |
 | --- | --- | --- | --- |
-| 1.1 | In scope for the first release (a list of capabilities)? | — (required) | `01-business/principles.md` |
-| 1.2 | Explicit non-goals — what must not be built speculatively? | — (required) | `01-business/principles.md` |
-| 1.3 | Priority order when goals conflict | correctness > security > availability > latency > operability > delivery speed > cost | `01-business/principles.md` |
-| 1.4 | Does any component need a different order (e.g. a data plane that puts availability first)? | no | `01-business/principles.md` |
-| 1.5 | Regulatory regimes that apply (GDPR, LGPD, PCI DSS, SOC 2, HIPAA, none…); and does the product take, store or transmit payment-card data (what is in card scope)? | none; no card data touches the system | `01-business/compliance-and-data.md` |
-| 1.6 | Operations that always need a human, however automated the rest is | irreversible data changes, production deploys, credential rotation | `01-business/availability.md` |
-| 1.7 | Availability targets | none until the first production deploy | `01-business/availability.md` |
-| 1.8 | Recovery objectives (how much data may be lost, how long recovery may take) and maintenance windows | decided before the first production deploy | `01-business/availability.md` |
-| 1.9 | Where must data reside? | a single region until a regime or contract requires otherwise | `01-business/compliance-and-data.md` |
+| 1.1 | In scope for the first release (a list of capabilities)? | — (required) | `01-business/principles.md` `scope` |
+| 1.2 | Explicit non-goals — what must not be built speculatively? | — (required) | `01-business/principles.md` `non_goals` |
+| 1.3 | Priority order when goals conflict | correctness > security > availability > latency > operability > delivery speed > cost | `01-business/principles.md` `priority_order` |
+| 1.4 | Does any component need a different order (e.g. a data plane that puts availability first)? | no | `01-business/principles.md` `priority_order_overrides` |
+| 1.5 | ⚑ Regulatory regimes that apply (GDPR, LGPD, PCI DSS, SOC 2, HIPAA, none…); and does the product take, store or transmit payment-card data (what is in card scope)? | none; no card data touches the system | `01-business/compliance-and-data.md` `regulatory_regimes` |
+| 1.6 | Operations that always need a human, however automated the rest is | irreversible data changes, production deploys, credential rotation | `01-business/availability.md` `human_approval_required_for` |
+| 1.7 | Availability targets | none until the first production deploy | `01-business/availability.md` `slo_policy` |
+| 1.8 | Recovery objectives (how much data may be lost, how long recovery may take) and maintenance windows | decided before the first production deploy | `01-business/availability.md` `recovery_objectives` `maintenance_windows` |
+| 1.9 | Where must data reside? | a single region until a regime or contract requires otherwise | `01-business/compliance-and-data.md` `data_residency` |
 | 1.10 | Erasure versus records that must be kept (audit, ledger): pseudonymous tokens, or retention exceptions? | pseudonymous tokens: the record stays, the link to the person is erased | `01-business/compliance-and-data.md`, `06-security/sensitive-data.md` |
 
 ## Phase 2 — Domain
 
 | Id | Question | Default | Writes to |
 | --- | --- | --- | --- |
-| 2.1 | The 5–15 core terms of the domain, each with one meaning; any words to forbid; and any collision with the words the baseline itself uses (zone, agent, domain, configuration, operator…) — declare it and choose your own word | — (required) | `02-domain/glossary.md` |
-| 2.2 | The core entities that have a lifecycle, and the states of each (aggregates and consistency boundaries are the domain-model pack's questions). Skipped when nothing has a lifecycle | from 1.1 | `02-domain/lifecycles.md` |
-| 2.3 | Internal identifier format | UUIDv7 | `02-domain/identifiers.md` |
-| 2.4 | Public identifier format | type-prefixed opaque (`<prefix>_<encoded>`) | `02-domain/identifiers.md` |
-| 2.5 | `business_time_zone`: the zone business dates are read in (instants are always UTC) | UTC | `02-domain/time.md` |
-| 2.6 | Type prefix for each public identifier (one per entity from 2.2) | derived from the entity names | `02-domain/identifiers.md` |
+| 2.1 | The 5–15 core terms of the domain, each with one meaning; any words to forbid; and any collision with the words the baseline itself uses (zone, agent, domain, configuration, operator…) — declare it and choose your own word | — (required) | `02-domain/glossary.md` `terms` |
+| 2.2 | The core entities that have a lifecycle, and the states of each (aggregates and consistency boundaries are the domain-model pack's questions). `n/a` when nothing has a lifecycle | from 1.1 | `02-domain/lifecycles.md` |
+| 2.3 | Internal identifier format | UUIDv7 | `02-domain/identifiers.md` `internal_id_format` |
+| 2.4 | Public identifier format | type-prefixed opaque (`<prefix>_<encoded>`) | `02-domain/identifiers.md` `public_id_format` |
+| 2.5 | `business_time_zone`: the zone business dates are read in (instants are always UTC) | UTC | `02-domain/time.md` `business_time_zone` |
+| 2.6 | Type prefix for each public identifier (one per entity from 2.2) | from 2.2: derived from the entity names | `02-domain/identifiers.md` `type_prefixes` |
 
 ## Phase 3 — Architecture
 
 | Id | Question | Default | Writes to |
 | --- | --- | --- | --- |
-| 3.1 | System shape (consistent with the components of 0.5) | modular monolith | `03-architecture/system.md` + ADR |
-| 3.2 | Internal boundaries (modules / bounded contexts), each owning its data | from 2.2 | `03-architecture/system.md` |
-| 3.3 | Deployables or release artifacts (what is shipped separately) | one | `03-architecture/system.md` + ADR if more than one |
-| 3.4 | How boundaries communicate | events for notification, published interfaces for queries | `03-architecture/system.md` |
-| 3.5 | Dependency direction | inward: adapters → application → domain | `03-architecture/dependency-rules.md` |
+| 3.1 | System shape (consistent with the components of 0.5) | modular monolith | `03-architecture/system.md` `system_shape` + ADR |
+| 3.2 | Internal boundaries (modules / bounded contexts), each owning its data | from 2.2 | `03-architecture/system.md` `boundaries` |
+| 3.3 | Deployables or release artifacts (what is shipped separately) | from 0.5: one per component that ships on its own | `03-architecture/system.md` `deployables` + ADR if more than one |
+| 3.4 | How boundaries communicate | events for notification, published interfaces for queries | `03-architecture/system.md` `cross_boundary_communication` |
+| 3.5 | Dependency direction | inward: adapters → application → domain | `03-architecture/dependency-rules.md` `layering_model` |
 {% if packs %}
-## Phase 4P — Packs (asked before phase 4)
+## Phase 4P — Packs (written before phase 4)
 
-Each installed pack's parameters, asked the same way. Defaults are in each document's
-`## Parameters` table. **Before offering a core document in phase 4, apply every `amends:` entry
-of an installed pack's `PACK.md` that names it.** Skip a pack whose component kinds (0.5) are
-absent from the product.
+Each installed pack's parameters appear in the recommendation sheet under the pack's row. Before a
+core document is written in phase 4, every `amends:` entry of an installed pack's `PACK.md` that
+names it is applied. A pack whose component kinds (0.5) are absent from the product is `n/a`.
 
 | Id | Pack | Key questions |
 | --- | --- | --- |
@@ -108,15 +161,15 @@ absent from the product.
 {% endif %}{% endif %}
 ## Phase 4 — Platform defaults
 
-Each core document from layers 05–12 is offered as a whole: **accept** its proposed defaults,
-**change** named parameters, or **later**. Changes become ADRs when they have a real alternative.
-A document whose `applies-to` kinds are absent from 0.5 is offered as `not-applicable` with a
-reason. `13-technology/README.md` is not here: it closes phase 5.
+Each core document from layers 05–12 is written with its proposed defaults, except where a row in
+the sheet changes a parameter. A change with a real alternative becomes an ADR. A document whose
+`applies-to` kinds are absent from 0.5 is `n/a` and offered as `not-applicable` with a reason.
+`13-technology/README.md` is not here: it closes phase 5.
 
 | Id | Document | Default |
 | --- | --- | --- |
 | 4.1 | `05-protocols/*` | accept |
-| 4.2 | `06-security/*` — always confirm `data_classes` and `agent_dependency_changes` explicitly, and the actors in `authn-authz.md` (`actor_types`: user, operator, service, system, agent; an operator is vendor personnel) | accept |
+| 4.2 | `06-security/*` (an "operator" among the actor types is the vendor's own personnel) | accept |
 | 4.3 | `07-observability/*` | accept |
 | 4.4 | `08-reliability/*` | accept |
 | 4.5 | `09-errors/taxonomy.md` | accept |
@@ -126,39 +179,41 @@ reason. `13-technology/README.md` is not here: it closes phase 5.
 
 ## Phase 5 — Technology
 
-Every answer here is an ADR plus a `13-technology/<area>.md`. `n/a` and `later` are valid.
+Every answer here is an ADR plus a `13-technology/<area>.md`. `n/a` and `later` are valid; a
+technology the brief names is a `brief` recommendation.
 
-| Id | Question | Default |
-| --- | --- | --- |
-| 5.1 | Language(s) and runtime | later |
-| 5.2 | Repository layout and build tool | later |
-| 5.3 | Backend framework (when a component of kind `service` or `daemon` exists) | later / n/a |
-| 5.4 | Frontend framework and design system (when a component of kind `ui` exists) | later / n/a |
-| 5.5 | Data stores | later |
-| 5.6 | Messaging / queues | later / n/a |
-| 5.7 | Hosting and deployment target | later |
-| 5.8 | Observability backend | later |
-{% if 'user-interface' in packs %}| 5.9 | Contents of `.baseline/ui.json` (catalog path, locales as BCP 47 tags such as `en-US`, token files per theme, contrast pairs). Asked after 5.4 | later |
-{% endif %}| 5.10 | `13-technology/README.md` — the process for technology decisions. Asked last, once every area above is answered or deferred | accept |
+| Id | Question | Default | Writes to |
+| --- | --- | --- | --- |
+| 5.1 | Language(s) and runtime | later | `13-technology/<area>.md` + ADR |
+| 5.2 | Repository layout and build tool | later | `13-technology/<area>.md` + ADR |
+| 5.3 | Backend framework (when a component of kind `service` or `daemon` exists) | later / n/a | `13-technology/<area>.md` + ADR |
+| 5.4 | Frontend framework and design system (when a component of kind `ui` exists) | later / n/a | `13-technology/<area>.md` + ADR |
+| 5.5 | Data stores | later | `13-technology/<area>.md` + ADR |
+| 5.6 | Messaging / queues | later / n/a | `13-technology/<area>.md` + ADR |
+| 5.7 | Hosting and deployment target | later | `13-technology/<area>.md` + ADR |
+| 5.8 | Observability backend | later | `13-technology/<area>.md` + ADR |
+{% if 'user-interface' in packs %}| 5.9 | Contents of `.baseline/ui.json` (catalog path, locales as BCP 47 tags such as `en-US`, token files per theme, contrast pairs). Written after 5.4 | later | `.baseline/ui.json` |
+{% endif %}| 5.10 | The process for technology decisions. Written last, once every area above is answered or deferred | accept | `13-technology/README.md` |
 
 ## Phase 6 — Process
 
 | Id | Question | Default | Writes to |
 | --- | --- | --- | --- |
-| 6.1 | Branching model | trunk-based, short-lived branches | `14-git/git.md` |
-| 6.2 | Merge strategy | squash only | `14-git/git.md` |
-| 6.3 | Approvals required per PR (a solo project says so explicitly) | 1, never the author | `14-git/git.md` |
-| 6.4 | Soft PR size limit | 400 changed lines, excluding generated files | `14-git/git.md` |
-| 6.5 | Agent autonomy tiers | 1 docs · 2 tests · 3 feature code · 4 security, migrations, CI, infra, dependencies | `16-ai/autonomy-and-context.md` |
-| 6.6 | May anything merge without a human approval (`auto_merge`)? | no | `16-ai/autonomy-and-context.md` |
-| 6.7 | Which AI vendors does the team use, and which model fills each tier (strong / standard / fast)? | later — tiers stay vendor-neutral until answered | `16-ai/model-routing.md` |
-| 6.8 | When is a spec required? | feature spec for business capability; story spec for tier 3–4 | `17-specs/spec-lifecycle.md` |
-| 6.9 | Work tracker. Shown is the value given when the project was generated: confirm or change it | {{ tracker }} | `17-specs/work-tracking.md` |
-| 6.10 | Tracker states | to do · in progress · complete | `17-specs/work-tracking.md`, `scripts/tracker/states.json` |
-| 6.11 | Paths that need a code owner's review (security, migrations, CI, infrastructure…) | security, migrations, CI and infrastructure paths | `14-git/git.md` |
-| 6.12 | `environments`, and who approves a production deploy | local development, staging, production; a human approves production | `15-delivery/deployments-and-rollback.md` |
+| 6.1 | Branching model | trunk-based, short-lived branches | `14-git/git.md` `branching_model` |
+| 6.2 | Merge strategy | squash only | `14-git/git.md` `merge_strategy` |
+| 6.3 | ⚑ Approvals required per PR. A solo project says so, and the solo mode of the rule applies | 1, never the author | `14-git/git.md` `required_approvals` `self_review_allowed` |
+| 6.4 | Soft PR size limit | 400 changed lines, excluding generated files | `14-git/git.md` `pr_size_soft_limit` |
+| 6.5 | Agent autonomy tiers | 1 docs · 2 tests · 3 feature code · 4 security, migrations, CI, infra, dependencies | `16-ai/autonomy-and-context.md` `autonomy_tiers` |
+| 6.6 | May anything merge without a human approval (`auto_merge`)? | no | `16-ai/autonomy-and-context.md` `auto_merge` |
+| 6.7 | Which AI vendors does the team use, and which model fills each tier (strong / standard / fast)? | later — tiers stay vendor-neutral until answered | `16-ai/model-routing.md` `tiers` |
+| 6.8 | How much spec process: `full` (feature and story specs with a lifecycle) or `lightweight` (an ADR plus the PR description); and when is a spec required? | full; feature spec for a business capability, story spec for tier 3–4 | `17-specs/spec-lifecycle.md` `spec_depth` `spec_required_for` |
+| 6.9 | Work tracker. Shown is the value given when the project was generated: confirm or change it | {{ tracker }} | `17-specs/work-tracking.md` `tracker` |
+| 6.10 | Tracker states | to do · in progress · complete | `17-specs/work-tracking.md` `tracker_states`, `scripts/tracker/states.json` |
+| 6.11 | Paths that need a code owner's review (security, migrations, CI, infrastructure…) | security, migrations, CI and infrastructure paths | `14-git/git.md` `code_owned_paths` |
+| 6.12 | `environments`, and who approves a production deploy | local development, staging, production; a human approves production | `15-delivery/deployments-and-rollback.md` `environments` `production_approval` |
 | 6.13 | `16-ai/operating-procedure.md` — accept as a whole, or name what changes | accept | `16-ai/operating-procedure.md` |
 | 6.14 | `16-ai/prohibitions.md` — accept as a whole, or name what changes | accept | `16-ai/prohibitions.md` |
+| 6.15 | The other delivery documents (pipeline and gates, production readiness, releases and distribution, product documentation) — accept as a whole, or name what changes | accept | `15-delivery/*` |
 
 ---
 

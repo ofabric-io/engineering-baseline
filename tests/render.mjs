@@ -138,6 +138,10 @@ for (const s of scenarios) {
   record(`${s.name}: sync-adapters`, sync.ok, sync.out);
   const check = run('node', ['scripts/check.mjs'], { cwd: dst });
   record(`${s.name}: check.mjs passes`, check.ok, check.out);
+  const rec = run('node', ['scripts/recommend.mjs', '--json'], { cwd: dst });
+  let recRows = null;
+  try { recRows = JSON.parse(rec.out); } catch { /* reported below */ }
+  record(`${s.name}: recommend.mjs maps every questionnaire row to existing documents and parameters`, rec.ok && Array.isArray(recRows) && recRows.length > 0, rec.out.slice(0, 600));
 
   for (const f of s.expectFiles ?? []) record(`${s.name}: ${f} present`, existsSync(join(dst, f)));
   for (const f of s.expectAbsent ?? []) record(`${s.name}: ${f} absent`, !existsSync(join(dst, f)));
@@ -157,6 +161,7 @@ for (const s of scenarios) {
   const hits = leftoverScan(dst, s.name);
   record(`${s.name}: no leftover terms`, hits.length === 0, hits.join('\n'));
 
+  if (s.name === 'everything') recommendChecks(dst);
   if (s.name === 'everything') {
     const fixture = join(dst, FIXTURE_DOC);
     writeFileSync(fixture, readFileSync(join(dst, 'docs/02-domain/time.md'), 'utf8')
@@ -164,6 +169,67 @@ for (const s of scenarios) {
       .replace(/^\| `([\w-]+)` \|/gm, '| `fixture_$1` |')); // parameter names are unique per project
     negativeChecks(dst);
     rmSync(fixture, { force: true });
+  }
+}
+
+// The recommendation sheet: generation, completeness check, merge on re-run, answered ids, and the
+// questionnaire-to-documents mapping failing on drift.
+function recommendChecks(dst) {
+  const rec = (...a) => run('node', ['scripts/recommend.mjs', ...a], { cwd: dst });
+  const sheet = join(dst, '.baseline/recommendations.md');
+  const edit = (file, mutate, fn) => {
+    const p = join(dst, file);
+    const prior = existsSync(p) ? readFileSync(p, 'utf8') : null;
+    writeFileSync(p, mutate(prior ?? ''));
+    try { return fn(); } finally { prior === null ? rmSync(p, { force: true }) : writeFileSync(p, prior); }
+  };
+  try {
+    const w = rec();
+    record('recommend.mjs writes the sheet with derived and ask rows', w.ok && existsSync(sheet) && /\d+ derived/.test(w.out) && /\d+ ask/.test(w.out), w.out);
+    const text = existsSync(sheet) ? readFileSync(sheet, 'utf8') : '';
+    const hasRow = (id) => text.split('\n').some((l) => l.startsWith(`| ${id} |`));
+    record('the sheet leaves out the brief (0.1) and 0.6, and lists headline and bulk rows',
+      !hasRow('0.1') && !hasRow('0.6') && hasRow('1.3') && hasRow('4.2/06-security/sensitive-data.md/data_classes'), text.slice(0, 400));
+    const fresh = rec('--check');
+    record('recommend.mjs --check fails while a derived row has no recommendation', !fresh.ok && /2\.6: Source is derived but Recommended is empty/.test(fresh.out), fresh.out);
+
+    // Fill every derived row, as the bootstrap would.
+    writeFileSync(sheet, text.split('\n').map((l) => (/ \|  \| derived \| /.test(l) ? l.replace(' |  | derived | ', ' | a recommendation | derived | ') : l)).join('\n'));
+    const filled = rec('--check');
+    record('recommend.mjs --check passes once every row is complete', filled.ok && /ok — \d+ decision/.test(filled.out), filled.out);
+    const again = rec();
+    const kept = rec('--check');
+    record('re-running recommend.mjs keeps filled rows', again.ok && kept.ok, `${again.out}\n${kept.out}`);
+
+    // Rewrites the Recommended, Source and Why cells of row 1.3.
+    const row13 = (recommended, source, why) => (t) => t.split('\n').map((l) => {
+      if (!l.startsWith('| 1.3 |')) return l;
+      const c = l.split(' | ');
+      return [c[0], c[1], recommended ?? c[2], source, `${why} |`].join(' | ');
+    }).join('\n');
+    const noWhy = edit('.baseline/recommendations.md', row13('availability first', 'brief', ''), () => rec('--check'));
+    record('recommend.mjs --check fails on a brief row with no quote from the brief', !noWhy.ok && /1\.3: Source is brief but Why is empty/.test(noWhy.out), noWhy.out);
+    const badSource = edit('.baseline/recommendations.md', row13(null, 'guess', ''), () => rec('--check'));
+    record('recommend.mjs --check fails on an unknown source', !badSource.ok && /1\.3: Source "guess"/.test(badSource.out), badSource.out);
+
+    const answeredYaml = [
+      'answers:',
+      '  "1.3": { answer: default, source: default, decided: 2026-01-01, adr: null }',
+      '  1.6/01-business/availability.md/slo_exhaustion_response: { answer: default, source: default, decided: 2026-01-01, adr: null }',
+    ].join('\n');
+    const answered = edit('.baseline/answers.yaml', (t) => t.replace('answers: {}', answeredYaml), () => rec('--json'));
+    let ids = [];
+    try { ids = JSON.parse(answered.out).map((r) => r.id); } catch { /* reported below */ }
+    record('recommend.mjs leaves out ids already answered in answers.yaml', answered.ok && ids.length > 0 && !ids.includes('1.3') && !ids.includes('1.6/01-business/availability.md/slo_exhaustion_response') && ids.includes('1.4'), answered.out.slice(0, 400));
+
+    const drift = edit('bootstrap/questionnaire.md', (t) => t.replace('`priority_order` |', '`priority_ordr` |'), () => rec('--json'));
+    record('recommend.mjs fails when the questionnaire names a parameter that does not exist', !drift.ok && /names parameter `priority_ordr`/.test(drift.out), drift.out);
+    const orphan = edit('docs/02-domain/zz-orphan.md', () => readFileSync(join(dst, 'docs/02-domain/time.md'), 'utf8').replace(/^\| `([\w-]+)` \|/gm, '| `orphan_$1` |'), () => rec('--json'));
+    record('recommend.mjs fails when a document with open parameters is offered by no question', !orphan.ok && /no question offers docs\/02-domain\/zz-orphan\.md/.test(orphan.out), orphan.out);
+    const withSheet = run('node', ['scripts/check.mjs'], { cwd: dst });
+    record('check.mjs passes with a recommendation sheet present', withSheet.ok, withSheet.out);
+  } finally {
+    rmSync(sheet, { force: true });
   }
 }
 

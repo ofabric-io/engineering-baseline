@@ -3,19 +3,30 @@
 # Format
 #   phase:    null = not started. Otherwise the last phase completed, as a string:
 #             "0" "1" "2" "3" "4P" "4" "5" "6" (phase order is 0, 1, 2, 3, 4P, 4, 5, 6).
+#   brief:    the answer to 0.1, verbatim (a YAML block scalar). null until given.
+#   mode:     the answer to 0.6: all | all-except | review. null until chosen; a file without
+#             it was started before the brief existed and runs as review.
+#   except:   with mode all-except, the ids the user asked to be asked.
 #   answers:  a map from answer id to an entry
-#               { answer: <value> | default | later, decided: YYYY-MM-DD, adr: ADR-NNN | null }
+#               { answer: <value> | default | later, source: user | brief | derived | default,
+#                 decided: YYYY-MM-DD, adr: ADR-NNN | null }
+#             source says where the value came from: the user's own words, a recommendation from
+#             the brief or from another answer that the user accepted, or the baseline default
+#             the user accepted. Every entry is the user's answer; source only explains it.
 #
 # Answer ids
 #   <question id>                       a headline question, e.g. "1.3" or "P.money"
-#   <question id>/<doc path>/<param>    a bulk parameter, with the path relative to docs/,
-#                                       e.g. "4.2/06-security/authn-authz.md/actor_types"
+#   <question id>/<doc path>/<param>    a parameter no question names, with the path relative to
+#                                       docs/, e.g. "4.2/06-security/authn-authz.md/actor_types"
 #
 # An answer equal to the default is still an answer (`answer: default`). Only an explicit `later`
 # leaves `[[...]]` in a document and a row in docs/DECISION-QUEUE.md.
 #
+# The recommendations themselves live in .baseline/recommendations.md (node scripts/recommend.mjs).
 # The bootstrap skill writes here as it goes, so a session can stop and resume. A human may fill
 # this file directly instead of using an AI tool.
 
 phase: null
+brief: null
+mode: null
 answers: {}

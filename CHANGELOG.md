@@ -6,6 +6,25 @@ A change that alters a document a project may already have ratified is called ou
 
 ## [Unreleased]
 
+### Changed — brief-first bootstrap
+
+- **The bootstrap starts from a brief.** Question 0.1 is a free-text description of the project
+  and its requirements, guided by a checklist. Foundation questions (⚑: 0.2, 0.3, 0.5, 1.5,
+  6.3) the brief leaves open are asked next.
+- **Every decision gets a recommendation.** New `scripts/recommend.mjs` writes
+  `.baseline/recommendations.md` with one row per open decision (headline questions and every
+  open parameter). Each row says where its recommendation came from: `brief` (quoting the
+  brief), `derived`, `default`, `ask` or `n/a`. `--check` fails while a row is incomplete.
+  A recommendation departs from the default only when the brief says something that calls for it.
+- **Accept all at once.** New question 0.6: `all`, `all except <ids>` or `review`. Only the
+  `ask` rows are asked; ratification and ADR acceptance remain two explicit questions at the end.
+- The questionnaire's "Writes to" cells name the parameters each question sets, and
+  `recommend.mjs` fails when one does not exist or a document with open parameters is offered by
+  no question. 6.8 now asks for `spec_depth`; new 6.15 covers the remaining delivery documents.
+- `.baseline/answers.yaml` gains `brief`, `mode`, `except` and a `source` per answer. A file
+  without `brief` continues in `review` mode.
+- New fixture `bootstrap-project-brief`; render tests cover the sheet in every scenario.
+
 ### Added — M6 fixes (wave 2)
 
 - **Component kinds**: `03-architecture/system.md` gains a Components table and

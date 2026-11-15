@@ -3,6 +3,8 @@
 Pass when every statement holds.
 
 - [ ] The agent says phases 0 and 1 are done and starts at phase 2. It does not re-ask 0.x or 1.x.
+- [ ] It does not ask for a brief or offer 0.6: the file has completed phases and no `brief`, so it
+      continues in `review` mode.
 - [ ] It read the documents phase 2 writes to (glossary, lifecycles, identifiers, time) before asking.
 - [ ] It asks questions 2.1 to 2.5 in one message, numbered with the questionnaire ids, each with a
       recommended default and a one-line trade-off, as plain text (no tool-specific picker).

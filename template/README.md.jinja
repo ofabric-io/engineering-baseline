@@ -23,4 +23,6 @@ node scripts/check.mjs
 
 If `docs/01-business/principles.md` is not yet ratified, run the bootstrap: ask your AI tool to
 follow `.agents/skills/bootstrap-project/SKILL.md`, or work through
-[`bootstrap/questionnaire.md`](bootstrap/questionnaire.md) by hand.
+[`bootstrap/questionnaire.md`](bootstrap/questionnaire.md) by hand. It starts from a brief of the
+project, recommends an answer for every decision (`node scripts/recommend.mjs` lists them), and
+asks only what the brief cannot settle.

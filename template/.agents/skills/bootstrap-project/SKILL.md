@@ -1,122 +1,207 @@
 ---
 name: bootstrap-project
-description: Turn a freshly generated project into one with ratified standards and recorded decisions, by running the bootstrap questionnaire phase by phase on a branch and finishing with a pull request. Use when the project has just been created from the engineering baseline, when docs/01-business/principles.md is not yet ratified, or when the user says "bootstrap the project", "set up the standards", "let's do the questionnaire", or "continue the bootstrap".
+description: Turn a freshly generated project into one with ratified standards and recorded decisions. It starts from a free-text brief, recommends an answer for every decision from it, lets the user accept them all at once, asks only what the brief cannot settle, and works on a branch that ends in a pull request. Use when the project has just been created from the engineering baseline, when docs/01-business/principles.md is not yet ratified, or when the user says "bootstrap the project", "set up the standards", "let's do the questionnaire", or "continue the bootstrap".
 ---
 
 # Bootstrap a project
 
-Drives `bootstrap/questionnaire.md` from start to finish. It can stop after any phase and
-resume later; progress lives in `.baseline/answers.yaml`, not in the conversation.
+Drives `bootstrap/questionnaire.md` from start to finish. It can stop at any point and resume
+later. Progress lives in `.baseline/answers.yaml` and `.baseline/recommendations.md`, not in the
+conversation.
 
-**Phase order:** 0 → 1 → 2 → 3 → 4P (packs) → 4 → 5 → 6. Packs run before phase 4 because a
-pack's `PACK.md` `amends:` names core documents it changes.
+**Flow:**
+1. Brief (0.1).
+2. Foundation gaps (⚑).
+3. Recommendation sheet.
+4. How to proceed (0.6).
+5. The `ask` rows.
+6. Write the phases in order: 0 → 1 → 2 → 3 → 4P → 4 → 5 → 6.
+7. Confirm ratification and ADRs.
+8. Open a pull request.
 
 ## Before asking anything
 
-1. Read `AGENTS.md`, `docs/README.md` and `bootstrap/questionnaire.md`.
-2. Read `.baseline/answers.yaml`. `phase: null` means not started; otherwise it is a string
-   naming the last completed phase. If it is set, this is a **resume**: say which phases are
-   done, and start at the next one in the order above. Never re-ask an answered question unless
-   the user asks. The file's header documents the answer-id scheme.
-3. Read `.copier-answers.yml` for the installed packs, tracker, git host and CI. The owner and
-   the tracker are already known from it: show them in 0.2 and 6.9 and only ask to confirm.
-4. **Work on a branch**, never the default branch (`docs/14-git/git.md`): create
-   `bootstrap/<project-slug>` (the slug is in `.copier-answers.yml`) before the first edit, from
-   a clean tree. If a branch with that name exists, resume on it.
+1. Read `AGENTS.md`, `docs/README.md` and `bootstrap/questionnaire.md`, in particular its "How it
+   runs" section and the checklist for the brief.
+2. Read `.baseline/answers.yaml` and work out where to resume:
+   - `brief` is null: start at the brief.
+   - `mode` is null: resume at the sheet or at 0.6.
+   - Otherwise resume at the first unwritten phase, after the next phase in `phase`.
+
+   Say what is already done. Never re-ask an answered question unless the user asks. A file with
+   phases done but no `brief` was started before the brief existed: continue it in `review` mode.
+3. Read `.copier-answers.yml` for the installed packs, tracker, git host and CI. The owner (0.2)
+   and the tracker (6.9) come from it, so recommend them as they are.
+4. **Work on a branch**, never the default branch (`docs/14-git/git.md`). Create
+   `bootstrap/<project-slug>` (the slug is in `.copier-answers.yml`) from a clean tree before the
+   first edit. If a branch with that name exists, resume on it.
 5. Check the toolchain: `node --version` must be 20 or later. The baseline's scripts need it
    whatever the project's own stack is.
 
-## Each phase
+## 1. The brief (0.1)
 
-1. **Read the documents the phase writes to** (the "Writes to" column), including their
-   `## Parameters` tables, and every already-ratified document in a higher layer. A choice that
-   contradicts a ratified higher layer is not available — say so instead of offering it.
-   Run `node scripts/params.mjs <path>` for those documents to get every open parameter with its
-   default; the questionnaire rows are only the headline ones. Skip a question, and set a
-   document `status: not-applicable` with a `reason:`, only when the component kinds recorded in
-   0.5 make it moot (frontmatter `applies-to:`); say so and ask for confirmation.
-2. **Phase 4P first, then 4.** Before offering a core document, apply each installed pack's
-   `PACK.md` `amends:` entry that names it, so the document is offered in its final shape.
-3. **Ask in numbered batches.** Headline questions first; then the remaining open parameters as
-   a bulk list ("accept all defaults, or name the ones to change"). Number with the
-   questionnaire's ids, each with the recommended default and its trade-off in one line, so the
-   user can reply `1.1 …, 1.2 …, 1.3 default, 1.4 later`. Ask as plain text, not through a
-   tool-specific picker. If the phase has more than about 25 items, split it into numbered
-   batches of that size and finish one before sending the next. Add a question the
-   questionnaire missed if its answer would change what gets built.
-4. **Never answer for the user.** An unanswered question is not a default. But an answer equal
-   to the default is an answer: record `default` and fill the parameter. Only an explicit
-   `later` goes to `docs/DECISION-QUEUE.md` under Deferred decisions and leaves the parameter
-   `[[...]]`.
-5. **Record answers immediately** in `.baseline/answers.yaml` (answer, date, ADR id) before
-   writing any document, so an interrupted session loses nothing. Use the id scheme in the
-   file's header.
-6. **Write the documents.** Fill the `## Parameters` answers; then write or adjust `## Rules`,
-   `## Enforcement` and `## AI guardrails` following `.agents/skills/ratify-standard/SKILL.md`.
-   Do not hand-copy enforcement debt: after writing, run `node scripts/queue.mjs`, which
-   regenerates the debt table in `docs/DECISION-QUEUE.md` from every `⬜` row.
-7. **Write an ADR for every answer with a real alternative** — always for 3.1, 3.3 and every
-   phase-5 choice — following `.agents/skills/new-adr/SKILL.md`. Not for an obvious default.
-8. **Open decisions.** A ratified document may keep an unchecked `## Open decisions` bullet only
-   if it ends `→ DECISION-QUEUE` and a matching row exists in the Deferred decisions table.
-   Otherwise resolve it or move it to the queue with the user's agreement. Never leave a
-   `[NEEDS CLARIFICATION: …]` marker in a document you ratify.
-9. **Ratify only with a yes.** Show which documents are ready to move to `ratified` (or
-   `not-applicable`) and ask. A document with any `[[...]]` or `[NEEDS CLARIFICATION: …]` left
-   is not ready, except that a pointer "decided in `13-technology/`" is ready once its area is
+Ask for the brief in one message: show the questionnaire's checklist and say that "don't know" is
+a fine answer. If the project was generated with a description, show it as a starting point. Do
+not ask the checklist items as separate questions. Record the reply verbatim under `brief` in
+`.baseline/answers.yaml` before doing anything else.
+
+## 2. Foundation gaps (⚑)
+
+The ⚑ questions are 0.2, 0.3, 0.5, 1.5 and 6.3. Every recommendation depends on them.
+
+- For each one the brief settles, note the answer and the words of the brief that settle it.
+- Ask every one the brief does not settle, or settles ambiguously, in one numbered message, each
+  with its default.
+- Record the replies with `source: user`.
+
+In 0.5, kinds come only from the fixed list `service`, `daemon`, `cli`, `library`, `ui`,
+`batch`. Do not invent a component the brief does not describe.
+
+## 3. The recommendation sheet
+
+1. Run `node scripts/recommend.mjs`. It writes `.baseline/recommendations.md` with one row per
+   open decision, pre-filled with `default` or `ask`.
+2. Read the documents behind the rows (their `## Parameters` tables and rules), every installed
+   pack's `PACK.md` `amends:`, and every already-ratified higher-layer document. A choice that
+   contradicts a ratified higher layer cannot be recommended.
+3. Fill in each row:
+   - **`brief`**: only when the brief *says* something that answers the row or calls for a value
+     other than the default. **Why** quotes the brief in a few words. "It seems likely" is not a
+     reason: with no words in the brief to quote, the row stays `default`.
+   - **`derived`**: the value follows from another answer or recommendation (2.6 from 2.2, 0.4
+     from 0.3, 3.3 from 0.5). **Why** names the id it follows from.
+   - **`n/a`**: the components recorded in 0.5 make the row moot (a document's `applies-to`, a
+     rule's scope tag, or a pack whose kinds are absent). **Why** names the missing kinds.
+   - **`ask`**: there is no default and the brief does not answer it, or the brief is ambiguous or
+     contradicts itself on it. **Why** says what is missing.
+   - **`default`**: everything else. Leave the default even when you would personally choose
+     otherwise. Instead, list it under "worth a look" in step 4.
+4. Run `node scripts/recommend.mjs --check` and fix what it reports until it passes.
+
+## 4. How to proceed (0.6)
+
+Send one message containing:
+
+- Counts per source, and the path `.baseline/recommendations.md` for the full sheet.
+- Every `brief` and `derived` row as a compact numbered list: `id — recommendation — why`.
+- The `n/a` rows grouped by the kinds that are missing.
+- **Worth a look:** at most about 10 `default` rows that you suspect fit this project poorly,
+  each with one line on why.
+- How many `ask` rows there are.
+
+Then ask 0.6 as plain text:
+- `all`: accept every recommendation, and answer only the `ask` rows (recommended);
+- `all except <ids>`: those ids are asked too;
+- `review`: go phase by phase with the recommendations pre-filled.
+
+Record `mode` (and `except`). Do not write any document before the user has answered 0.6.
+
+## 5. The `ask` rows
+
+- Ask the `ask` rows, plus the `except` ids, in numbered batches of about 25, in phase order.
+  Finish one batch before sending the next.
+- Give each question its id, any partial recommendation, and the trade-off in one line, so the
+  user can reply `1.1 …, 1.2 …, 2.1 later`.
+- Ask as plain text, never through a tool-specific picker.
+- Add a question the questionnaire missed if its answer would change what gets built.
+
+**Never answer for the user.** Accepting `all` is the user's answer for every row they were
+shown. A row the user never saw is unanswered; nor is an `ask` row the user skipped. Only an
+explicit `later` defers: it goes to `docs/DECISION-QUEUE.md` under Deferred decisions and leaves
+the parameter `[[...]]`.
+
+**Record before writing.** Write every answer to `.baseline/answers.yaml` (answer, source, date,
+ADR id) before editing a document. In `all` / `all-except` mode, write the accepted
+recommendations at once, with their sources. If an answer changes a row that others were derived
+from, recompute those rows, show the changed ones, and get a yes before using them.
+
+## 6. Write the phases
+
+Go through the phases in order. In `review` mode, ask each phase's rows as a numbered batch first.
+Show the recommendation as the proposed answer, then record the replies. In `all` / `all-except`
+mode, write without stopping between phases. For each phase:
+
+1. **Packs before core.** In phase 4P, and before writing a core document in phase 4, apply each
+   installed pack's `PACK.md` `amends:` entry that names it.
+2. **Fill the `## Parameters` answers.** Then write or adjust `## Rules`, `## Enforcement` and
+   `## AI guardrails`, following `.agents/skills/ratify-standard/SKILL.md`. Mark a document whose
+   `applies-to` kinds are all absent as ready to be `not-applicable`, with a `reason:`.
+3. **Enforcement debt.** Do not hand-copy it: run `node scripts/queue.mjs`, which regenerates the
+   debt table in `docs/DECISION-QUEUE.md` from every `⬜` row.
+4. **ADRs.** Write one for every answer with a real alternative, following
+   `.agents/skills/new-adr/SKILL.md`: always for 3.1, 3.3, every phase-5 choice, and every `brief`
+   row that departs from the default. Not for an accepted default. Leave each ADR `proposed`.
+5. **Open decisions.** A document may keep an unchecked `## Open decisions` bullet only if it ends
+   `→ DECISION-QUEUE` and a matching row exists in the Deferred decisions table. Never leave a
+   `[NEEDS CLARIFICATION: …]` marker in a document that is to be ratified.
+6. **Progress.** Update `phase` in `.baseline/answers.yaml` (a string: `"0"` … `"6"`, `"4P"`) and
+   the status board in `docs/DECISION-QUEUE.md`.
+7. **Run `node scripts/check.mjs`**, report its output verbatim, and fix what it reports.
+8. **Commit the phase** on the branch (Conventional Commits, `docs/14-git/git.md`). In `review`
+   mode, ask whether to continue to the next phase or stop. In the other modes, carry on.
+
+## 7. Confirm ratification and ADRs
+
+These two questions are asked in every mode, and neither can be inferred from `all`. In `review`
+mode, ask them at the end of each phase. Otherwise, ask them once, after the last phase, in one
+message:
+
+1. "Ratify these documents?", listing them, with those that would become `not-applicable` and
+   their reasons. A document with any `[[...]]` or `[NEEDS CLARIFICATION: …]` left is not ready.
+   The one exception: a pointer "decided in `13-technology/`" counts as ready once its area is
    answered or deferred in phase 5.
-10. **Accept ADRs explicitly.** At the end of every phase, list the ADRs written in it that are
-    still `proposed` and ask: "Accept ADRs N..M? (yes / no / name the ones to leave)". Move only
-    the named ones to `accepted`, and update the ADR index. Never accept on an implied yes.
-11. **Update** `.baseline/answers.yaml` `phase` (a string: `"0"` … `"6"`, `"4P"`) and the status
-    board in `docs/DECISION-QUEUE.md`.
-12. **Run `node scripts/check.mjs`** and report its output verbatim. Fix what it reports before
-    moving on.
-13. **Commit the phase on the branch** (Conventional Commits, `docs/14-git/git.md`), then ask
-    whether to continue to the next phase or stop here.
+2. "Accept ADRs N..M? (yes / no / name the ones to leave)".
+
+Apply only what the user says yes to: set `status`, `owner` and `last-reviewed` on each document,
+and update the ADR index. Then run `node scripts/check.mjs` again and commit.
 
 ## Phase-specific notes
 
-- **Phase 0:** write the answer to 0.1 into `AGENTS.md` "What this project is". 0.5 fills the
-  Components table in `docs/03-architecture/system.md` (`| Component | Kind | Purpose |`); kinds
-  come from the fixed list `service`, `daemon`, `cli`, `library`, `ui`, `batch`. Accept ADR-001
-  only when the user confirms it, in the end-of-phase ADR step.
-- **Phase 1:** question 1.5 also asks about payment-card scope; 1.10 asks how erasure meets
-  records that must be kept (audit, ledger). Record both before ratifying compliance and
-  sensitive-data documents.
-- **Phase 2:** seed the glossary from the answers to 1.1; propose terms, do not invent meanings.
-  The glossary's "Terms the baseline itself uses" note lets the project declare a collision and
-  choose its own word. If the `multi-tenant` pack is installed, its isolation-unit name becomes
-  a glossary term and the generic alternatives become forbidden words: write them to
-  `.baseline/forbidden-terms.txt`. Do **not** forbid words the baseline's own files use;
-  list such an exception in `.baseline/forbidden-allow.txt` (one term per line), and never
-  by editing a baseline-owned file.
-- **Phase 4P:** apply `amends:` first (step 2 above), then ask each pack's row. Skip a pack whose
-  component kinds are absent.
-- **Phase 4:** offer each document as a whole — accept, change named parameters, or later. Do
-  not walk through every rule unless the user asks. Use the baseline's default for
-  `environments` text ("local development, staging, production"). Do not ask 4.9: the
-  `13-technology/README.md` question is 5.10.
-- **Phase 5:** a technology choice is an ADR plus `docs/13-technology/<area>.md`. Rules in
-  higher layers that say "decided in `13-technology/`" now link to it. Ask the `.baseline/ui.json`
-  question (5.9) after the frontend decision. Close the phase with `13-technology/README.md`
-  (5.10) once every area is answered or deferred.
-- **Phase 6, question 6.7:** ask which AI vendors the team uses, then map each to the strong /
-  standard / fast tiers in `docs/16-ai/model-routing.md`. Ask the user for current model names;
-  do not assume them. 6.12 uses the `environments` default of D6 (local development, staging,
-  production). 6.13 and 6.14 accept `16-ai/operating-procedure.md` and `16-ai/prohibitions.md`
-  as a whole unless the user names a change.
+- **Phase 0:** summarize the brief in two or three sentences under "What this project is" in
+  `AGENTS.md`. 0.5 fills the Components table in `docs/03-architecture/system.md`
+  (`| Component | Kind | Purpose |`). ADR-001 is accepted only in the step 7 question.
+- **Phase 1:** 1.5 also covers payment-card scope. 1.10 covers how erasure meets records that
+  must be kept (audit, ledger).
+- **Phase 2:** propose glossary terms from the brief and 1.1. They are recommendations, not
+  invented meanings, and 2.1 has no default, so it is asked unless the brief lists the terms.
+  - The glossary's "Terms the baseline itself uses" note lets the project declare a collision and
+    choose its own word.
+  - If the `multi-tenant` pack is installed, the isolation-unit name becomes a glossary term, and
+    the generic alternatives become forbidden words in `.baseline/forbidden-terms.txt`.
+  - Do **not** forbid words the baseline's own files use. List such an exception in
+    `.baseline/forbidden-allow.txt` (one term per line), never by editing a baseline-owned file.
+- **Phase 5:** a technology choice is an ADR plus `docs/13-technology/<area>.md`. A technology the
+  brief names is a `brief` row. Rules in higher layers that say "decided in `13-technology/`"
+  now link to it. Write `.baseline/ui.json` (5.9) after the frontend decision, and close the phase
+  with `13-technology/README.md` (5.10).
+- **Phase 6:**
+  - **6.3 and 6.8:** a solo project uses the solo mode of `required_approvals`, and `lightweight`
+    `spec_depth` is the usual recommendation for it. Say so in the row's Why when the brief
+    describes a solo project.
+  - **6.7:** ask which AI vendors the team uses unless the brief says. Ask the user for current
+    model names; never assume them.
+  - **6.13, 6.14 and 6.15:** accept their documents as a whole unless a row changes them.
 
 ## Finishing: pull request
 
 When the last phase is done (or the user stops early), push the branch and open a pull request
-with `.agents/skills/open-pr/SKILL.md`, reading the host from `git_host` in
-`.copier-answers.yml`: `github` or `gitlab` uses `node scripts/pr/open-pr.mjs`; for `other`,
-explain that the branch is ready, give the exact push command and the title and body the user
-should paste into their host. Never push to or commit on the default branch, and never merge.
+with `.agents/skills/open-pr/SKILL.md`. Read the host from `git_host` in `.copier-answers.yml`:
+
+- `github` or `gitlab`: use `node scripts/pr/open-pr.mjs`.
+- `other`: explain that the branch is ready, and give the exact push command plus the title and
+  body the user should paste into their host.
+
+The pull request body lists the `brief` and `derived` rows, so a reviewer sees what was inferred.
+Never push to or commit on the default branch, and never merge.
 
 ## Done
 
-Report: phases completed, documents ratified or set not-applicable, ADRs written and accepted,
-decisions deferred, the output of `node scripts/check.mjs`, and the pull request URL (or the
-manual steps). If the user stopped early, list exactly what remains.
+Report:
+- the decisions, counted by source;
+- the documents ratified or set `not-applicable`;
+- the ADRs written and accepted;
+- the decisions deferred;
+- the output of `node scripts/check.mjs`;
+- the pull request URL, or the manual steps.
+
+If the user stopped early, list exactly what remains.

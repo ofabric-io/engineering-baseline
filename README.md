@@ -26,8 +26,10 @@ git init && git config core.hooksPath .githooks
 ```
 
 Then open the project with any AI coding tool and ask it to run the **bootstrap-project**
-skill, or work through `bootstrap/questionnaire.md` by hand. The bootstrap turns your answers
-into ratified standards and ADRs.
+skill, or work through `bootstrap/questionnaire.md` by hand. The bootstrap starts from a
+free-text brief of the project and its requirements, recommends an answer for every decision from
+it (`.baseline/recommendations.md`), and lets you accept them all at once. It asks only what the
+brief cannot settle, then turns the answers into ratified standards and ADRs.
 
 Later, pull improvements from newer baseline versions:
 
@@ -40,7 +42,7 @@ copier update
 | Asked by | When | Decides |
 | --- | --- | --- |
 | **Copier** (`copier.yml`) | Once, at creation | Which files exist: packs, tracker, CI |
-| **Bootstrap skill** (`bootstrap/questionnaire.md`) | After creation, resumable | What the documents say: scope, priorities, domain, architecture, defaults |
+| **Bootstrap skill** (`bootstrap/questionnaire.md`) | After creation, resumable; starts from a brief and recommends every answer | What the documents say: scope, priorities, domain, architecture, defaults |
 
 ## Repository layout
 
