@@ -31,18 +31,30 @@ the next unratified document, top layer first. Do not pick arbitrarily.
    - `## Enforcement` — every rule appears, with its mechanism and status: `✅` automated,
      `◐` partial, `⬜` scheduled, `❌` deliberately review-only.
    - `## AI guardrails` — under ten blunt lines, nothing that is not in `## Rules`.
+   - A rule that fits only some component kinds ends its first line with
+     ` _(applies to: service, daemon)_`; an untagged rule applies to every kind.
+   - **Open decisions:** every bullet is resolved, or stays unchecked only if it ends
+     `→ DECISION-QUEUE` and has a row in the Deferred decisions table. Never leave a
+     `[NEEDS CLARIFICATION: …]` marker in a ratified document.
    - Frontmatter: `status: ratified`, `owner`, `last-reviewed: <today>` — only after step 7.
 5. **Write an ADR for every real trade-off** (`.agents/skills/new-adr/SKILL.md`). Not for
    obvious choices.
 6. **Build the enforcement that is cheap now** — a script check, a CI step, a test. Anything
    not buildable now becomes a `⬜` row and an Enforcement-debt row in
-   `docs/DECISION-QUEUE.md`. No rule is left with no mechanism at all.
-7. **Ratify only on the user's explicit yes.** Then update the status board in
+   `docs/DECISION-QUEUE.md`. Never hand-copy the debt table: run `node scripts/queue.mjs`, which
+   regenerates it from the `⬜` rows. No rule is left with no mechanism at all.
+7. **Ratify only on the user's explicit yes.** If the component kinds in
+   `docs/03-architecture/system.md` include none of the document's `applies-to:` kinds, offer
+   `status: not-applicable` with a one-line `reason:` instead; rule checks are skipped for it.
+   If the session produced ADRs, ask "Accept ADRs N..M?"; only a yes moves them to `accepted`.
+   Then update the status board in
    `docs/DECISION-QUEUE.md` and run `node scripts/check.mjs`, reporting its output.
 
 ## Constraints
 
 - Do not ratify a document whose decisions depend on a layer that is still `not-started`. Name
   the blocking layer and stop.
+- A pointer such as "decided in `13-technology/`" counts as answered once that area is answered or
+  explicitly deferred; do not block on it otherwise.
 - Do not create a separate agent-only rules file. Rules live once, in `docs/`.
 - A ratified document changes only through an ADR (`docs/04-adr/README.md`).

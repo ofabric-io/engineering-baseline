@@ -39,7 +39,8 @@ One spec id (`FEAT-NNN` or `STORY-NNN`). If it matches no file or several, stop 
    say that `create` is owed (see the skill that wrote it); do not create it here. If the item's
    brief is stale, regenerate nothing by hand: say so.
 5. **Report:** path, new status, whether it appears under `node scripts/tracker/cli.mjs list --startable`
-   and, if not, the reason.
+   and, if not, the reason. If the command warns that its answer is offline, say so; do not
+   conclude the spec is or is not startable from it.
 
 ## Constraints
 

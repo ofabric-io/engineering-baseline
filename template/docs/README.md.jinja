@@ -13,8 +13,20 @@ Every document carries a `status` in its frontmatter:
 | `proposed` | Baseline defaults, not yet adopted by this project. | Only as a suggestion; flag that it is unratified. |
 | `in-progress` | Being decided. Rules may still change. | Provisionally, and say so. |
 | `ratified` | Binding. Changing it requires an ADR. | **Yes.** |
+| `not-applicable` | The project has no component of the kinds the document concerns; its `reason:` says why. | **No rules to follow.** |
 
 Only a human moves a document to `ratified`. The `ratify-standard` skill runs that session.
+
+## Component kinds and scope tags
+
+A project's components are listed in `03-architecture/system.md`, each with a kind: `service`,
+`daemon`, `cli`, `library`, `ui` or `batch`. A rule that fits only some kinds ends its first line
+with ` _(applies to: service, daemon)_`; an untagged rule applies to every kind. A document may
+carry `applies-to: [...]` in its frontmatter; if no component has one of those kinds, it may be
+set `not-applicable` with a `reason:`.
+
+A ratified document may keep an unchecked open decision only if the bullet ends
+`→ DECISION-QUEUE`.
 
 ## The hierarchy
 

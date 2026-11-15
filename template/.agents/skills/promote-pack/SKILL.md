@@ -26,7 +26,9 @@ available as a path. The procedure and rules are `maintainers/pack-authoring.md`
    project's decision history, ADR numbers, dates and paths. List each core rule it amends in
    `PACK.md` under `amends:`. A core document must never link into the pack.
 4. **Add the Copier choice** to `packs` in `copier.yml` and its `requires` to the validator.
-5. **Add a row** to the pack table in `template/bootstrap/questionnaire.md.jinja`.
+5. **Add a row** to the Phase 4P pack table in `template/bootstrap/questionnaire.md.jinja`
+   (phase 4P runs before phase 4, so each `amends:` entry is applied before its document is
+   offered). Say which component kinds the pack concerns.
 6. **Add a render scenario** to `tests/render.mjs` with the pack on, and confirm it is also absent
    when off.
 7. **Run `node tests/render.mjs`**; the leftover-name scan must pass. Fix by generalizing, never by

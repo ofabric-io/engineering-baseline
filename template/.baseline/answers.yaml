@@ -1,7 +1,21 @@
 # Bootstrap answers. Ids match bootstrap/questionnaire.md.
-# Each entry: { answer: <value> | default | later, decided: YYYY-MM-DD, adr: ADR-NNN | null }
-# The bootstrap skill writes here as it goes, so a session can stop and resume.
-# A human may fill this file directly instead of using an AI tool.
+#
+# Format
+#   phase:    null = not started. Otherwise the last phase completed, as a string:
+#             "0" "1" "2" "3" "4P" "4" "5" "6" (phase order is 0, 1, 2, 3, 4P, 4, 5, 6).
+#   answers:  a map from answer id to an entry
+#               { answer: <value> | default | later, decided: YYYY-MM-DD, adr: ADR-NNN | null }
+#
+# Answer ids
+#   <question id>                       a headline question, e.g. "1.3" or "P.money"
+#   <question id>/<doc path>/<param>    a bulk parameter, with the path relative to docs/,
+#                                       e.g. "4.2/06-security/authn-authz.md/actor_types"
+#
+# An answer equal to the default is still an answer (`answer: default`). Only an explicit `later`
+# leaves `[[...]]` in a document and a row in docs/DECISION-QUEUE.md.
+#
+# The bootstrap skill writes here as it goes, so a session can stop and resume. A human may fill
+# this file directly instead of using an AI tool.
 
-phase: 0 # last phase completed; 0 = not started
+phase: null
 answers: {}

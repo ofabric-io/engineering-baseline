@@ -45,6 +45,7 @@ tree, title without the story id, body missing a template section. The body rule
 
 ## Constraints
 
+- Branches and titles follow `docs/14-git/git.md`; never open the request from the default branch.
 - Never merge the request; review rules are in `docs/14-git/git.md`.
 - Never skip, disable or weaken a failing check to reach green.
 - Never write body content the template has no section for.

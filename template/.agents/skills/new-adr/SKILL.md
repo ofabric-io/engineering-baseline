@@ -22,16 +22,27 @@ for ADRs are in `docs/04-adr/README.md`; this skill is the procedure.
      was none, this is a standard, not an ADR: stop and say so.
    - **Consequences** — positive, negative, and what becomes harder to change later.
    - **Compliance** — the script, CI gate, test, or deliberate review that verifies it.
-5. Leave `status: proposed`. Only a human moves it to `accepted`; ask.
-6. Add it to the index in `docs/04-adr/README.md`.
+5. Leave `status: proposed`. Only a human moves it to `accepted`: ask explicitly ("Accept
+   ADR-N?"). On a yes set `status: accepted`, fill `date:` and `deciders:`, and update the index.
+   An accepted ADR holds no placeholder (`YYYY-MM-DD`, `TBD`, `[[...]]`).
+6. Add it to the index in `docs/04-adr/README.md`; the index and the files must agree.
 7. Link it from `## References` in every standard whose rules it decides.
-8. Run `node scripts/check.mjs` and report the result.
+8. If part of the decision is deferred, put it in `docs/DECISION-QUEUE.md` and end the matching
+   Open-decisions bullet with `→ DECISION-QUEUE`. Enforcement owed is a `⬜` row in the
+   standard; run `node scripts/queue.mjs` to regenerate the debt table, never edit it by hand.
+9. Run `node scripts/check.mjs` and report the result.
 
 ## Amending (only in `pre-production` governance mode)
 
 For an ADR that was incomplete or wrong from the start: edit it, and add an `## Amendments`
 row with the date, what changed and why. Never rewrite Context. Ask the user before editing an
 `accepted` ADR.
+
+## Components and applicability
+
+A decision that holds for only some component kinds (`service`, `daemon`, `cli`, `library`, `ui`,
+`batch`) says which. A decision that makes a whole document moot sets that document to
+`status: not-applicable` with a `reason:`.
 
 ## Superseding
 
