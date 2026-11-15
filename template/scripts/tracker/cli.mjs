@@ -22,7 +22,8 @@ const KIND_PREFIX = { feat: 'FEAT', feature: 'FEAT', story: 'STORY' };
 const HELP = `usage: node scripts/tracker/cli.mjs <verb> [args]
 
   next-number --kind feat|story        highest + 1 across docs/17-specs/ and the tracker
-                                       (a gap in the sequence is a reservation, never reused)
+                                       (a gap in the sequence is a reservation, never reused);
+                                       tracker unreachable: specs only, flagged "offline answer" on stderr
   create --spec <path> [--epic <e>] [--dry-run]
                                        create the work item for a spec, write its reference back
                                        into the spec's tracker: frontmatter
@@ -185,18 +186,30 @@ async function main() {
   if (/^(delete|remove|rm|destroy)$/.test(verb)) die('there is no delete verb: close or abandon the item instead');
   if (verb === 'adapter') { console.log(adapterName()); return; }
 
-  const adapter = await loadAdapter();
   const specs = loadSpecs();
 
-  switch (verb) {
-    case 'next-number': {
-      const prefix = KIND_PREFIX[String(flags.kind ?? '').toLowerCase()];
-      if (!prefix) die('next-number needs --kind feat|story');
-      const items = await adapter.list();
-      const id = nextNumber(prefix, specs, items.map((i) => i.id));
-      out(flags, { id }, id);
-      return;
+  if (verb === 'next-number') {
+    const prefix = KIND_PREFIX[String(flags.kind ?? '').toLowerCase()];
+    if (!prefix) die('next-number needs --kind feat|story');
+    let trackerIds = [];
+    let offline = null;
+    try {
+      const adapter = await loadAdapter();
+      trackerIds = (await adapter.list()).map((i) => i.id);
+    } catch (e) {
+      offline = e.message;
     }
+    const id = nextNumber(prefix, specs, trackerIds);
+    if (offline) {
+      console.error(`tracker: offline answer — verify against the tracker before using it (the tracker could not be read: ${offline.split('\n')[0]}; the number is highest + 1 across ${SPECS_DIR}/ only)`);
+    }
+    out(flags, offline ? { id, offline: true } : { id }, id);
+    return;
+  }
+
+  const adapter = await loadAdapter();
+
+  switch (verb) {
     case 'create': {
       const path = flags.spec;
       if (!path || path === true) die('create needs --spec <path>');

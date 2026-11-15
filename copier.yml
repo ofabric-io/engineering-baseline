@@ -54,9 +54,13 @@ packs:
     "multi-tenant — isolation unit, enforcement, leak tests": multi-tenant
     "audit-trail — what is audited, record shape, retention": audit-trail
     "user-interface — design tokens, accessibility, UI states, i18n, components, design workflow": user-interface
+    "web-ui — browser security, web accessibility specifics, web semantics (requires user-interface)": web-ui
+    "cli — exit codes, stdout/stderr, machine-readable output, flags and help": cli
+    "data-store — schema migrations, transactions, store-level isolation, backup mechanics": data-store
+    "domain-model — aggregates, consistency boundaries, repository and unit-of-work patterns": domain-model
   default: []
   validator: >-
-    {% if 'webhooks' in packs and 'events' not in packs %}The webhooks pack requires the events pack{% elif 'ledger' in packs and 'money' not in packs %}The ledger pack requires the money pack{% endif %}
+    {% if 'webhooks' in packs and 'events' not in packs %}The webhooks pack requires the events pack{% elif 'ledger' in packs and 'money' not in packs %}The ledger pack requires the money pack{% elif 'web-ui' in packs and 'user-interface' not in packs %}The web-ui pack requires the user-interface pack{% endif %}
 
 tracker:
   type: str
