@@ -40,7 +40,7 @@ Requires pack(s): `events`.
 - **R1.** Every webhook MUST be signed as `signature_scheme` says and carry the headers in `signature_headers`.
 - **R2.** The signature MUST be computed over the exact bytes sent; the sender MUST NOT re-serialise a payload between signing and sending.
 - **R3.** The signature header MUST carry a scheme-version prefix so the scheme can change without ambiguity.
-- **R4.** Receiver documentation MUST tell receivers to verify the signature over the raw body with a constant-time comparison, to reject a timestamp outside `replay_tolerance`, and to deduplicate on the event `id` (`delivery-and-outbox.md` R8 of the events pack).
+- **R4.** Receiver documentation MUST tell receivers to verify the signature over the raw body with a constant-time comparison, to reject a timestamp outside `replay_tolerance`, and to deduplicate on the event `id` (`packs/events/delivery-and-outbox.md` R8).
 - **R5.** Each endpoint MUST have its own signing secret, generated with a cryptographically secure source, shown to the owner once, and stored per `06-security/secrets-and-crypto.md`.
 - **R6.** Secret rotation MUST support two valid secrets at once for `secret_overlap`: during the overlap the sender signs with the new secret (or with both), so a receiver can switch without a gap.
 - **R7.** A signing secret MUST NOT appear in a log line, an error, a metric label or a delivery attempt record (`06-security/sensitive-data.md`).

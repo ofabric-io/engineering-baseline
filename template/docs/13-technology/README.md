@@ -51,3 +51,38 @@ decided area's document MUST cover the ones that apply:
 
 A technology document MUST NOT restate or relax a rule from a higher layer; it names the tool that
 enforces it. To relax a rule, supersede it with an ADR.
+
+## Rules
+
+- **R1.** Every technology choice MUST be recorded as an ADR before the code depends on it.
+- **R2.** Each decided area MUST have a document `13-technology/<area>.md` made from
+  `13-technology/_technology-template.md`, covering every deferred item in "What lives here" that
+  applies to it.
+- **R3.** A technology document MUST NOT restate or relax a rule from a higher layer; it names the
+  tool that enforces that rule. Relaxing a rule requires a superseding ADR.
+- **R4.** An area not yet decided MUST stay `[[decided_*]]` in the table above and MUST be listed in
+  `docs/DECISION-QUEUE.md`; no code or document may assume an answer for it.
+- **R5.** An area the project does not have MUST be marked `n/a`, not deleted.
+
+## Enforcement
+
+| Rule | Mechanism | Status |
+| --- | --- | --- |
+| R1 | Review: a technology document without an ADR link is rejected | ❌ review-only |
+| R2 | Review against the "What lives here" list | ❌ review-only |
+| R3 | Review; `scripts/check.mjs` rejects a ratified document with unresolved markers | ◐ partial |
+| R4 | `scripts/check.mjs` keeps this document unratifiable while any `[[decided_*]]` is open | ◐ partial |
+| R5 | Review | ❌ review-only |
+
+## AI guardrails
+
+```text
+Never pick a technology yourself. A stack choice is an ADR the user accepts.
+Never write code that assumes an undecided area; ask, or record it in DECISION-QUEUE.md.
+Tool configuration lives in 13-technology/<area>.md, never in a higher layer.
+```
+
+## References
+
+- `04-adr/README.md` — how a choice is recorded
+- `13-technology/_technology-template.md` — the shape of a technology document

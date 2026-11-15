@@ -42,14 +42,14 @@ Requires pack(s): `money`.
 - **R1.** Bookkeeping MUST be double-entry. A movement is one **journal entry** containing two or
   more **entries**, and the entries of a journal entry MUST sum to exactly zero.
 - **R2.** An entry's amount MUST be a signed integer at the internal scale of the money pack
-  (`money.md` R1, R2). The project MUST fix one sign convention (for example debit positive,
+  (`packs/money/money.md` R1, R2). The project MUST fix one sign convention (for example debit positive,
   credit negative), and each account MUST declare its normal side so displayed balances read
   naturally.
 - **R3.** A **ledger** is the pair (owner, currency). The currency belongs to the ledger, every
   account and entry inherits it, and it MUST NOT change.
 - **R4.** All entries of one journal entry MUST belong to ledgers of the same currency. A
   cross-currency movement MUST be two journal entries linked by an explicit conversion record,
-  never one journal entry holding two currencies (`money.md` R9, R11).
+  never one journal entry holding two currencies (`packs/money/money.md` R9, R11).
 - **R5.** Entries and journal entries MUST be append-only: never updated, never deleted. A mistake
   MUST be corrected by a reversing journal entry that references the original.
 - **R6.** The accounts a ledger may hold MUST be exactly those in `chart_of_accounts`. A new

@@ -59,12 +59,28 @@ export function sections(text) {
   return out;
 }
 
-/** Rule numbers defined in a `## Rules` section: list items that start `- **R<n>.**`. */
+/**
+ * Rule ids defined in a `## Rules` section: list items that start `- **R<n>.**`, or `- **P<n>.**`
+ * for numbered prohibitions. Returns ids as strings, e.g. ["R1", "R2"] or ["P1"].
+ */
 export function ruleIds(text) {
   const body = sections(text).Rules ?? '';
   const ids = [];
-  for (const m of body.matchAll(/^\s*(?:[-*]|\d+\.)\s+\*\*R(\d+)\.\*\*/gm)) ids.push(Number(m[1]));
+  for (const m of body.matchAll(/^\s*(?:[-*]|\d+\.)\s+\*\*([RP])(\d+)\.\*\*/gm)) ids.push(`${m[1]}${Number(m[2])}`);
   return ids;
+}
+
+/** Expands a rule list such as "R1–R3, R5" or "P2/P4" into ids; null if the text is not a rule list. */
+export function expandRuleList(textValue) {
+  const ids = [];
+  for (const part of textValue.split(/\s*(?:,|\/|&|\band\b)\s*/)) {
+    const m = part.trim().match(/^([RP])(\d+)(?:\s*[-–]\s*(?:[RP])?(\d+))?$/);
+    if (!m) return null;
+    const from = Number(m[2]);
+    const to = m[3] ? Number(m[3]) : from;
+    for (let n = from; n <= to; n++) ids.push(`${m[1]}${n}`);
+  }
+  return ids.length ? ids : null;
 }
 
 /** Rows of the `## Enforcement` table whose first cell names rules: [{ ids, status, raw }]. */
@@ -74,12 +90,8 @@ export function enforcementRows(text) {
   for (const line of body.split('\n')) {
     if (!line.trim().startsWith('|')) continue;
     const cells = line.trim().replace(/^\||\|$/g, '').split('|').map((c) => c.trim());
-    const first = cells[0].replace(/[*`]/g, '');
-    const ids = [];
-    const range = first.match(/^R(\d+)\s*[-–]\s*R?(\d+)$/); // "R3-R5"
-    if (range) for (let n = Number(range[1]); n <= Number(range[2]); n++) ids.push(n);
-    else if (/^R\d+(\s*(,|\/|&|and)\s*R\d+)*$/.test(first)) for (const m of first.matchAll(/R(\d+)/g)) ids.push(Number(m[1]));
-    else continue;
+    const ids = expandRuleList(cells[0].replace(/[*`]/g, '')); // "R1", "R1–R3, R5", "P2/P4"
+    if (!ids) continue;
     const status = (cells.slice(1).join(' ').match(/[✅◐⬜❌]/) ?? [null])[0];
     rows.push({ ids, status, raw: line.trim() });
   }

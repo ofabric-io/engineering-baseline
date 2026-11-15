@@ -82,7 +82,7 @@ const sync = spawnSync(process.execPath, [join(ROOT, 'scripts', 'sync-adapters.m
 if (sync.status !== 0) failures.push(...(sync.stdout + sync.stderr).trim().split('\n').filter(Boolean));
 
 // 6. Standards documents that are proposed, in-progress or ratified carry enforceable rules.
-//    Format: `## Rules` lists `- **R<n>.** ...` (numbers unique); `## Enforcement` is a table whose
+//    Format: `## Rules` lists `- **R<n>.** ...` (or `- **P<n>.**` for prohibitions; ids unique); `## Enforcement` is a table whose
 //    first column is `R<n>` and whose last column holds one status: ✅ ◐ ⬜ ❌.
 const ENFORCEMENT_STATUSES = '✅ ◐ ⬜ ❌';
 const ruleCache = new Map();
@@ -103,7 +103,7 @@ for (const [abs, file] of mdFiles) {
   }
   const seen = new Set();
   for (const n of ids) {
-    if (seen.has(n)) fail(file, `rule number R${n} is used more than once in "## Rules"; rule numbers are unique`);
+    if (seen.has(n)) fail(file, `rule number ${n} is used more than once in "## Rules"; rule numbers are unique`);
     seen.add(n);
   }
   const rows = enforcementRows(text);
@@ -111,17 +111,17 @@ for (const [abs, file] of mdFiles) {
   for (const row of rows) {
     for (const n of row.ids) {
       covered.add(n);
-      if (!seen.has(n)) fail(file, `"## Enforcement" has a row for R${n}, which is not a rule in "## Rules"`);
+      if (!seen.has(n)) fail(file, `"## Enforcement" has a row for ${n}, which is not a rule in "## Rules"`);
     }
     if (!row.status) fail(file, `"## Enforcement" row has no status (use one of ${ENFORCEMENT_STATUSES}): ${row.raw}`);
   }
   for (const n of seen) {
-    if (!covered.has(n)) fail(file, `R${n} has no row in "## Enforcement"; add "| R${n} | <mechanism> | <${ENFORCEMENT_STATUSES.split(' ').join(' | ')}> |"`);
+    if (!covered.has(n)) fail(file, `${n} has no row in "## Enforcement"; add "| ${n} | <mechanism> | <${ENFORCEMENT_STATUSES.split(' ').join(' | ')}> |"`);
   }
 }
 
 // 7. Cross-document rule references: "`path.md` R3" must name a rule that exists in that document.
-const XREF_RE = /`?((?:[\w.-]+\/)*[\w.-]+\.md)`?[ \t]+(R\d+(?:[ \t]*(?:,|and|&)[ \t]*R\d+)*)/g;
+const XREF_RE = /`?((?:[\w.-]+\/)*[\w.-]+\.md)`?[ \t]+([RP]\d+(?:[ \t]*(?:,|and|&)[ \t]*[RP]\d+)*)/g;
 for (const [abs, file] of mdFiles) {
   if (isTemplateFile(file)) continue;
   const prose = read(abs).replace(/```[\s\S]*?```/g, '').replace(/<!--[\s\S]*?-->/g, '');
@@ -130,8 +130,8 @@ for (const [abs, file] of mdFiles) {
     const target = [join(ROOT, 'docs', p), join(ROOT, p), resolve(dirname(abs), p)].find((c) => existsSync(c));
     if (!target) { fail(file, `reference "${m[1]} ${m[2]}" points to a document that does not exist (write the path relative to docs/, e.g. \`08-reliability/timeouts-retries.md\` R3)`); continue; }
     const have = new Set(rulesOf(target));
-    for (const r of m[2].matchAll(/R(\d+)/g)) {
-      if (!have.has(Number(r[1]))) fail(file, `reference "${m[1]} R${r[1]}" names a rule that does not exist in ${rel(target)}`);
+    for (const r of m[2].matchAll(/[RP]\d+/g)) {
+      if (!have.has(r[0])) fail(file, `reference "${m[1]} ${r[0]}" names a rule that does not exist in ${rel(target)}`);
     }
   }
 }
