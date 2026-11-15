@@ -31,7 +31,7 @@ Where secrets live, how they rotate, and which cryptographic practices are allow
 ### Secret handling
 
 - **R1.** A secret MUST NOT appear in source, a fixture, a commit message, a log, a CI log or a build artifact.
-- **R2.** Secrets MUST be held in the `secret_store` and injected into the process at deploy or start time.
+- **R2.** Secrets MUST be held in the `secret_store` and injected into the process at deploy or start time, except those governed by R17.
 - **R3.** Secrets MUST be read in one place, validated at start-up, and the process MUST fail to start if a required one is missing.
 - **R4.** A secret MUST NOT be passed to a logger even when redaction would mask it.
 - **R5.** Every secret MUST be rotatable under `rotation_policy`; the system MUST accept two valid versions of a secret during rotation.
@@ -53,6 +53,10 @@ Where secrets live, how they rotate, and which cryptographic practices are allow
 - **R15.** Network connections that leave a trust zone MUST use at least `min_transport_security`.
 - **R16.** Certificate verification MUST NOT be disabled in any environment.
 
+### Secrets that leave the control plane
+
+- **R17.** A secret that deliberately leaves the control plane (for example customer key material distributed to nodes) MUST be: delivered only over a channel authenticated to the individual recipient, scoped to that recipient and purpose, held there in memory or owner-only storage, revocable and replaced on rotation, and never logged. Each such secret type MUST be named in this document and classed as secret in `06-security/sensitive-data.md` R13. _(applies to: service, daemon, batch)_
+
 ## Enforcement
 
 | Rule | Mechanism | Status |
@@ -73,6 +77,7 @@ Where secrets live, how they rotate, and which cryptographic practices are allow
 | R14 | Infrastructure review | ❌ review-only |
 | R15 | TLS scan of external endpoints in CI or on a schedule | ⬜ scheduled |
 | R16 | Static search for verification-disabling options | ⬜ scheduled |
+| R17 | Distribution-path review; revocation test | ⬜ scheduled |
 
 ## AI guardrails
 
@@ -80,6 +85,7 @@ Where secrets live, how they rotate, and which cryptographic practices are allow
 - Never invent cryptography. Use the library and algorithms in `13-technology/`.
 - Never use a non-secure random source for anything unpredictable.
 - Never disable certificate verification, even temporarily.
+- A secret sent to a node is scoped to that node, revocable, and never logged.
 - If a secret leaks, say so immediately; do not assess whether it was probably fine.
 
 ## References

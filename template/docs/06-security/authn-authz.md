@@ -15,27 +15,32 @@ Who the actors are, how they prove identity, and how permissions are decided and
 
 | Parameter | Answer | Default | Trade-off |
 | --- | --- | --- | --- |
-| `actor_types` | [[actor_types]] | listed by the bootstrap (e.g. end user, operator, service, agent) | each needs its own credential type |
+| `actor_types` | [[actor_types]] | `user`, `operator`, `service`, `system`, `agent` | each needs its own credential type; the values are also the audit `actor.type` values |
 | `authorization_model` | [[authorization_model]] | role-based, checked server-side on every request | attribute-based is more expressive and harder to audit |
 | `step_up_actions` | [[step_up_actions]] | changing credentials, changing recovery details, irreversible bulk operations, any operation across isolation boundaries | more step-up means more friction; less means a stolen session does more damage |
-| `session_lifetime` | [[session_lifetime]] | short idle timeout, bounded absolute lifetime, revocable server-side | long sessions are convenient and widen the theft window |
+| `session_lifetime` | [[session_lifetime]] | short idle timeout, bounded absolute lifetime, revocable server-side | long-lived sessions or tokens are convenient and widen the theft window |
 
 ## Open decisions
 
 - [ ] Ratify this document with the project (`.agents/skills/ratify-standard/SKILL.md`).
-- [ ] Which credential type does each actor type use, and where is the mapping recorded?
+- [ ] Which credential mechanism does each actor type use? Fill the table under Rules.
 - [ ] Is there an external identity provider, and which protocol does it speak?
 
 ## Rules
 
 ### Actors and credentials
 
-- **R1.** Every actor type in `actor_types` MUST have exactly one documented credential mechanism, recorded in a table in this document once ratified.
+- **R1.** Every actor type in `actor_types` MUST have exactly one documented credential mechanism, recorded in the actor-credential table in this document.
+
+  | Actor type | Credential mechanism | Revocation |
+  | --- | --- | --- |
+  | [[credential_actor]] | [[credential_mechanism]] | [[credential_revocation]] |
+
 - **R2.** An authentication mechanism MUST NOT be built for an actor type that has no consumer yet.
-- **R3.** Actor types with different privilege levels MUST NOT share a credential type, a session store namespace or a session type. Escalating between them MUST require forging a different credential, not changing a claim.
+- **R3.** Actor types with different privilege levels MUST NOT share a credential type, a session or token store namespace or a session or token type. Escalating between them MUST require forging a different credential, not changing a claim.
 - **R4.** A credential that grants access MUST be revocable server-side. A bearer credential that cannot be revoked MUST be short-lived.
 - **R5.** A credential issued for a single purpose MUST be scoped to that purpose and MUST expire quickly, and it MUST grant nothing beyond that purpose.
-- **R6.** Credentials MUST NOT be stored where untrusted scripts can read them.
+- **R6.** A credential held by a client or a node MUST be stored with owner-only access, in the platform's protected credential facility where one exists. Storage rules specific to an interface type belong to that interface's standards.
 - **R7.** A failed authentication MUST NOT reveal whether the identifier exists.
 - **R8.** Authentication attempts MUST be rate limited per identifier and per network origin (`06-security/appsec.md` R6, R7).
 
@@ -57,12 +62,12 @@ Who the actors are, how they prove identity, and how permissions are decided and
 
 | Rule | Mechanism | Status |
 | --- | --- | --- |
-| R1 | Document completeness at ratification | ❌ review-only |
+| R1 | Document completeness at ratification; the table has a row per actor type | ❌ review-only |
 | R2 | PR review | ❌ review-only |
 | R3 | Integration test: a credential of one type is rejected by the other's entry points | ⬜ scheduled |
 | R4 | Integration test of revocation | ⬜ scheduled |
 | R5 | Integration test of scope and expiry | ⬜ scheduled |
-| R6 | Security review of client credential storage | ❌ review-only |
+| R6 | Security review of client and node credential storage | ❌ review-only |
 | R7 | Test comparing responses for known and unknown identifiers | ⬜ scheduled |
 | R8 | Integration test | ⬜ scheduled |
 | R9 | Test that enumerates entry points and fails on any without a policy | ⬜ scheduled |

@@ -1,6 +1,7 @@
 ---
 layer: 07-observability
 status: proposed # not-started | proposed | in-progress | ratified
+applies-to: [service, daemon]
 owner: TBD
 last-reviewed: never
 ---
@@ -9,7 +10,7 @@ last-reviewed: never
 
 ## Purpose
 
-Liveness, readiness and start-up signals for any long-running process, what each may and may not check, and how a process shuts down. Short-lived programs (a command-line tool, a batch run) have no health endpoint; the shutdown rules still apply to their work in flight.
+Liveness, readiness and start-up signals for any long-running process, what each may and may not check, and how a process shuts down. It applies to `service` and `daemon` components; a command-line program, a library or a batch job has no health signals.
 
 ## Parameters
 
@@ -27,7 +28,7 @@ Liveness, readiness and start-up signals for any long-running process, what each
 
 ### Signals
 
-- **R1.** A long-running process MUST expose three distinct signals, and they MUST NOT be conflated:
+- **R1.** A long-running process MUST expose three distinct signals, and they MUST NOT be conflated: _(applies to: service, daemon)_
 
   | Signal | Answers | Failing means |
   | --- | --- | --- |

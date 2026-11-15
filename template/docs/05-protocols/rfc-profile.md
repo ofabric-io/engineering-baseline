@@ -9,7 +9,7 @@ last-reviewed: never
 
 ## Purpose
 
-Which published standards the project adopts instead of inventing its own, which it deliberately does not, and every known deviation. Standards for HTTP, events, money and user interfaces are added by the packs that need them, not listed here.
+Which published standards the project adopts instead of inventing its own, which it deliberately does not, and every known deviation. Packs add standards for the areas they govern; this document lists only what every project adopts.
 
 ## Parameters
 
@@ -34,13 +34,13 @@ Which published standards the project adopts instead of inventing its own, which
 
 ### Core standards
 
-- **R5.** Requirement keywords in standards documents MUST carry the meaning given in RFC 2119 (as clarified by RFC 8174: only when written in capitals).
-- **R6.** Timestamps crossing a boundary (storage format, wire format, file format, log line) MUST use RFC 3339, in UTC.
-- **R7.** Durations that must be written as text MUST use ISO 8601 duration syntax; calendar dates without a time MUST use ISO 8601 date syntax.
-- **R8.** Universally unique identifiers MUST follow RFC 9562, in the version chosen in `02-domain/identifiers.md`.
-- **R9.** Released artifacts and published interfaces MUST be versioned with Semantic Versioning.
-- **R10.** Commit messages MUST follow Conventional Commits (`14-git/git.md`).
-- **R11.** Metrics, traces and log correlation MUST use OpenTelemetry semantics, and trace propagation MUST use W3C Trace Context (`07-observability/metrics-and-tracing.md`).
+- **R5.** Requirement keywords in standards documents MUST carry the meaning given by the requirement-keyword standard in `core_standards`, and only when written in capitals.
+- **R6.** Timestamps crossing a boundary (storage format, wire format, file format, log line) MUST use the timestamp standard in `core_standards`, in UTC.
+- **R7.** Durations that must be written as text MUST use the duration syntax of the standards in `core_standards`; calendar dates without a time MUST use the date syntax of the same standards.
+- **R8.** Universally unique identifiers MUST follow the standard in `core_standards`, in the version chosen in `02-domain/identifiers.md`.
+- **R9.** Released artifacts and published interfaces MUST be versioned with the versioning scheme in `core_standards`.
+- **R10.** Commit messages MUST follow the commit convention in `core_standards` (`14-git/git.md`).
+- **R11.** Metrics, traces and log correlation MUST use the telemetry semantics in `core_standards`, and trace propagation MUST use the propagation format it names (`07-observability/metrics-and-tracing.md`).
 
 ### Drafts
 
