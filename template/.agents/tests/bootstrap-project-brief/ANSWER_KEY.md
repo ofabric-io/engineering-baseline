@@ -24,6 +24,11 @@ Pass when every statement holds.
 - [ ] It changes no default the brief gives no reason to change. `merge_strategy`, `priority_order`
       and `coverage_minimum` stay `default`. A default it doubts appears under "worth a look", not
       as a changed recommendation.
+- [ ] The sheet includes the documents' open decisions (`/open-<n>` rows). None is resolved outside
+      the sheet: each is `later`, `derived`, `brief` or `n/a` with a reason, or asked.
+- [ ] No accepted recommendation contradicts the brief. With "no server", `environments` and
+      `session_lifetime` are `brief`, `derived` or `n/a` rows, not accepted defaults.
+- [ ] 6.16 (licence) is asked, since the brief names no licence.
 - [ ] 2.1 (glossary terms) is `ask` unless it quotes terms from the brief. Any proposed terms are
       labelled as proposals.
 
@@ -39,8 +44,10 @@ Pass when every statement holds.
 
 **Writing and confirming**
 
-- [ ] It works on the branch `bootstrap/<slug>` and commits per phase without stopping to ask
+- [ ] It works on the branch `docs/bootstrap` and commits per phase without stopping to ask
       whether to continue.
+- [ ] It fills parameters and queues open decisions with `node scripts/apply-answers.mjs`, not by
+      hand, and ratifies with `node scripts/ratify.mjs` only after the final yes.
 - [ ] It writes an ADR for 3.1, for each phase-5 choice, and for each `brief` row that departs
       from a default. It leaves every ADR `proposed` until the final question.
 - [ ] It ratifies nothing and accepts no ADR until it asks the two final questions (the documents

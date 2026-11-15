@@ -30,7 +30,7 @@ if (story && !title.startsWith(story)) refuse(`the title must start with ${story
 
 // The body must contain every section heading of the template, in order.
 const host = (existsSync(join(root, '.copier-answers.yml')) && readFileSync(join(root, '.copier-answers.yml'), 'utf8').match(/^git_host:\s*["']?(\w+)/m)?.[1]) || 'other';
-const templates = { github: '.github/pull_request_template.md', gitlab: '.gitlab/merge_request_templates/Default.md' };
+const templates = { github: '.github/pull_request_template.md', gitlab: '.gitlab/merge_request_templates/Default.md', other: 'docs/14-git/pull-request-template.md' };
 const body = readFileSync(bodyFile, 'utf8').replace(/\r\n/g, '\n');
 if (templates[host] && existsSync(join(root, templates[host]))) {
   const headings = [...readFileSync(join(root, templates[host]), 'utf8').matchAll(/^## .+$/gm)].map((m) => m[0].trim());

@@ -11,8 +11,8 @@ documents named in **Writes to**. Paths in this file are relative to `docs/`.
 2. **Foundation gaps.** Questions marked ⚑ shape every later recommendation. Each one the brief
    does not settle is asked now, before anything is recommended.
 3. **Recommendation sheet.** `node scripts/recommend.mjs` lists every open decision — each
-   headline question below and every open parameter in `docs/` — in
-   `.baseline/recommendations.md`. Each row gets a recommended answer and its source:
+   headline question below, every open parameter, and every open bullet under a document's
+   `## Open decisions` — in `.baseline/recommendations.md`. Each row gets a recommended answer and its source:
    - `brief`: the brief settles it, and the row quotes the brief;
    - `derived`: it follows from another answer, and the row names that answer;
    - `default`: the baseline default, because the brief says nothing against it;
@@ -20,7 +20,8 @@ documents named in **Writes to**. Paths in this file are relative to `docs/`.
    - `n/a`: the component kinds make it moot.
 
    A recommendation departs from the default only when the brief *says* something that calls for
-   it. A plausible guess is not a reason. `node scripts/recommend.mjs --check` passes when every
+   it, or makes the default false. A plausible guess is not a reason. An open decision's default
+   is `later` (deferred to the queue). `node scripts/recommend.mjs --check` passes when every
    row is complete.
 4. **How to proceed (0.6).** Choose one:
    - `all`: accept every recommendation;
@@ -28,7 +29,9 @@ documents named in **Writes to**. Paths in this file are relative to `docs/`.
    - `review`: go phase by phase with the recommendations pre-filled.
 
    In every mode the `ask` rows are asked, in numbered batches of about 25.
-5. **Write, then confirm.** The documents and ADRs are written phase by phase on a branch. Before
+5. **Write, then confirm.** `node scripts/apply-answers.mjs` writes the recorded answers into the
+   documents and queues every `later`. The rules and ADRs are then written phase by phase on a
+   branch. Before
    anything is ratified or an ADR accepted, the user gets one explicit question for each.
 
 An answer is `default`, a value, or `later`. `later` is always allowed: the question is recorded
@@ -214,6 +217,7 @@ technology the brief names is a `brief` recommendation.
 | 6.13 | `16-ai/operating-procedure.md` — accept as a whole, or name what changes | accept | `16-ai/operating-procedure.md` |
 | 6.14 | `16-ai/prohibitions.md` — accept as a whole, or name what changes | accept | `16-ai/prohibitions.md` |
 | 6.15 | The other delivery documents (pipeline and gates, production readiness, releases and distribution, product documentation) — accept as a whole, or name what changes | accept | `15-delivery/*` |
+| 6.16 | The project's licence: an SPDX identifier for open source, or `proprietary` | — (required) | `15-delivery/releases-and-distribution.md` `project_licence` |
 
 ---
 

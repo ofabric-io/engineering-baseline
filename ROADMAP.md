@@ -73,7 +73,9 @@ migration, live tests of the GitHub Issues and ClickUp tracker adapters.
       documents, `data-store` / `domain-model` / `web-ui` / `cli` packs, five new core
       documents, one owner per rule, unique parameter names, generated debt table, ADR checks,
       forbidden-terms scoping, offline numbering, bootstrap on a branch
-- [ ] Re-run one bootstrap on the wave-2 template to confirm the fixes
+- [x] Re-run one bootstrap on the wave-2 template (brief-first, a solo CLI project, mode `all`) and
+      fix what it exposed
+- [ ] Re-run once more after those fixes, ideally on a project with packs
 - [ ] Run the bootstrap and the skill fixtures in **at least two different AI tools**
 - [ ] Live-test the GitHub Issues and ClickUp tracker adapters
 - [ ] Tag v1.0.0

@@ -34,7 +34,8 @@ These standards use some everyday words with a specific meaning: **zone** (a tim
 network or trust zone, never both unqualified), **agent** (an AI agent acting on the project, not
 a software agent installed on a host), **domain** (the business problem space, not an internet
 domain), **configuration** (values that change behaviour without a code change), **operator**
-(vendor personnel who run the system, as distinct from a customer's user). If one collides with
+(vendor personnel who run the system, as distinct from a customer's user), **validation** (the
+error category for input that breaks a stated constraint, `09-errors/taxonomy.md`). If one collides with
 a term in this project, declare the collision here, choose the project's own word and add the
 baseline's use to the forbidden synonyms.
 

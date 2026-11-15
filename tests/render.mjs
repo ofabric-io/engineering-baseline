@@ -196,7 +196,7 @@ function recommendChecks(dst) {
     // Fill every derived row, as the bootstrap would.
     writeFileSync(sheet, text.split('\n').map((l) => (/ \|  \| derived \| /.test(l) ? l.replace(' |  | derived | ', ' | a recommendation | derived | ') : l)).join('\n'));
     const filled = rec('--check');
-    record('recommend.mjs --check passes once every row is complete', filled.ok && /ok — \d+ decision/.test(filled.out), filled.out);
+    record('recommend.mjs --check passes once every row is complete', filled.ok && /ok — \d+ open decision/.test(filled.out), filled.out);
     const again = rec();
     const kept = rec('--check');
     record('re-running recommend.mjs keeps filled rows', again.ok && kept.ok, `${again.out}\n${kept.out}`);
@@ -215,12 +215,15 @@ function recommendChecks(dst) {
     const answeredYaml = [
       'answers:',
       '  "1.3": { answer: default, source: default, decided: 2026-01-01, adr: null }',
-      '  1.6/01-business/availability.md/slo_exhaustion_response: { answer: default, source: default, decided: 2026-01-01, adr: null }',
+      '  1.8/01-business/availability.md/slo_exhaustion_response: { answer: default, source: default, decided: 2026-01-01, adr: null }',
     ].join('\n');
     const answered = edit('.baseline/answers.yaml', (t) => t.replace('answers: {}', answeredYaml), () => rec('--json'));
-    let ids = [];
-    try { ids = JSON.parse(answered.out).map((r) => r.id); } catch { /* reported below */ }
-    record('recommend.mjs leaves out ids already answered in answers.yaml', answered.ok && ids.length > 0 && !ids.includes('1.3') && !ids.includes('1.6/01-business/availability.md/slo_exhaustion_response') && ids.includes('1.4'), answered.out.slice(0, 400));
+    let byId = new Map();
+    try { byId = new Map(JSON.parse(answered.out).map((r) => [r.id, r])); } catch { /* reported below */ }
+    record('recommend.mjs marks ids answered in answers.yaml, and only those',
+      answered.ok && byId.get('1.3')?.answered === true && byId.get('1.8/01-business/availability.md/slo_exhaustion_response')?.answered === true && byId.get('1.4')?.answered === false, answered.out.slice(0, 400));
+    record('the sheet lists each document\'s open decisions, defaulting to later',
+      [...byId.values()].some((r) => r.kind === 'open' && r.id === '2.5/02-domain/time.md/open-1' && r.recommended === 'later' && r.source === 'default'), answered.out.slice(0, 400));
 
     const drift = edit('bootstrap/questionnaire.md', (t) => t.replace('`priority_order` |', '`priority_ordr` |'), () => rec('--json'));
     record('recommend.mjs fails when the questionnaire names a parameter that does not exist', !drift.ok && /names parameter `priority_ordr`/.test(drift.out), drift.out);
@@ -228,8 +231,66 @@ function recommendChecks(dst) {
     record('recommend.mjs fails when a document with open parameters is offered by no question', !orphan.ok && /no question offers docs\/02-domain\/zz-orphan\.md/.test(orphan.out), orphan.out);
     const withSheet = run('node', ['scripts/check.mjs'], { cwd: dst });
     record('check.mjs passes with a recommendation sheet present', withSheet.ok, withSheet.out);
+    applyChecks(dst);
   } finally {
     rmSync(sheet, { force: true });
+  }
+}
+
+// apply-answers.mjs fills cells and queues open decisions; ratify.mjs ratifies; check.mjs then
+// accepts the document and refuses it once its queue row is gone; queue.mjs drops rows scoped to
+// kinds the project lacks.
+function applyChecks(dst) {
+  const touched = ['.baseline/answers.yaml', 'docs/02-domain/time.md', 'docs/01-business/principles.md', 'docs/DECISION-QUEUE.md', 'docs/03-architecture/system.md'];
+  const saved = touched.map((f) => [join(dst, f), readFileSync(join(dst, f), 'utf8')]);
+  const node = (...a) => run('node', a, { cwd: dst });
+  try {
+    const entries = [
+      '"2.5": { answer: default, source: default, decided: 2026-01-01, adr: null }',
+      '2.5/02-domain/time.md/instant_precision: { answer: default, source: default, decided: 2026-01-01, adr: null }',
+      '2.5/02-domain/time.md/clock_source: { answer: "an injected clock, always", source: user, decided: 2026-01-01, adr: null }',
+      '2.5/02-domain/time.md/open-1: { answer: later, source: default, decided: 2026-01-01, adr: null }',
+      '"1.3": { answer: "security > correctness, as a test", source: user, decided: 2026-01-01, adr: null }',
+    ].map((e) => `  ${e}`).join('\n');
+    const answersPath = join(dst, '.baseline/answers.yaml');
+    writeFileSync(answersPath, readFileSync(answersPath, 'utf8').replace('answers: {}', `answers:\n${entries}`));
+
+    const dry = node('scripts/apply-answers.mjs', '--dry-run');
+    const timeBefore = readFileSync(join(dst, 'docs/02-domain/time.md'), 'utf8');
+    record('apply-answers.mjs --dry-run reports changes and writes nothing', dry.ok && /would change docs\/02-domain\/time\.md: clock_source/.test(dry.out) && timeBefore.includes('[[clock_source]]'), dry.out);
+    const applied = node('scripts/apply-answers.mjs');
+    const time = readFileSync(join(dst, 'docs/02-domain/time.md'), 'utf8');
+    const queue = readFileSync(join(dst, 'docs/DECISION-QUEUE.md'), 'utf8');
+    record('apply-answers.mjs fills parameter cells (default stays the word default)',
+      applied.ok && /\| `business_time_zone` \| default \|/.test(time) && /\| `clock_source` \| an injected clock, always \|/.test(time)
+      && /\| `priority_order` \| security > correctness, as a test \|/.test(readFileSync(join(dst, 'docs/01-business/principles.md'), 'utf8')), applied.out);
+    record('apply-answers.mjs queues a later open decision and numbers its queue row',
+      /→ DECISION-QUEUE\s*$/m.test(time.split('## Rules')[0]) && /^\| D1 \| .* \| `02-domain\/time\.md` \(2\.5\/02-domain\/time\.md\/open-1\) \| no \|/m.test(queue), queue.split('## Enforcement')[0].slice(-600));
+    const again = node('scripts/apply-answers.mjs');
+    record('apply-answers.mjs is idempotent', again.ok && /0 change\(s\)/.test(again.out), again.out);
+
+    const ratified = node('scripts/ratify.mjs', '--owner', 'tester', 'docs/02-domain/time.md');
+    const timeR = readFileSync(join(dst, 'docs/02-domain/time.md'), 'utf8');
+    const board = readFileSync(join(dst, 'docs/DECISION-QUEUE.md'), 'utf8');
+    record('ratify.mjs sets status, owner and date, ticks the Ratify bullet and fills the status board',
+      ratified.ok && /^status: ratified$/m.test(timeR) && /^owner: tester$/m.test(timeR) && /^- \[x\] Ratify this document/m.test(timeR) && /^\| `02-domain\/time\.md` \| ratified \| tester \|/m.test(board) && !/_Filled in by the bootstrap\._/.test(board), ratified.out);
+    const ok = node('scripts/check.mjs');
+    record('check.mjs accepts the ratified document with its open decision queued', ok.ok, ok.out);
+    writeFileSync(join(dst, 'docs/DECISION-QUEUE.md'), board.replace(/^\| D1 .*\n/m, ''));
+    const noRow = node('scripts/check.mjs');
+    record('check.mjs refuses a queued open decision with no Deferred decisions row', !noRow.ok && /queues an open decision, but docs\/DECISION-QUEUE\.md/.test(noRow.out), noRow.out);
+    writeFileSync(join(dst, 'docs/DECISION-QUEUE.md'), board);
+
+    // Debt rows for rules scoped to kinds the project lacks disappear once the kinds are known.
+    const count = () => (readFileSync(join(dst, 'docs/DECISION-QUEUE.md'), 'utf8').match(/^\| `[^`]+` \| [RP]\d/gm) ?? []).length;
+    node('scripts/queue.mjs');
+    const all = count();
+    const sys = join(dst, 'docs/03-architecture/system.md');
+    writeFileSync(sys, readFileSync(sys, 'utf8').replace(/^\| `component_kinds` \| \[\[component_kinds\]\] \|/m, '| `component_kinds` | library |'));
+    const q = node('scripts/queue.mjs');
+    record('queue.mjs leaves out debt rows scoped only to kinds the project lacks', q.ok && count() > 0 && count() < all, `${all} -> ${count()}\n${q.out}`);
+  } finally {
+    for (const [p, t] of saved) writeFileSync(p, t); // restores DECISION-QUEUE.md to never-generated
   }
 }
 
@@ -460,7 +521,9 @@ function wave2Checks(dst) {
       .replace(/## Open decisions[\s\S]*?(?=\n## Rules)/, `## Open decisions\n\n${body}\n`),
     { status: 'ratified', rules: '- **R1.** MUST a.', enforcement: '| R1 | review | ❌ |' });
   rejects('a ratified document with an open decision not in the queue', [[TIME, ratified('- [ ] still open')]], /open decision not in the queue/);
-  accepts('a ratified document whose open decisions are ticked or queued', [[TIME, ratified('- [x] done\n- [ ] later\n      continued here → DECISION-QUEUE')]]);
+  const queueRow = (x) => x.replace(/(\| # \| Question \| Belongs to \| Blocking\? \| Raised \|\n\| --- \| --- \| --- \| --- \| --- \|\n)/, `$1| D1 | later | \`${TIME.replace(/^docs\//, '')}\` | no | 2026-01-01 |\n`);
+  accepts('a ratified document whose open decisions are ticked or queued', [[TIME, ratified('- [x] done\n- [ ] later\n      continued here → DECISION-QUEUE')], ['docs/DECISION-QUEUE.md', queueRow]]);
+  rejects('a ratified document that queues an open decision with no queue row', [[TIME, ratified('- [ ] later → DECISION-QUEUE')]], /queues an open decision, but docs\/DECISION-QUEUE\.md/);
 
   // ADRs: index parity and completeness of an accepted ADR.
   const accept = (x) => x.replace(/^status: [\w-]+/m, 'status: accepted').replace(/^date: .*/m, 'date: 2026-01-01').replace(/^deciders: .*/m, 'deciders: [Ada Lovelace]');

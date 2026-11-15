@@ -8,9 +8,12 @@
 // generated (no generated-by line yet) is skipped by --check until the first run of this script.
 // Due: a row says when it falls due with one of the words below anywhere in its Mechanism or
 // Status cell (for example `⬜ before-production`); a row that says nothing is `when-stack-decided`.
+// Once the Components table in docs/03-architecture/system.md names the project's kinds, a row is
+// left out when its document's `applies-to`, or every rule it covers, is scoped to kinds the
+// project does not have.
 import { existsSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
-import { ROOT, walk, rel, read, frontmatter, enforcementRows, isTemplatePath } from './lib.mjs';
+import { ROOT, walk, rel, read, frontmatter, enforcementRows, isTemplatePath, COMPONENT_KINDS, parseList, expandRuleList, linesWithContext, tableCells } from './lib.mjs';
 
 export const DUE = ['before-first-release', 'before-production', 'when-stack-decided', 'later'];
 const START = '<!-- debt:start -->';
@@ -44,15 +47,54 @@ function rewrite(text, from) {
 const dueOf = (cells) => DUE.find((d) => cells.join(' ').includes(d)) ?? 'when-stack-decided';
 const ruleNo = (s) => Number((s.match(/\d+/) ?? [0])[0]);
 
+/**
+ * The component kinds this project has: the Kind column of the Components table in
+ * docs/03-architecture/system.md, plus any kind named in its `component_kinds` answer. Empty while
+ * neither is filled in, which means "unknown": nothing is filtered.
+ */
+function projectKinds() {
+  const p = join(ROOT, 'docs', '03-architecture', 'system.md');
+  if (!existsSync(p)) return new Set();
+  const kinds = new Set();
+  for (const { line, section, fenced } of linesWithContext(read(p))) {
+    if (fenced) continue;
+    const c = tableCells(line);
+    if (!c) continue;
+    if (section === 'Components' && c.length >= 2 && COMPONENT_KINDS.includes(c[1].replace(/`/g, ''))) kinds.add(c[1].replace(/`/g, ''));
+    if (section === 'Parameters' && c[0] === '`component_kinds`' && !/\[\[/.test(c[1]) && c[1] !== 'default') {
+      for (const k of COMPONENT_KINDS) if (new RegExp(`\\b${k}\\b`).test(c[1])) kinds.add(k);
+    }
+  }
+  return kinds;
+}
+
+/** Rule id -> kinds from its scope tag `_(applies to: …)_`; a rule without a tag is absent. */
+function scopedRules(text) {
+  const scoped = new Map();
+  for (const { line, section, fenced } of linesWithContext(text)) {
+    if (fenced || section !== 'Rules') continue;
+    const id = line.match(/^\s*(?:[-*]|\d+\.)\s+\*\*([RP]\d+)\.\*\*/)?.[1];
+    const tag = line.match(/\s_\(applies to: ([^)]*)\)_$/)?.[1];
+    if (id && tag) scoped.set(id, tag.split(',').map((k) => k.trim()));
+  }
+  return scoped;
+}
+
 function debtRows() {
   const out = [];
+  const kinds = projectKinds();
+  const absent = (list) => kinds.size > 0 && list.length > 0 && !list.some((k) => kinds.has(k));
   for (const abs of docs) {
     const text = read(abs);
     const fm = frontmatter(text);
     if (!fm || !['proposed', 'in-progress', 'ratified'].includes(fm.status) || 'spec' in fm || 'story' in fm) continue;
     if (/^docs\/04-adr\/ADR-\d+/.test(rel(abs))) continue;
+    if ('applies-to' in fm && absent(parseList(fm['applies-to']))) continue; // no component of this project is in scope
+    const scoped = scopedRules(text);
     for (const row of enforcementRows(text)) {
       if (row.status !== '⬜') continue;
+      const ids = expandRuleList(row.cells[0].replace(/[*`]/g, '').trim()) ?? [];
+      if (ids.length && ids.every((id) => scoped.has(id) && absent(scoped.get(id)))) continue; // every rule is scoped to absent kinds
       const rule = row.cells[0].replace(/[*`]/g, '').trim();
       const mechanism = rewrite(row.cells.slice(1, -1).join(' / ').replace(/[⬜✅◐❌]/g, '').trim() || '—', abs);
       out.push({ doc: docsRel(abs), rule, mechanism, due: dueOf(row.cells.slice(1)) });

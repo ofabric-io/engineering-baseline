@@ -23,7 +23,7 @@ changes over time without breaking them.
 | `non_interactive_flag` | [[non_interactive_flag]] | a `--no-input` flag, and automatic non-interactive mode when standard input is not a terminal | an explicit flag only is predictable and breaks piping by surprise |
 | `config_precedence` | [[config_precedence]] | flags, then environment variables, then project file, then user file, then built-in defaults | fewer layers are easier to explain and force one place for everything |
 | `config_env_prefix` | [[config_env_prefix]] | one fixed upper-case prefix per program, shared by every variable | no prefix collides with other programs' variables |
-| `deprecation_window` | [[deprecation_window]] | a removed command, flag or output field is deprecated for at least two minor releases first | a shorter window frees maintainers and strands scripts |
+| `deprecation_window` | [[deprecation_window]] | a removed command, flag or output field is deprecated for at least two minor releases first; where `interface_deprecation_notice` (`15-delivery/releases-and-distribution.md`) is longer, that applies | a shorter window frees maintainers and strands scripts |
 | `version_output` | [[version_output]] | `--version` prints the program name and version on one line, and exits 0 | adding build details helps support and breaks naive parsing |
 
 ## Open decisions

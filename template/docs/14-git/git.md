@@ -76,8 +76,9 @@ parameter back to `no`.
 - **R12.** Pull requests MUST be merged per `merge_strategy`.
 - **R13.** The pull request body MUST be the project's template, filled in: every section present,
   in the template's order, with a section that does not apply answered ("None.") and not deleted.
-  The templates are `.github/pull_request_template.md` and
-  `.gitlab/merge_request_templates/Default.md`; `scripts/pr/open-pr.mjs` builds a body from them.
+  The template is `.github/pull_request_template.md` on GitHub,
+  `.gitlab/merge_request_templates/Default.md` on GitLab, and `docs/14-git/pull-request-template.md`
+  on any other host; `scripts/pr/open-pr.mjs` checks a body against it.
 - **R14.** A pull request title MUST reference its story (`17-specs/spec-lifecycle.md`) when one
   exists; titles of type `chore`, `docs`, `ci`, `build` and `revert` are exempt.
 - **R15.** A pull request MUST have `required_approvals` approving reviews, none by the author

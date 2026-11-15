@@ -22,6 +22,16 @@ const MARKER_RE = /\[\[[^\]\n]+\]\]|\[NEEDS CLARIFICATION[^\]]*\]/g;
 
 const mdFiles = walk(ROOT, (p) => p.endsWith('.md')).map((p) => [p, rel(p)]);
 
+/** The "Deferred decisions" section of docs/DECISION-QUEUE.md, read once. */
+let deferredText = null;
+const deferredTable = () => {
+  if (deferredText === null) {
+    const q = join(ROOT, 'docs', 'DECISION-QUEUE.md');
+    deferredText = existsSync(q) ? (read(q).split(/^## Deferred decisions/m)[1] ?? '').split(/^## /m)[0] : '';
+  }
+  return deferredText;
+};
+
 // 1. Frontmatter status values, and "binding" documents must be complete.
 for (const [abs, file] of mdFiles) {
   if (!file.startsWith('docs/') || isTemplateFile(file)) continue;
@@ -71,6 +81,8 @@ for (const [abs, file] of mdFiles) {
       const flush = () => {
         if (bullet && !/→\s*DECISION-QUEUE\.?$/.test(bullet.text.trim())) {
           fail(`${file}:${bullet.n}`, `is ratified but has an open decision not in the queue ("${bullet.text.trim().slice(0, 60)}…"); resolve it (tick the box), or end the bullet with "→ DECISION-QUEUE" and add it to docs/DECISION-QUEUE.md`);
+        } else if (bullet && !deferredTable().includes(`\`${file.replace(/^docs\//, '')}\``)) {
+          fail(`${file}:${bullet.n}`, `is ratified and queues an open decision, but docs/DECISION-QUEUE.md "Deferred decisions" has no row naming \`${file.replace(/^docs\//, '')}\` in "Belongs to"; add one (node scripts/apply-answers.mjs adds it for an answer recorded as later)`);
         }
         bullet = null;
       };

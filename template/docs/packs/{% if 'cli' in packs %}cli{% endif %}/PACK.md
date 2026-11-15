@@ -3,7 +3,7 @@ pack: cli
 version: 0.1.0
 requires: []
 amends:
-  - 15-delivery/releases-and-distribution.md  # applies its compatibility and deprecation rules to commands, flags and output
+  - 15-delivery/releases-and-distribution.md  # add to public_surfaces: every command, flag, exit code and documented output field
 documents:
   - cli-conventions.md  # Command-Line Conventions
 ---
@@ -25,7 +25,10 @@ Documents in this folder depend on the core layers; no core document links here.
 ## What it uses
 
 - **Compatibility and deprecation** follow `15-delivery/releases-and-distribution.md`; this pack
-  names what counts as a breaking change for a command-line program.
+  names what counts as a breaking change for a command-line program. Applying the amendment means
+  one edit: the core document's `public_surfaces` answer lists the program's commands, flags,
+  exit codes and documented output fields. The interval between deprecation and removal is the
+  core's `interface_deprecation_notice` or this pack's `deprecation_window`, whichever is longer.
 - **Diagnostics and logging** follow `07-observability/logging.md` where the program writes
   structured diagnostics.
 - **Errors** map to exit codes here and to categories in `09-errors/taxonomy.md`.

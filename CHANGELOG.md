@@ -6,6 +6,41 @@ A change that alters a document a project may already have ratified is called ou
 
 ## [Unreleased]
 
+### Changed — fixes from the first brief-first trial run
+
+A full bootstrap of a solo command-line project (176 decisions, mode `all`) found these gaps.
+
+- **Open decisions are in the sheet.** Every unticked bullet under a document's
+  `## Open decisions` is a row (`<question>/<doc>/open-<n>`), defaulting to `later`. Before,
+  about 67 of them were never shown to the user and the agent had to decide them itself.
+- **`scripts/apply-answers.mjs`** writes recorded answers into the `## Parameters` cells, ticks
+  or queues open decisions, and numbers the Deferred decisions rows (`D1`, `D2`, …).
+  `--dry-run` shows the changes first.
+- **`scripts/ratify.mjs`** ratifies documents, or marks them not applicable, after the user's yes:
+  it sets status, owner and date, ticks the Ratify bullet and updates the status board.
+- **`check.mjs`** refuses a ratified document whose queued open decision has no row in the
+  Deferred decisions table.
+- **`queue.mjs`** leaves out debt rows for rules scoped only to component kinds the project does
+  not have.
+- **Sheet and answers.** The sheet gains a `user` source and marks answered rows instead of
+  dropping them. `answers.yaml` documents `n/a`, the one-line entry format and `adr: null`
+  until the ADR exists.
+- **Skill.**
+  - A default the brief makes false is a `brief` row, not "worth a look".
+  - A consistency pass resolves recommendations that contradict each other.
+  - The branch is `docs/bootstrap`, following the `<type>/<slug>` branch naming.
+  - The final confirmation is grouped by layer.
+  - The PR body explains why it exceeds the soft size limit.
+- **Content.**
+  - New `project_licence` setting and question 6.16.
+  - **Projects must review:** `releases-and-distribution.md` R8 now requires the licence text
+    at the repository root.
+  - The glossary lists `validation` among the words the baseline uses.
+  - The `cli` pack's amendment is a concrete edit, and the longer of the two deprecation
+    intervals applies.
+  - **Projects must review:** `git.md` R13 names a PR template for every host. Hosts other than
+    GitHub and GitLab now get `docs/14-git/pull-request-template.md`.
+
 ### Changed — brief-first bootstrap
 
 - **The bootstrap starts from a brief.** Question 0.1 is a free-text description of the project

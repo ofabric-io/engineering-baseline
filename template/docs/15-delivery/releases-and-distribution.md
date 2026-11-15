@@ -20,6 +20,7 @@ libraries, images and installers. Getting a version running in the project's own
 | --- | --- | --- | --- |
 | `release_versioning_scheme` | [[release_versioning_scheme]] | Semantic Versioning, as adopted in `core_standards` (`05-protocols/rfc-profile.md`) | calendar versioning signals recency and says nothing about compatibility |
 | `public_surfaces` | [[public_surfaces]] | listed by the project: for a library its exported API; for a command-line program its commands, flags, exit codes and output formats; for a daemon its configuration and wire protocols; for a user interface its documented behaviour | a wider surface protects consumers and slows change; a narrower one frees internals |
+| `project_licence` | [[project_licence]] | listed by the project: an SPDX identifier for open source, or `proprietary` | the licence decides who may use, change and redistribute the code; changing it later needs every contributor's agreement |
 | `distribution_channels` | [[distribution_channels]] | listed by the project, each with its registry or host | each channel is a publishing credential and a place to keep correct |
 | `supported_versions_policy` | [[supported_versions_policy]] | the latest minor of the current major receives fixes; the previous major receives security fixes for 12 months | longer support costs backports; shorter support pushes upgrades onto consumers |
 | `compatibility_matrix` | [[compatibility_matrix]] | listed by the project: platforms, runtimes and dependency ranges supported | a wider matrix is more test cost and fewer stranded consumers |
@@ -57,8 +58,9 @@ libraries, images and installers. Getting a version running in the project's own
 - **R7.** A published version MUST NOT be overwritten or deleted; a defect is corrected by a new
   version. A version MAY be withdrawn from use only with a recorded reason and a pointer to its
   replacement.
-- **R8.** Every published artifact MUST carry its version, licence, source location and a link to the
-  release notes.
+- **R8.** Every published artifact MUST carry its version, licence (`project_licence`), source
+  location and a link to the release notes, and the repository MUST hold the licence text at its
+  root.
 - **R9.** Each release MUST have release notes listing breaking changes, deprecations, fixes and
   upgrade steps; they MUST come from the changelog (`14-git/git.md` R19).
 
