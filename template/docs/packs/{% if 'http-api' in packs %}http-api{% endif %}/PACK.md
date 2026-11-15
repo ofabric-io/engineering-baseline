@@ -10,6 +10,7 @@ documents:
   - responses-and-errors.md  # Responses & Errors
   - idempotency-and-versioning.md  # Idempotency, Versioning & Deprecation
   - pagination-filtering.md  # Pagination, Filtering & Sorting
+  - long-running-operations.md  # Long-Running Operations
 ---
 
 # Pack: http-api
@@ -29,8 +30,9 @@ depend on the core layers; no core document links here.
 
 ## Parameters worth deciding first
 
-`allowed_methods` per resource kind, `patch_semantics`, `caching`, `versioning_scheme` and
-`hide_existence`. The defaults suit a general-purpose JSON API; an API for an append-only or
+`allowed_methods` per resource kind, `patch_semantics`, `caching`, `versioning_scheme`,
+`hide_existence` and `scope_selection` (how a principal belonging to several accounts or isolation
+units chooses one). The defaults suit a general-purpose JSON API; an API for an append-only or
 high-assurance domain typically narrows methods and forbids caching on specific kinds.
 
 ## Bootstrap

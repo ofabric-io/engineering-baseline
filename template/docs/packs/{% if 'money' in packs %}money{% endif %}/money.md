@@ -23,7 +23,7 @@ boundaries, or how exchange rates are sourced — those are parameters or projec
 | `rounding_mode` | [[rounding_mode]] | half-up (half away from zero), passed explicitly | banker's rounding is common in accounting and removes upward bias |
 | `rounding_boundaries` | [[rounding_boundaries]] | settlement, invoicing, ledger posting, and any external system that accepts only standard minor units | each extra boundary is a place precision is lost; fewer boundaries means more pending fractions |
 | `currency_allowlist` | [[currency_allowlist]] | the closed set of currencies the product transacts in | an open list means unvetted currencies reach settlement |
-| `multi_currency` | [[multi_currency]] | single currency | multi-currency adds conversion rules and rate sourcing |
+| `multi_currency` | [[multi_currency]] | single: one currency for the whole product. Alternatives: single per isolation unit (if the project has isolation units: each has one currency, units may differ), or multiple within a unit | single needs no conversion at all; single per isolation unit keeps every calculation single-currency but needs a currency fixed at unit creation; multiple adds conversion rules and rate sourcing |
 | `wire_format` | [[wire_format]] | amount as an integer string + currency code | JSON numbers lose precision in many clients |
 
 ## Open decisions
@@ -39,11 +39,12 @@ boundaries, or how exchange rates are sourced — those are parameters or projec
 
 ### Representation
 
-- **R1.** A monetary value MUST use the representation in `representation`: an integer amount at
-  the fixed scale in `internal_scale`, plus a currency. Binary floating-point values MUST NOT be
-  used to calculate, persist or transmit money.
-- **R2.** A monetary value MUST be one `Money` type carrying exactly two fields: an integer
-  `amount` in internal units and a `currency` code.
+- **R1.** A monetary value MUST use `representation`; with the default, an integer amount at the
+  scale in `internal_scale` plus a currency. Binary floating-point values MUST NOT be used to
+  calculate, persist or transmit money.
+- **R2.** A monetary value MUST be one `Money` type carrying exactly two fields: an `amount` in
+  the form `representation` gives (with the default, an integer in internal units) and a
+  `currency` code.
 - **R3.** A loose numeric monetary amount MUST NOT exist. Every amount of money — in a domain
   object, request, event payload, parameter or return value — is a `Money`. Any other number that
   carries a unit MUST name its unit (`11-style/`).
@@ -58,17 +59,20 @@ boundaries, or how exchange rates are sourced — those are parameters or projec
 ### Access and arithmetic
 
 - **R7.** Every operation on `Money` MUST go through the one shared money module: at least
-  add, subtract, multiply by a scalar, divide, allocate, compare, negate, convert and reduce to
-  settlement precision.
+  add, subtract, multiply by a scalar, divide, allocate, compare, negate and reduce to settlement
+  precision, plus convert when conversion exists (R11).
 - **R8.** Direct access to the raw `amount` MUST NOT occur outside the money module and its own
   tests.
 - **R9.** Arithmetic or comparison between amounts of different currencies MUST NOT occur. The
   money module MUST fail on a currency mismatch.
 - **R10.** `Money` multiplied by `Money` MUST NOT be defined. Only `Money` ± `Money` and `Money`
   × scalar exist.
-- **R11.** Currency conversion MUST be an explicit operation that requires an exchange rate, the
-  rate's source, its applicable timestamp and a rounding policy, with no default for any of them.
-  When `multi_currency` is single, conversion MUST NOT exist.
+- **R11.** Where conversion exists (`multi_currency` allows more than one currency in a place
+  that must combine them), it MUST be an explicit operation that requires an exchange rate, the
+  rate's source, its applicable timestamp and a rounding policy, with no default for any of them,
+  and the `convert` operation is then required in the money module. Where no conversion exists
+  (`multi_currency` is single, or single per isolation unit with no cross-unit amounts combined),
+  the module MUST NOT offer one.
 
 ### Rounding
 
@@ -82,13 +86,15 @@ boundaries, or how exchange rates are sourced — those are parameters or projec
 
 ### Transport and persistence
 
-- **R15.** `amount` MUST be serialized as a string in every text interchange format, paired with
-  its currency code, per `wire_format`.
-- **R16.** Inbound `amount` MUST be parsed and validated as an integer string at the boundary and
-  MUST NOT be accepted as a JSON number or any native floating-point type.
-- **R17.** Storage MUST hold an amount as an integer column and the currency as a three-character
-  column, written and read as a pair. A single decimal or floating-point column holding an amount
-  MUST NOT be used.
+- **R15.** `amount` MUST be serialized in every text interchange format as `wire_format` says,
+  paired with its currency code; with the default, as an integer string.
+- **R16.** Inbound `amount` MUST be parsed and validated at the boundary against `wire_format`
+  (with the default, as an integer string) and MUST NOT be accepted as a JSON number or any native
+  floating-point type.
+- **R17.** Storage MUST hold an amount in the exact type `representation` requires (with the
+  default, an integer column) and the currency as a three-character column, written and read as a
+  pair. A floating-point column, or a decimal column whose scale is not `internal_scale`, MUST NOT
+  hold an amount.
 - **R18.** `currency` MUST be validated against `currency_allowlist` at every system edge. An
   unlisted currency MUST be rejected, never silently converted.
 
@@ -108,7 +114,7 @@ boundaries, or how exchange rates are sourced — those are parameters or projec
 | R5 | A separate settlement-precision operation; review | ❌ review-only |
 | R7, R8 | Module-boundary check restricting raw amount access (tool chosen in `13-technology/`) | ⬜ scheduled |
 | R9, R10 | Every binary operation fails on mismatch; multiply accepts a scalar only; unit tests | ⬜ scheduled |
-| R11 | Conversion signature requires a rate snapshot argument; no default | ⬜ scheduled |
+| R11 | Conversion signature requires a rate snapshot argument; no default; no conversion exported when none exists | ⬜ scheduled |
 | R12 | Rounding exported only from the money module; architecture test on callers | ⬜ scheduled |
 | R13 | Required parameter, so omitting the mode fails to build | ⬜ scheduled |
 | R14, R19 | Property test over arbitrary weights | ⬜ scheduled |
@@ -125,7 +131,7 @@ Use the money module for every operation. Do not touch the raw amount outside it
 NEVER add, subtract or compare two currencies. Convert explicitly, with a rate.
 NEVER write a scale literal. Round only at the named boundaries, mode passed explicitly.
 Split with largest-remainder allocation. Never divide repeatedly.
-Serialize amounts as strings; reject JSON numbers. Store integer + 3-char code.
+Serialize per wire_format (default: strings); reject JSON numbers. Store the exact type + 3-char code.
 ```
 
 ## References

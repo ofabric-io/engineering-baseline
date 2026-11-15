@@ -40,10 +40,10 @@ What an event is, its envelope, its name, and what it may carry. Reliable delive
 
 ### Envelope
 
-- **R5.** Every event MUST use `envelope`; with the default, the CloudEvents attributes `id`, `source`, `type`, `specversion` and `time` are required, plus `subject` naming the entity acted on.
+- **R5.** Every event MUST use `envelope`; with the default envelope, the CloudEvents attributes `id`, `source`, `type`, `specversion` and `time` are required, plus `subject` naming the entity acted on.
 - **R6.** `id` MUST follow `event_id_format` and MUST be unique per event; it is the consumers' deduplication key (`delivery-and-outbox.md` R8).
-- **R7.** `time` MUST be RFC 3339 in UTC (`02-domain/time.md`).
-- **R8.** Every event MUST carry the attributes in `context_attributes`. `correlationid` MUST remain unchanged across the whole causal chain and `causationid` MUST name the immediate cause; both are required when listed.
+- **R7.** `time` MUST be RFC 3339 in UTC (`02-domain/time.md`); with the default envelope this is the CloudEvents `time` attribute.
+- **R8.** Every event MUST carry the attributes in `context_attributes`; with the default envelope they are CloudEvents extension attributes. `correlationid` MUST remain unchanged across the whole causal chain and `causationid` MUST name the immediate cause; both are required when listed.
 
 ### Naming
 

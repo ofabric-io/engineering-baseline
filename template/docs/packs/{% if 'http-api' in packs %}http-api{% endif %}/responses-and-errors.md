@@ -9,7 +9,7 @@ last-reviewed: never
 
 ## Purpose
 
-One response shape and one error format for the whole API, and the mapping from the error categories of `09-errors/taxonomy.md` to HTTP status codes. This is the document the core taxonomy defers the wire format to.
+One response shape and one error format for the whole API, and the mapping from the error categories of `09-errors/taxonomy.md` (domain, validation, authentication, authorization, not_found, conflict, rate_limited, unavailable, internal) to HTTP status codes. This is the document the core taxonomy defers the wire format to.
 
 ## Parameters
 
@@ -43,14 +43,14 @@ One response shape and one error format for the whole API, and the mapping from 
   | accepted, completing asynchronously | `202` with a pollable status resource |
   | succeeded, nothing to return | `204` |
   | conditional read, unchanged | `304` |
-  | replay of an earlier request | the original status (`idempotency-and-versioning.md` R6) |
+  | replay of an earlier request | the original status (`idempotency-and-versioning.md` R4) |
 
 - **R4.** A `2xx` response MUST NOT carry an error in its body. A business outcome of "declined" or "failed" is a successful request whose resource has a failed state.
 
 ### Error format
 
-- **R5.** An error response MUST follow `error_format`; with the default, it is RFC 9457 Problem Details with `Content-Type: application/problem+json`.
-- **R6.** Every error MUST carry `type`, `title`, `status`, `detail`, a stable machine-readable `code`, and `requestId`:
+- **R5.** An error response MUST follow `error_format`; with the default format, it is RFC 9457 Problem Details with `Content-Type: application/problem+json`.
+- **R6.** Every error MUST carry, with the default format, `type`, `title`, `status`, `detail`, a stable machine-readable `code`, and `requestId` (the members are named by `error_format` otherwise):
 
   ```json
   {
@@ -81,36 +81,37 @@ One response shape and one error format for the whole API, and the mapping from 
 ### What must not leak
 
 - **R12.** An error body MUST NOT contain a stack trace, a query fragment, an internal host name, an upstream provider's raw response, or an internal identifier (`06-security/appsec.md`).
-- **R13.** An error the taxonomy marks as not exposable MUST be replaced with a generic message plus `requestId`; the detail goes to the logs.
+- **R13.** An error whose `isExposable` flag is false (`09-errors/taxonomy.md`) MUST be replaced with a generic message plus `requestId`; the detail goes to the logs.
 - **R14.** When `hide_existence` is yes, a request for a resource the caller may not access MUST return exactly the response (status, body shape and timing class) of a request for a resource that does not exist.
 
 ### Mapping
 
 - **R15.** Exactly one translation point MUST map the taxonomy's errors to this format; no handler, service or middleware sets an error status itself.
-- **R16.** The status MUST be derived from the error's category by the table below, and a specific `code` MAY override it in the error-code catalog. An override MUST be documented next to the code.
+- **R16.** The status MUST be derived from the error's category (`09-errors/taxonomy.md`) by the table below, and a specific `code` MAY override it in the error-code catalog. An override MUST be documented next to the code.
 
-  | Category or situation | Status |
-  | --- | --- |
-  | transport: unparseable body | `400` |
-  | transport: not authenticated | `401` with `WWW-Authenticate` |
-  | application: forbidden | `403` (or `404` per R14) |
-  | application: not found | `404` |
-  | transport: method not allowed | `405` with `Allow` |
-  | transport: representation not acceptable | `406` |
-  | domain: invariant or state conflict | `409` |
-  | removed permanently (a retired version) | `410` |
-  | transport: precondition failed (`If-Match`) | `412` |
-  | transport: body too large | `413` |
-  | transport: unsupported media type | `415` |
-  | transport: validation failure | `validation_status` |
-  | transport: precondition required | `428` |
-  | transport: rate limited | `429` with `Retry-After` |
-  | infrastructure: dependency failed | `502` |
-  | infrastructure: unavailable or shedding load | `503` with `Retry-After` |
-  | infrastructure: dependency timed out | `504` |
-  | defect in this service | `500`, generic body (R13) |
+  | Category | Situation | Status |
+  | --- | --- | --- |
+  | `validation` | unparseable body | `400` |
+  | `validation` | well-formed but invalid | `validation_status` |
+  | `validation` | unsupported media type | `415` |
+  | `validation` | representation not acceptable | `406` |
+  | `validation` | body too large | `413` |
+  | `authentication` | not authenticated | `401` with `WWW-Authenticate` |
+  | `authorization` | forbidden | `403` (or `404` per R14) |
+  | `not_found` | resource absent | `404` |
+  | `not_found` | method not allowed on the resource | `405` with `Allow` |
+  | `conflict` | state or concurrency conflict | `409` |
+  | `conflict` | precondition failed (`If-Match`) | `412` |
+  | `conflict` | precondition required | `428` |
+  | `conflict` | removed permanently (a retired version) | `410` |
+  | `domain` | a business rule refused the operation | `409`, or `422` when no state conflict is involved, set per code in the catalog |
+  | `rate_limited` | limit exceeded | `429` with `Retry-After` |
+  | `unavailable` | dependency failed | `502` |
+  | `unavailable` | overloaded or shedding load | `503` with `Retry-After` |
+  | `unavailable` | dependency timed out | `504` |
+  | `internal` | defect in this service | `500`, generic body (R13) |
 
-- **R17.** An error that is safe to retry MUST say so (a `retryable` member or a `Retry-After` header); a client MUST NOT infer retry safety from the status alone (`08-reliability/timeouts-retries.md`).
+- **R17.** An error whose `isRetryable` flag is true MUST say so on the wire (an `isRetryable` member or a `Retry-After` header); a client MUST NOT infer retry safety from the status alone (`08-reliability/timeouts-retries.md`).
 
 ## Enforcement
 
