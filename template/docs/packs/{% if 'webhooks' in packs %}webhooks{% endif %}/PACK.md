@@ -9,8 +9,15 @@ documents:
 
 # Pack: webhooks
 
-Optional standards for projects that have this capability. Documents in this folder depend on
-the core layers; no core document links here.
+Standards for projects that deliver events to HTTP endpoints registered by external parties.
+Documents in this folder depend on the core layers and on the events pack; no core document
+links here. The pack amends no core rule: it narrows the events pack's delivery rules for the
+HTTP case.
+
+## Parameters worth deciding first
+
+`signature_scheme` (HMAC over timestamp and raw body by default; RFC 9421 as the long-term
+alternative), `retry_schedule`, `replay_tolerance` and `url_policy`.
 
 ## Bootstrap
 
