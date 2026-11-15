@@ -2,9 +2,10 @@
 pack: multi-tenant
 version: 0.1.0
 requires: []
-amends: []
+amends:
+  - 02-domain/glossary.md  # once isolation_unit_name is chosen, its generic synonyms become forbidden terms
 documents:
-  - isolation.md  # Tenant Isolation
+  - isolation.md  # Isolation
 ---
 
 # Pack: multi-tenant
