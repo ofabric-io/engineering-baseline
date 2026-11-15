@@ -15,14 +15,14 @@ How instants, dates, durations and time zones are represented, and where time co
 
 | Parameter | Answer | Default | Trade-off |
 | --- | --- | --- | --- |
-| `zone_of_record` | [[zone_of_record]] | UTC for instants; an explicit named zone for business dates | implicit server-local time is the classic source of off-by-one-day bugs |
+| `business_time_zone` | [[business_time_zone]] | UTC for instants; an explicit named zone for business dates, one for the project or one per isolation unit if each has its own calendar | implicit server-local time is the classic source of off-by-one-day bugs; a zone per isolation unit is more correct and more to carry |
 | `instant_precision` | [[instant_precision]] | milliseconds | finer precision rarely survives every hop |
 | `clock_source` | [[clock_source]] | injected clock port; no direct system-clock reads in domain code | testability of expiry and deadline logic |
 
 ## Open decisions
 
 - [ ] Ratify this document with the project (`.agents/skills/ratify-standard/SKILL.md`).
-- [ ] Which named zone is the business zone of record, and which holiday or non-working-day calendar applies, if business days matter at all?
+- [ ] Which named zone is the `business_time_zone` (per isolation unit, if they differ), and which holiday or non-working-day calendar applies, if business days matter at all?
 
 ## Rules
 
@@ -31,7 +31,7 @@ How instants, dates, durations and time zones are represented, and where time co
 - **R1.** An instant MUST be stored and processed in UTC, and serialised as RFC 3339 with a `Z` suffix.
 - **R2.** Instants MUST be carried at `instant_precision`; finer precision MUST NOT be relied on for ordering.
 - **R3.** An instant field MUST be named with an `At` suffix (or the project's equivalent convention in `11-style/naming-and-style.md`).
-- **R4.** A local time MUST NOT be stored or appear in an interface payload; local time is a presentation concern computed at the edge from the viewer's zone.
+- **R4.** Except as R13 allows, a local time MUST NOT be stored or appear in an interface payload; local time is a presentation concern computed at the edge from the viewer's zone.
 
 ### The clock
 
@@ -44,14 +44,18 @@ How instants, dates, durations and time zones are represented, and where time co
 
 ### Business time
 
-- **R8.** Business-day and cut-off calculations MUST use the business zone named in `zone_of_record`, stated explicitly at every call site and never defaulted from the host.
+- **R8.** Business-day and cut-off calculations MUST use the business zone named in `business_time_zone`, stated explicitly at every call site and never defaulted from the host.
 - **R9.** Non-working days MUST come from an explicit calendar held as data, not from a weekday check.
 
 ### Durations
 
-- **R10.** A duration MUST be an integer with its unit in the name (`timeoutMs`, `ttlSeconds`); a bare `timeout` is prohibited.
+- **R10.** A duration MUST be an integer with its unit in the name, following `11-style/naming-and-style.md`; a bare `timeout` is prohibited.
 - **R11.** A duration MUST NOT be stored as a string; an ISO 8601 duration string is permitted on the wire and MUST be parsed at the boundary.
 - **R12.** A duration derived from two instants MUST be produced by a helper that returns a named-unit value, never by subtracting into a bare number.
+
+### Future local times
+
+- **R13.** A future wall-clock time that must keep its local meaning (a recurring schedule, an appointment) MAY be stored as a local date and time together with an IANA time zone identifier; it MUST be resolved to an instant at the moment of use and MUST NOT be stored without its zone.
 
 ## Enforcement
 
@@ -66,11 +70,12 @@ How instants, dates, durations and time zones are represented, and where time co
 | R9 | Calendar as data, with a test for a weekday holiday | ⬜ scheduled |
 | R10 | Naming lint for unit suffixes; review | ◐ partial |
 | R11, R12 | Duration helpers are the only conversion path | ⬜ scheduled |
+| R13 | Schema check that a local date-time column always has a zone-identifier column | ⬜ scheduled |
 
 ## AI guardrails
 
 ```text
-Instants: UTC, RFC 3339 with Z, named *At. Never store or send a local time.
+Instants: UTC, RFC 3339 with Z, named *At. Never store or send a local time, except a future schedule stored with its IANA zone id.
 Never read the system clock in domain or application code. Use the injected clock.
 A date with no time is a date-only type, never a timestamp at midnight.
 State the zone explicitly in business-day maths; never use the host's zone.

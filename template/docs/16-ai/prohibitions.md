@@ -31,7 +31,8 @@ is the fallback, not the goal.
 - **P2.** An agent MUST NOT disable or suppress a lint, type or static-analysis rule without a
   written justification at the site and in the pull request body.
 - **P3.** An agent MUST NOT modify code unrelated to the task, including opportunistic
-  refactors, formatting sweeps and dependency bumps.
+  refactors, formatting sweeps and dependency bumps
+  (`06-security/dependencies-and-supply-chain.md` owns dependency changes).
 - **P4.** An agent MUST NOT invent a convention (interface shape, naming, data layout) that a
   standard should define. If the standard is absent or `not-started`, it asks.
 - **P5.** An agent MUST NOT bypass a module boundary, nor widen an interface, relax a type or
@@ -58,8 +59,8 @@ is the fallback, not the goal.
 - **P15.** An agent MUST NOT claim work is done while a required verification step failed or was
   skipped.
 - **P16.** An agent MUST NOT execute a migration, or a destructive or irreversible operation,
-  against a shared environment without explicit per-change approval
-  (`16-ai/operating-procedure.md` R10).
+  in any environment, including a development store shared with another person, without
+  explicit per-change approval. This rule owns migration execution; other documents cite it.
 - **P17.** On hitting a prohibition, the agent MUST halt the affected work, report which
   prohibition applies and the context, and hand the decision to a human. It MUST NOT choose a
   workaround, and MUST report before it asks for any exception.
@@ -105,4 +106,5 @@ is the fallback, not the goal.
 - `16-ai/autonomy-and-context.md` — tiers
 - `03-architecture/dependency-rules.md`
 - `06-security/secrets-and-crypto.md`
+- `06-security/dependencies-and-supply-chain.md`
 - `17-specs/spec-lifecycle.md`, `17-specs/work-tracking.md`

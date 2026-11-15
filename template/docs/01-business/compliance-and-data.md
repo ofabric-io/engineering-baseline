@@ -17,12 +17,12 @@ Which regulatory regimes apply, what records must be kept and for how long, and 
 | --- | --- | --- | --- |
 | `regulatory_regimes` | [[regulatory_regimes]] | none declared | e.g. GDPR, LGPD, PCI DSS, SOC 2, HIPAA — each adds rules here |
 | `record_retention` | [[record_retention]] | decided per data class in `06-security/sensitive-data.md` | a single global period is simpler but rarely correct |
-| `data_residency` | [[data_residency]] | a single region until a regime or contract requires otherwise | each added region multiplies operations and legal surface |
+| `data_residency` | [[data_residency]] | as required by regimes and contracts: where none applies, any region the project chooses and records | each added region multiplies operations and legal surface |
 
 ## Open decisions
 
 - [ ] Ratify this document with the project (`.agents/skills/ratify-standard/SKILL.md`).
-- [ ] If two obligations conflict (for example an erasure right against a retention duty), who decides, and where is the decision recorded? Until decided, [NEEDS CLARIFICATION: conflict between obligations] stays open and nothing is built around it.
+- [ ] If two obligations conflict (for example an erasure right against a retention duty), who decides, and where is the decision recorded? Until decided, nothing is built around the conflict (R14, R15). → DECISION-QUEUE
 
 ## Rules
 
@@ -34,22 +34,22 @@ Which regulatory regimes apply, what records must be kept and for how long, and 
 
 ### Data classification
 
-- **R4.** Every field that holds data MUST belong to exactly one data class, decided when the field is added. The classes are the `data_classes` parameter of `06-security/sensitive-data.md`, defined there and only there.
-- **R5.** A field in the most sensitive class MUST be added to the redaction list (`06-security/sensitive-data.md`) in the same change that introduces it.
+- **R4.** Data classification MUST follow `06-security/sensitive-data.md` R1–R2; the classes and the field-to-class table are defined there and only there.
+- **R5.** A regime's obligations MUST be mapped to the classes it covers, so that each class's handling meets the strictest regime that applies to it.
 - **R6.** Classification MUST follow the data, not the table: derived or copied data inherits the highest class of its sources.
 
 ### Auditability
 
-- **R7.** Every consequential action MUST produce an audit record naming the actor, the action, the target and the time.
-- **R8.** The project MUST state whether its audit trail is authoritative evidence; if it is best-effort, that is a known exposure recorded in this document or an ADR, not in a code comment.
+- **R7.** Every consequential action MUST be recorded with the actor, the action, the target and the time. Where an audit-trail capability is installed, its documents govern how.
+- **R8.** The project MUST state whether these records are authoritative evidence; if they are best-effort, that is a known exposure recorded in this document or an ADR, not in a code comment.
 
 ### Retention and residency
 
-- **R9.** Every data class or record kind MUST declare a retention period in `record_retention`, with the obligation that sets it.
+- **R9.** Every record kind MUST have a retention period in `record_retention`, stated in the retention-by-class table of `06-security/sensitive-data.md`, with the obligation that sets it.
 - **R10.** A retention period MUST NOT be shortened without checking it against the obligation that set it; retention is a duty, not a storage-cost decision.
 - **R11.** Retention MUST be enforced by an automated job per store, not by manual cleanup.
-- **R12.** Production data MUST NOT be copied to another environment; non-production environments use synthetic data.
-- **R13.** Data MUST NOT be stored or processed outside the regions in `data_residency`. Adding a region MUST be an ADR.
+- **R12.** Copies of production data MUST follow `06-security/sensitive-data.md` R14–R16.
+- **R13.** Data MUST NOT be stored or processed outside the places `data_residency` permits. Adding a region MUST be an ADR.
 
 ### Deferred obligations
 
@@ -64,13 +64,13 @@ Which regulatory regimes apply, what records must be kept and for how long, and 
 | R2 | ADR required; compliance review checklist | ❌ review-only |
 | R3 | Agent prohibition (`16-ai/prohibitions.md`) | ◐ partial |
 | R4, R6 | Schema review; a data-class annotation required on every field (mechanism chosen in `13-technology/`) | ⬜ scheduled |
-| R5 | Redaction-list check on changes that add a restricted field | ⬜ scheduled |
-| R7 | Audit-emission check on state-changing operations (`07-observability/`) | ⬜ scheduled |
+| R5 | Review of the regime-to-class mapping | ❌ review-only |
+| R7 | Check that state-changing operations emit a record (mechanism chosen in `13-technology/`) | ⬜ scheduled |
 | R8 | Review; recorded here or in an ADR | ❌ review-only |
 | R9 | Retention table reviewed per store | ⬜ scheduled |
 | R10 | PR review against the retention table | ❌ review-only |
 | R11 | Scheduled retention jobs with recorded runs | ⬜ scheduled |
-| R12 | No export path for production data; environment access controls | ⬜ scheduled |
+| R12 | Enforced where `06-security/sensitive-data.md` enforces it | ⬜ scheduled |
 | R13 | Infrastructure configuration restricted to approved regions | ⬜ scheduled |
 | R14 | `15-delivery/production-readiness.md` is a blocking checklist | ❌ review-only |
 | R15 | Release gate on the readiness checklist | ⬜ scheduled |
@@ -79,10 +79,9 @@ Which regulatory regimes apply, what records must be kept and for how long, and 
 
 ```text
 Never infer what a regulation requires. Never design around an undecided obligation. ASK.
-Classify every field when you add it; put the most sensitive class on the redaction list in
-the SAME change.
+Classify every field when you add it, per 06-security/sensitive-data.md.
 Never shorten a retention period for storage cost.
-Production data never leaves production. Use synthetic data elsewhere.
+Production data never leaves production unless 06-security/sensitive-data.md allows it.
 Never ship code that depends on an undecided obligation to production.
 ```
 

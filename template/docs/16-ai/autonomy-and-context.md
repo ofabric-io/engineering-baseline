@@ -32,8 +32,9 @@ agent works through a task is `operating-procedure.md`; what it must never do is
 
 ### Autonomy tiers
 
-- **R1.** Nothing merges without a human's approval. There MUST NOT be an auto-merge path at any
-  tier, for any author; changing this requires an ADR that supersedes this rule.
+- **R1.** Merging MUST follow `auto_merge`, which this document owns. A merge that `auto_merge`
+  does not permit MUST NOT happen without a human's approval, and no auto-merge path MAY exist
+  beyond the tiers and conditions `auto_merge` names; changing it requires an ADR.
 - **R2.** The tier of a change is set by its change type, using the tiers in `autonomy_tiers`.
   The default tiers are:
 
@@ -47,8 +48,8 @@ agent works through a task is `operating-procedure.md`; what it must never do is
 - **R3.** When a change spans tiers, the highest tier applies to the whole change.
 - **R4.** For tier 3 and 4, review means a human read the diff and can say what it does. An
   approval from someone who has not read the diff does not count.
-- **R5.** The reviewer MUST NOT be the author. The number of approvals required is
-  `required_approvals` in `14-git/git.md`.
+- **R5.** Review and approval MUST follow `14-git/git.md` (the reviewer is never the author;
+  approvals required; solo mode), which owns those rules.
 - **R6.** An agent MUST state in the pull request body the tier it believes the change falls
   under, and why when the change spans tiers.
 - **R7.** An agent MUST NOT lower a change's tier by splitting it into pieces that each fall in a
@@ -71,11 +72,12 @@ agent works through a task is `operating-procedure.md`; what it must never do is
   | Domain model, entities, state transitions | `02-domain/` |
   | Persistence, queries, data schema | `06-security/`, `08-reliability/`, `13-technology/` |
   | Data migrations | `15-delivery/deployments-and-rollback.md`, `08-reliability/` |
-  | Public interfaces, protocols, message formats | `05-protocols/`, `09-errors/`, and any installed pack for that interface |
+  | Public interfaces, protocols, message formats | `05-protocols/`, `09-errors/`, and any installed pack that governs that area |
   | Authentication, authorization, cryptography, secrets | `06-security/` |
   | Logging, metrics, tracing, health | `07-observability/` |
   | Retries, timeouts, concurrency, background work | `08-reliability/` |
-  | User-facing screens and copy | any installed user-interface pack |
+  | User-facing screens and copy | any installed pack that governs that area |
+  | Money, ledgers, audit records, isolation units, events, data stores | any installed pack that governs that area |
   | Tests | `12-testing/` |
   | Build, CI, deployment, infrastructure | `14-git/`, `15-delivery/`, `13-technology/` |
   | Documentation, specs, ADRs | `16-ai/`, `17-specs/`, `04-adr/` |
@@ -94,10 +96,10 @@ agent works through a task is `operating-procedure.md`; what it must never do is
 
 | Rule | Mechanism | Status |
 | --- | --- | --- |
-| R1 | Branch protection: required approval, no auto-merge, no self-approval | ⬜ scheduled |
+| R1 | Branch protection: required approval, auto-merge enabled only as `auto_merge` allows | ⬜ scheduled |
 | R2, R3, R6 | Pull request template tier field, asserted by a CI job | ⬜ scheduled |
 | R4 | Reviewer names what the diff does in the approval | ❌ review-only |
-| R5 | Branch protection: no self-approval | ⬜ scheduled |
+| R5 | Enforced where `14-git/git.md` enforces it | ⬜ scheduled |
 | R7 | Pull request review | ❌ review-only |
 | R8, R10 | `AGENTS.md` read-first list; pull request review | ❌ review-only |
 | R9 | This table; pull request review | ❌ review-only |
@@ -107,7 +109,7 @@ agent works through a task is `operating-procedure.md`; what it must never do is
 
 ## AI guardrails
 
-- Nothing auto-merges, at any tier.
+- Merge only as `auto_merge` allows; by default nothing auto-merges.
 - The highest tier of the change governs all of it. Never split a change to lower its tier.
 - Tier 3 and 4 need an approved plan first. Tier 4 also needs per-step human approval.
 - State the tier, and why, in the pull request body.
@@ -119,5 +121,5 @@ agent works through a task is `operating-procedure.md`; what it must never do is
 
 - `16-ai/operating-procedure.md` — the loop these tiers sit inside
 - `16-ai/prohibitions.md` — what is never allowed at any tier
-- `14-git/git.md` — `required_approvals`
+- `14-git/git.md` — reviewer, approvals, solo mode
 - `17-specs/spec-lifecycle.md` — when a spec is required
