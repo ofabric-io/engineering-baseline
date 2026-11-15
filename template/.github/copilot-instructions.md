@@ -1,0 +1,4 @@
+Read and follow `AGENTS.md` at the repository root before any task. It is the single source of
+instructions for this project; skills are listed there by path under `.agents/skills/`.
+
+<!-- Adapter for GitHub Copilot. Keep this file a pointer. -->

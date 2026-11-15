@@ -1,0 +1,56 @@
+---
+adr: 001
+status: proposed
+date: YYYY-MM-DD
+deciders: []
+supersedes: null
+superseded-by: null
+---
+
+# ADR-001: Adopt the engineering baseline
+
+## Context
+
+{{ project_name }} needs engineering standards, a decision record and a spec workflow from its
+first commit, so that humans and AI agents work to the same rules. Writing them from scratch
+costs weeks and tends to produce rules nobody enforces.
+
+## Decision
+
+{{ project_name }} adopts **engineering-baseline** at commit `{{ _copier_answers._commit or 'local' }}`,
+generated with:
+
+- AI-tool adapters: all (AGENTS.md plus pointers for every supported tool)
+- Packs: {{ packs | join(', ') if packs else 'none' }}
+- Tracker: {{ tracker }}
+- CI: {{ ci }}
+
+Baseline documents arrive as `proposed` and become binding only when ratified by this project.
+Every departure from a baseline default is recorded as an ADR or in the document's Parameters.
+Later baseline versions are pulled with `copier update`, and each update is reviewed like any
+other change.
+
+## Alternatives considered
+
+| Option | Why not |
+| --- | --- |
+| Write standards from scratch | Slow, and the result is usually unenforced prose |
+| Adopt no written standards | Agents and new contributors infer rules from code, inconsistently |
+| Copy another project's documents | Carries that project's domain and history; no update path |
+
+## Consequences
+
+- Positive: the project starts with a complete hierarchy, templates, skills and checks.
+- Negative: baseline updates must be reviewed and merged; local edits can conflict with them.
+- Harder to change later: the layer numbering and the status model, which every document and
+  skill references.
+
+## Compliance
+
+`.copier-answers.yml` records the adopted baseline commit. `scripts/check.mjs` runs in the git
+hooks and in CI.
+
+## Amendments
+
+| Date | Change | Why |
+| --- | --- | --- |

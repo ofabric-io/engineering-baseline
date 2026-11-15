@@ -1,0 +1,15 @@
+# Agent scratch output (AGENTS.md: never leave notes at the repository root)
+.agents/out/
+
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+
+# Per-user AI-tool settings (permissions are personal, not project policy)
+.claude/settings.local.json
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.swp

@@ -1,0 +1,75 @@
+# {{ project_name }} — Engineering Standards
+
+An **engineering standards hierarchy**. Each layer constrains the layers below it. Read it top
+down, from business intent to delivery mechanics.
+
+## Status
+
+Every document carries a `status` in its frontmatter:
+
+| status | Meaning | May an agent follow it? |
+| --- | --- | --- |
+| `not-started` | No rules yet. | **No.** Never infer a rule from it — ask a human. |
+| `proposed` | Baseline defaults, not yet adopted by this project. | Only as a suggestion; flag that it is unratified. |
+| `in-progress` | Being decided. Rules may still change. | Provisionally, and say so. |
+| `ratified` | Binding. Changing it requires an ADR. | **Yes.** |
+
+Only a human moves a document to `ratified`. The `ratify-standard` skill runs that session.
+
+## The hierarchy
+
+```text
+                        BUSINESS  (01)
+                            │
+                          DOMAIN  (02)
+                            │
+                  ARCHITECTURE  (03, 04)
+                            │
+       PLATFORM STANDARDS  (05–09)   protocols · security · observability · reliability · errors
+                            │
+       ENGINEERING RULES   (10–13)   patterns · style · testing · technology
+                            │
+              DELIVERY  (14, 15)     git · CI/CD
+                            │
+           AI OPERATIONS  (16)
+                            │
+                 SPECS  (17)  ──────►  a feature spec cuts vertically through every layer
+
+        PACKS (docs/packs/)  ──────►  optional layers; depend on the core, never the reverse
+```
+
+A spec is an **input**, never an override: where a feature appears to need an exception to a
+standard, that exception is an ADR.
+
+## Layers
+
+| # | Layer | Decides |
+| --- | --- | --- |
+| 01 | `01-business/` | Scope, non-goals, the priority order when goals conflict, compliance posture |
+| 02 | `02-domain/` | Ubiquitous language, identifiers, time, lifecycles and invariants |
+| 03 | `03-architecture/` | System shape, boundaries, dependency direction |
+| 04 | `04-adr/` | Why each significant decision was made |
+| 05 | `05-protocols/` | Which published standards (RFCs, ISO, specs) are adopted |
+| 06 | `06-security/` | Application security, authn/authz, sensitive data, secrets |
+| 07 | `07-observability/` | Logging, metrics, tracing, health |
+| 08 | `08-reliability/` | Timeouts, retries, concurrency, idempotency |
+| 09 | `09-errors/` | Error taxonomy and handling |
+| 10 | `10-patterns/` | Approved patterns and named anti-patterns |
+| 11 | `11-style/` | Naming and code style principles |
+| 12 | `12-testing/` | Test levels, coverage, what must be tested |
+| 13 | `13-technology/` | The stack: one document per technology decision |
+| 14 | `14-git/` | Branching, commits, pull requests, review |
+| 15 | `15-delivery/` | CI gates, deployments, rollback, production readiness |
+| 16 | `16-ai/` | Agent autonomy, operating procedure, prohibitions, model routing |
+| 17 | `17-specs/` | Spec lifecycle, templates, work tracking |
+
+## Packs installed
+
+{% if packs %}{% for p in packs %}- `packs/{{ p }}/`
+{% endfor %}{% else %}None. Add one with `copier update` and answer the packs question again.
+{% endif %}
+## Shape of a document
+
+Every standards document follows `docs/_template.md`: Purpose, Parameters, Open decisions,
+Rules, Enforcement, AI guardrails, References. `docs/DECISION-QUEUE.md` tracks what is decided,
+what is deferred, and enforcement still owed.

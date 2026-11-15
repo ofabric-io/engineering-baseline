@@ -1,0 +1,75 @@
+# Creation-time questions only: they decide WHICH FILES EXIST.
+# What the documents SAY is decided later by the bootstrap skill (template/bootstrap/).
+
+_min_copier_version: "9.4.0"
+_subdirectory: template
+_templates_suffix: .jinja
+_answers_file: .copier-answers.yml
+_message_after_copy: |
+  Project "{{ project_name }}" created from engineering-baseline.
+
+  Next:
+    cd {{ _copier_conf.dst_path }}
+    git init && git config core.hooksPath .githooks
+    node scripts/sync-adapters.mjs
+    node scripts/check.mjs
+
+  Then ask your AI tool to run the bootstrap-project skill
+  (.agents/skills/bootstrap-project/SKILL.md), or fill in bootstrap/questionnaire.md by hand.
+
+project_name:
+  type: str
+  help: Human-readable project name
+  validator: "{% if not project_name.strip() %}Required{% endif %}"
+
+project_slug:
+  type: str
+  help: Kebab-case identifier (used in paths and package names)
+  default: "{{ project_name.strip().lower().replace(' ', '-') }}"
+  validator: >-
+    {% if not (project_slug | regex_search('^[a-z][a-z0-9-]*$')) %}Lowercase letters, digits and hyphens, starting with a letter{% endif %}
+
+project_description:
+  type: str
+  help: One or two sentences on what the project is for (agents read this on every task)
+  default: ""
+
+owner:
+  type: str
+  help: Default owner of standards documents (a name or handle)
+  default: TBD
+
+packs:
+  type: str
+  help: >-
+    Optional packs: standards for capabilities only some projects have.
+    You can add one later with `copier update`.
+  multiselect: true
+  choices:
+    "http-api — resources, errors, idempotency, pagination, versioning": http-api
+    "events — domain/integration events, outbox, delivery, schema evolution": events
+    "webhooks — outbound webhooks: signing, retries, rotation (requires events)": webhooks
+    "money — monetary amounts, rounding, allocation, serialization": money
+    "ledger — double-entry bookkeeping (requires money)": ledger
+    "multi-tenant — isolation unit, enforcement, leak tests": multi-tenant
+    "audit-trail — what is audited, record shape, retention": audit-trail
+  default: []
+  validator: >-
+    {% if 'webhooks' in packs and 'events' not in packs %}The webhooks pack requires the events pack{% elif 'ledger' in packs and 'money' not in packs %}The ledger pack requires the money pack{% endif %}
+
+tracker:
+  type: str
+  help: Where work items (features, stories) are tracked
+  choices:
+    "None — Markdown queue inside the repo": none
+    GitHub Issues: github-issues
+    ClickUp: clickup
+  default: none
+
+ci:
+  type: str
+  help: CI provider that runs the baseline checks
+  choices:
+    GitHub Actions: github-actions
+    None (run scripts/check.mjs yourself): none
+  default: github-actions

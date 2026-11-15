@@ -1,0 +1,20 @@
+# Terms that must never appear in template/ or in a rendered project.
+# One per line, matched case-insensitively on word boundaries.
+# Add the names of any project you extract from to tests/leftover-terms.local.txt (git-ignored).
+
+# Domain vocabulary of earlier projects
+seller
+buyer
+chargeback
+payout
+antecipação
+
+# Technology choices (they belong to a project's docs/13-technology/, never to the baseline)
+nestjs
+typeorm
+pnpm
+nx
+postgres
+postgresql
+redis
+react

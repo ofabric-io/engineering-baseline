@@ -1,0 +1,7 @@
+.tmp/
+node_modules/
+.claude/settings.local.json
+.DS_Store
+Thumbs.db
+tests/leftover-terms.local.txt
+maintainers/extraction-map.md

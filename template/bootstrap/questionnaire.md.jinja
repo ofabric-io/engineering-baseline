@@ -1,0 +1,124 @@
+# Bootstrap questionnaire — {{ project_name }}
+
+Every decision this project must make before its standards are binding. It works with any AI
+tool or with none: answer in `.baseline/answers.yaml` (same ids), then apply the answers to the
+documents named in **Writes to**.
+
+How to answer each question: `default`, a value, or `later`. `later` is always allowed. The
+question is then recorded in `docs/DECISION-QUEUE.md` and is never guessed.
+
+Questions are asked **one phase at a time**, numbered, with the recommended default and its
+trade-off. A phase is finished when every question in it is answered or deferred.
+
+---
+
+## Phase 0 — Intake
+
+| Id | Question | Default | Writes to |
+| --- | --- | --- | --- |
+| 0.1 | In two or three sentences: what does the product do, for whom, and what does it deliberately not do? | {{ project_description or '— (required)' }} | `AGENTS.md` |
+| 0.2 | Who decides on standards and ADRs (names or handles)? | {{ owner }} | frontmatter `owner`, ADR `deciders` |
+| 0.3 | Is anything already in production? | no | `docs/04-adr/README.md` governance mode |
+| 0.4 | ADR governance mode: `pre-production` (amend in place until first production deploy) or `immutable`? | `pre-production` if 0.3 is no, else `immutable` | `docs/04-adr/README.md` |
+
+## Phase 1 — Business
+
+| Id | Question | Default | Writes to |
+| --- | --- | --- | --- |
+| 1.1 | In scope for the first release (a list of capabilities)? | — (required) | `01-business/principles.md` |
+| 1.2 | Explicit non-goals — what must not be built speculatively? | — (required) | `01-business/principles.md` |
+| 1.3 | Priority order when goals conflict | correctness > security > availability > latency > operability > delivery speed > cost | `01-business/principles.md` |
+| 1.4 | Does any component need a different order (e.g. a data plane that puts availability first)? | no | `01-business/principles.md` |
+| 1.5 | Regulatory regimes that apply (GDPR, LGPD, PCI DSS, SOC 2, HIPAA, none…) | none | `01-business/compliance-and-data.md` |
+| 1.6 | Operations that always need a human, however automated the rest is | irreversible data changes, production deploys, credential rotation | `01-business/availability.md` |
+| 1.7 | Availability targets | none until the first production deploy | `01-business/availability.md` |
+
+## Phase 2 — Domain
+
+| Id | Question | Default | Writes to |
+| --- | --- | --- | --- |
+| 2.1 | The 5–15 core terms of the domain, each with one meaning; and any words to forbid | — (required) | `02-domain/glossary.md` |
+| 2.2 | The core entities that are consistency boundaries (aggregates), and the states of each | from 1.1 | `02-domain/lifecycles.md` |
+| 2.3 | Internal identifier format | UUIDv7 | `02-domain/identifiers.md` |
+| 2.4 | Public identifier format | type-prefixed opaque (`<prefix>_<encoded>`) | `02-domain/identifiers.md` |
+| 2.5 | Zone of record for business dates (instants are always UTC) | UTC | `02-domain/time.md` |
+
+## Phase 3 — Architecture
+
+| Id | Question | Default | Writes to |
+| --- | --- | --- | --- |
+| 3.1 | System shape | modular monolith | `03-architecture/system.md` + ADR |
+| 3.2 | Internal boundaries (modules / bounded contexts), each owning its data | from 2.2 | `03-architecture/system.md` |
+| 3.3 | Deployables (what is shipped separately) | one | `03-architecture/system.md` + ADR if more than one |
+| 3.4 | How boundaries communicate | events for notification, published interfaces for queries | `03-architecture/system.md` |
+| 3.5 | Dependency direction | inward: adapters → application → domain | `03-architecture/dependency-rules.md` |
+
+## Phase 4 — Platform defaults
+
+Each core document from layers 05–12 is offered as a whole: **accept** its proposed defaults,
+**change** named parameters, or **later**. Changes become ADRs when they have a real alternative.
+
+| Id | Document | Default |
+| --- | --- | --- |
+| 4.1 | `05-protocols/rfc-profile.md` | accept |
+| 4.2 | `06-security/*` (4 documents) | accept |
+| 4.3 | `07-observability/*` (3 documents) | accept |
+| 4.4 | `08-reliability/*` (2 documents) | accept |
+| 4.5 | `09-errors/taxonomy.md` | accept |
+| 4.6 | `10-patterns/patterns.md` | accept |
+| 4.7 | `11-style/naming-and-style.md` | accept |
+| 4.8 | `12-testing/strategy.md` | accept |
+{% if packs %}
+## Phase 4P — Packs
+
+Each installed pack's parameters, asked the same way. Defaults are in each document's
+`## Parameters` table.
+
+| Id | Pack | Key questions |
+| --- | --- | --- |
+{% if 'http-api' in packs %}| P.http-api | `packs/http-api/` | Which methods per resource kind? PATCH semantics? Versioning scheme? Is caching allowed anywhere? |
+{% endif %}{% if 'events' in packs %}| P.events | `packs/events/` | Domain events only, or integration events too? Naming prefix? |
+{% endif %}{% if 'webhooks' in packs %}| P.webhooks | `packs/webhooks/` | Signature scheme? Retry window? Auto-disable threshold? |
+{% endif %}{% if 'money' in packs %}| P.money | `packs/money/` | Single or multi-currency? Internal scale? Rounding mode and where rounding happens? |
+{% endif %}{% if 'ledger' in packs %}| P.ledger | `packs/ledger/` | Chart of accounts? Settlement or withdrawal flows? |
+{% endif %}{% if 'multi-tenant' in packs %}| P.multi-tenant | `packs/multi-tenant/` | **What is the isolation unit called?** One axis or two? Fairness quotas? |
+{% endif %}{% if 'audit-trail' in packs %}| P.audit-trail | `packs/audit-trail/` | Retention? Delivery guarantee? Visible to customers? |
+{% endif %}{% endif %}
+## Phase 5 — Technology
+
+Every answer here is an ADR plus a `13-technology/<area>.md`. `n/a` and `later` are valid.
+
+| Id | Question | Default |
+| --- | --- | --- |
+| 5.1 | Language(s) and runtime | later |
+| 5.2 | Repository layout and build tool | later |
+| 5.3 | Backend framework | later / n/a |
+| 5.4 | Frontend framework and design system | later / n/a |
+| 5.5 | Data stores | later |
+| 5.6 | Messaging / queues | later / n/a |
+| 5.7 | Hosting and deployment target | later |
+| 5.8 | Observability backend | later |
+
+## Phase 6 — Process
+
+| Id | Question | Default | Writes to |
+| --- | --- | --- | --- |
+| 6.1 | Branching model | trunk-based, short-lived branches | `14-git/git.md` |
+| 6.2 | Merge strategy | squash only | `14-git/git.md` |
+| 6.3 | Approvals required per PR | 1, never the author | `14-git/git.md` |
+| 6.4 | Soft PR size limit | 400 changed lines, excluding generated files | `14-git/git.md` |
+| 6.5 | Agent autonomy tiers | 1 docs · 2 tests · 3 feature code · 4 security, migrations, CI, infra, dependencies | `16-ai/autonomy-and-context.md` |
+| 6.6 | May anything merge without a human approval? | no | `16-ai/autonomy-and-context.md` |
+| 6.7 | Which AI vendors does the team use, and which model fills each tier (strong / standard / fast)? | later — tiers stay vendor-neutral until answered | `16-ai/model-routing.md` |
+| 6.8 | When is a spec required? | feature spec for business capability; story spec for tier 3–4 | `17-specs/spec-lifecycle.md` |
+| 6.9 | Work tracker | {{ tracker }} | `17-specs/work-tracking.md` |
+
+---
+
+## Done when
+
+- Every question is answered or deferred to `docs/DECISION-QUEUE.md`.
+- Every document whose questions were all answered is `ratified`, with `owner` and
+  `last-reviewed` set.
+- Every answer with a real alternative has an ADR.
+- `node scripts/check.mjs` passes.

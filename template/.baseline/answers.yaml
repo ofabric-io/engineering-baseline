@@ -1,0 +1,7 @@
+# Bootstrap answers. Ids match bootstrap/questionnaire.md.
+# Each entry: { answer: <value> | default | later, decided: YYYY-MM-DD, adr: ADR-NNN | null }
+# The bootstrap skill writes here as it goes, so a session can stop and resume.
+# A human may fill this file directly instead of using an AI tool.
+
+phase: 0 # last phase completed; 0 = not started
+answers: {}

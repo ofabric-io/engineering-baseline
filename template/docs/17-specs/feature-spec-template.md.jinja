@@ -1,0 +1,135 @@
+---
+spec: FEAT-NNN
+status: draft # draft | approved | implemented | superseded | abandoned
+tracker: null # work item URL, if the project uses a tracker
+depends-on: [] # FEAT-NNN this cannot start before; [] = none
+owner: TBD
+created: YYYY-MM-DD
+supersedes: null
+---
+
+# [[Feature name]]
+
+> A feature spec cuts vertically through every standards layer. It never overrides a standard —
+> an exception needs an ADR — and it never restates one: cite the rule, do not copy it.
+>
+> Remove a section only by replacing it with `Not applicable — <why>`. An empty section reads as
+> "not yet considered", and a later agent will fill it with invention. Mark every gap inline as
+> `[NEEDS CLARIFICATION: question]`; a spec with any marker left cannot be approved.
+
+## Problem
+
+<!-- What is wrong today, in the words of whoever has the problem. Not a solution. -->
+
+## Goal and success metric
+
+<!-- What changes if this works, and the number that would show it. -->
+
+## Scope
+
+<!-- What is in. Specific enough that "is X included?" has an answer. -->
+
+## Non-goals
+
+<!-- What is deliberately out. This section prevents more work than any other. -->
+
+## Actors and permissions
+
+| Actor | Role | May |
+| --- | --- | --- |
+| | | |
+
+## User flows
+
+<!-- The happy path, then every failure path. -->
+
+## Functional requirements
+
+<!-- Numbered: FR1, FR2… Each implementable and arguable. -->
+
+## Acceptance criteria
+
+<!-- Numbered, independently testable, each mapping to at least one test.
+     "Works correctly" is not an acceptance criterion. -->
+
+1.
+
+## Standards to read
+
+<!-- The document paths an agent must load before implementing any story under this feature. -->
+
+- `docs/`
+
+---
+
+## Standards impact
+
+Cite the rule; do not restate it. Write `None` where the feature does not touch a layer.
+
+### Domain
+
+<!-- New or changed glossary terms, aggregates, states, transitions, invariants. -->
+
+### Architecture
+
+<!-- Boundaries touched, new dependencies between them, anything needing an ADR. -->
+
+### Security
+
+<!-- Authorization rules, data classification of every new field, threat-model triggers. -->
+
+### Reliability
+
+<!-- Timeouts, retries, idempotency, concurrency, behaviour when a dependency is down. -->
+
+### Observability
+
+<!-- Logs, metrics, traces, health. -->
+{% if 'http-api' in packs %}
+### API
+
+<!-- Endpoints, shapes, error codes, idempotency, and whether anything is a breaking change
+     (docs/packs/http-api/). -->
+{% endif %}{% if 'events' in packs %}
+### Events
+
+<!-- Events published and consumed, their versions, any schema change (docs/packs/events/). -->
+{% endif %}{% if 'money' in packs %}
+### Money
+
+<!-- Every monetary value, rounding boundary and currency behaviour (docs/packs/money/). -->
+{% endif %}{% if 'multi-tenant' in packs %}
+### Tenant isolation
+
+<!-- Which isolation axis each new piece of data belongs to, and the leak test that proves it
+     (docs/packs/multi-tenant/). -->
+{% endif %}{% if 'audit-trail' in packs %}
+### Audit
+
+<!-- Which actions in this feature produce audit records (docs/packs/audit-trail/). -->
+{% endif %}
+---
+
+## Testing plan
+
+<!-- Levels, and the cases that are mandatory rather than nice to have. -->
+
+## Rollout and rollback
+
+<!-- Flag, phases, kill switch, and what happens to in-flight work on rollback. -->
+
+## Open questions
+
+| # | Question | Blocks? | Owner |
+| --- | --- | --- | --- |
+
+## Stories
+
+| ID | Title | Tier | Status |
+| --- | --- | --- | --- |
+
+## Deviations
+
+<!-- Filled in during implementation. "None." is a valid entry; silence is not. -->
+
+None.
