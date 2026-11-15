@@ -20,6 +20,13 @@ A question answered "decide later" lands here. It is never guessed.
 ## Enforcement debt
 
 Rules marked `⬜ scheduled` in an `## Enforcement` table, with the milestone that owes them.
+**Generated** by `node scripts/queue.mjs` — never edit between the markers by hand. `Due` is one
+of `before-first-release`, `before-production`, `when-stack-decided`, `later`.
 
+<!-- debt:start -->
 | Document | Rule | Mechanism owed | Due |
 | --- | --- | --- | --- |
+<!-- debt:end -->
+
+A deferred decision from the questionnaire (`later`) goes in the table above. A ratified
+document's open-decision bullet ending `→ DECISION-QUEUE` must have a row there.

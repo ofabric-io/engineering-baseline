@@ -11,7 +11,9 @@ contributor. Tool-specific files (`CLAUDE.md`, `GEMINI.md`, `.github/copilot-ins
 ## Read before your first edit
 
 1. `docs/README.md` — the standards hierarchy and what each `status` means.
-2. The documents for the layers your change touches. Only `ratified` documents are binding.
+2. The documents for the layers your change touches. A rule ending ` _(applies to: …)_` binds
+   only components of those kinds (`service`, `daemon`, `cli`, `library`, `ui`, `batch`, listed
+   in `docs/03-architecture/system.md`); a `not-applicable` document has no rules here. Only `ratified` documents are binding.
    A `proposed` document is a default not yet adopted; a `not-started` one has no rules —
    **never infer a rule from it, ask.**
 3. For implementation work: the story spec and its parent feature spec
@@ -38,6 +40,9 @@ Role prompts for delegated work live in `.agents/agents/*.md`. Hand the file's b
 subagent verbatim, followed by the task. Model choice follows `docs/16-ai/model-routing.md`.
 
 ## Checks
+
+**Requires Node ≥ 20** — the baseline's checks, hooks and tools run on it regardless of the
+project's own stack (`node --version`).
 
 ```sh
 node scripts/check.mjs       # everything CI runs on the docs and adapters

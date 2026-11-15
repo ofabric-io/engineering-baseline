@@ -18,7 +18,9 @@ feature spec is missing or this is not a story.
 
 1. **Read the parent spec** in full.
 2. **Allocate the number:** `node scripts/tracker/cli.mjs next-number --kind story`. Never choose
-   one by eye; gaps are reservations.
+   one by eye; gaps are reservations. If the command prints an **offline answer** warning (the
+   tracker was unreachable, so only `docs/17-specs/` was read), tell the user in those words and
+   proceed only after they confirm the number against the tracker.
 3. **Copy `docs/17-specs/story-spec-template.md`** to `docs/17-specs/STORY-NNN-<slug>.md` and set
    `parent:`.
 4. **Write `## Parent context`**: one paragraph, so an agent that loads only this file is not

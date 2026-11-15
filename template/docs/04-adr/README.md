@@ -2,6 +2,12 @@
 
 Standards say **how we work**. ADRs say **why we chose it**. One decision per file.
 
+## Parameters
+
+| Parameter | Answer | Default | Trade-off |
+| --- | --- | --- | --- |
+| `adr_governance_mode` | [[adr_governance_mode]] | `pre-production` before the first production deployment, then `immutable` | amending in place is faster while nothing depends on a decision; `immutable` keeps a trustworthy history |
+
 ## Rules
 
 - **R1.** A decision with a plausible alternative gets an ADR. An obvious one does not.
@@ -18,8 +24,7 @@ Standards say **how we work**. ADRs say **why we chose it**. One decision per fi
   | `pre-production` | amended in place, with an `## Amendments` row (date, change, why) | at the first production deployment, recorded by an ADR |
   | `immutable` | only superseded by a new ADR | never |
 
-  This project's mode: **[[adr_governance_mode]]** (set by the bootstrap; default
-  `pre-production`).
+  This project's mode is `adr_governance_mode` (see Parameters).
 - **R7.** To supersede: write a new ADR whose `supersedes:` names the old number and whose
   Context explains what changed; set the old ADR to `status: superseded` with `superseded-by:`
   and log it in its `## Amendments`. Keep the old body intact.

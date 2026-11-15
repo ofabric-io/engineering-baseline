@@ -27,7 +27,9 @@ The request in the requester's words. If it is a one-liner, the interview in ste
    ```
 
    It answers highest + 1 across `docs/17-specs/` and the tracker. A gap in the sequence is a
-   reservation; do not reuse it.
+   reservation; do not reuse it. If the command prints an **offline answer** warning (the tracker
+   was unreachable, so only `docs/17-specs/` was read), tell the user in those words and proceed
+   only after they confirm the number against the tracker.
 3. **Establish the epic**, if the project's tracker groups features under one
    (`docs/17-specs/work-tracking.md`). Epics are filed by a human; if none fits, ask which to use.
 4. **Copy `docs/17-specs/feature-spec-template.md`** to `docs/17-specs/FEAT-NNN-<slug>.md`.

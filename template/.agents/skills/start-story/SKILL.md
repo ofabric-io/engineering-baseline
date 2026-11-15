@@ -14,7 +14,8 @@ coverage that does not exist. The stage is declared in `docs/workflow.yaml` (`st
 
 A story id, or a request to "pick up the next story". For the latter, run
 `node scripts/tracker/cli.mjs list --startable`, pick the first, and **say which you picked**
-before going on.
+before going on. If the command warns that its answer is offline (tracker unreachable), say so
+and proceed only with the user's confirmation; the claim in step 2 still needs the tracker.
 
 ## Procedure
 

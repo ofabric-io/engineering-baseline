@@ -13,7 +13,9 @@ Lifecycle and startability rules: `docs/17-specs/spec-lifecycle.md`, `docs/17-sp
 ## Procedure
 
 1. **Startable now.** Run `node scripts/tracker/cli.mjs list --startable` and copy its answer as
-   is. Do not re-rank or filter.
+   is. Do not re-rank or filter. If it warns that the answer is offline (tracker unreachable),
+   report that warning first and mark every tracker-dependent section as unverified. A spec with
+   `status: not-applicable` is out of scope for the sweep.
 2. **Read every spec's frontmatter and `## Open questions`** in `docs/17-specs/`.
 3. **Draft specs ready to approve:** `status: draft`, no `[NEEDS CLARIFICATION: ...]` or
    unresolved placeholder left, and no blocking question without an answer. Flag; never approve.
