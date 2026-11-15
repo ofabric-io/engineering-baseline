@@ -44,3 +44,44 @@ export function stripNonProse(text) {
     .replace(/<!--[\s\S]*?-->/g, '')
     .replace(/`[^`\n]*`/g, '');
 }
+
+/** Splits a document into its `## Heading` sections (fenced code ignored). Returns { heading: body }. */
+export function sections(text) {
+  const out = {};
+  let current = null;
+  let fenced = false;
+  for (const line of text.replace(/^---\n[\s\S]*?\n---\n/, '').split('\n')) {
+    if (/^```/.test(line)) fenced = !fenced;
+    const h = !fenced && line.match(/^## +(.+?)\s*$/);
+    if (h) { current = h[1]; out[current] = ''; continue; }
+    if (current !== null) out[current] += `${line}\n`;
+  }
+  return out;
+}
+
+/** Rule numbers defined in a `## Rules` section: list items that start `- **R<n>.**`. */
+export function ruleIds(text) {
+  const body = sections(text).Rules ?? '';
+  const ids = [];
+  for (const m of body.matchAll(/^\s*(?:[-*]|\d+\.)\s+\*\*R(\d+)\.\*\*/gm)) ids.push(Number(m[1]));
+  return ids;
+}
+
+/** Rows of the `## Enforcement` table whose first cell names rules: [{ ids, status, raw }]. */
+export function enforcementRows(text) {
+  const body = sections(text).Enforcement ?? '';
+  const rows = [];
+  for (const line of body.split('\n')) {
+    if (!line.trim().startsWith('|')) continue;
+    const cells = line.trim().replace(/^\||\|$/g, '').split('|').map((c) => c.trim());
+    const first = cells[0].replace(/[*`]/g, '');
+    const ids = [];
+    const range = first.match(/^R(\d+)\s*[-–]\s*R?(\d+)$/); // "R3-R5"
+    if (range) for (let n = Number(range[1]); n <= Number(range[2]); n++) ids.push(n);
+    else if (/^R\d+(\s*(,|\/|&|and)\s*R\d+)*$/.test(first)) for (const m of first.matchAll(/R(\d+)/g)) ids.push(Number(m[1]));
+    else continue;
+    const status = (cells.slice(1).join(' ').match(/[✅◐⬜❌]/) ?? [null])[0];
+    rows.push({ ids, status, raw: line.trim() });
+  }
+  return rows;
+}

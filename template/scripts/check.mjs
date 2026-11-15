@@ -4,7 +4,7 @@
 import { existsSync } from 'node:fs';
 import { join, dirname, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
-import { ROOT, walk, rel, read, frontmatter, stripNonProse } from './lib.mjs';
+import { ROOT, walk, rel, read, frontmatter, stripNonProse, ruleIds, enforcementRows } from './lib.mjs';
 
 const failures = [];
 const fail = (file, msg) => failures.push(`${file}: ${msg}`);
@@ -80,6 +80,78 @@ if (existsSync(forbiddenFile)) {
 // 5. AI-tool adapters are thin and in sync with .agents/.
 const sync = spawnSync(process.execPath, [join(ROOT, 'scripts', 'sync-adapters.mjs'), '--check'], { encoding: 'utf8' });
 if (sync.status !== 0) failures.push(...(sync.stdout + sync.stderr).trim().split('\n').filter(Boolean));
+
+// 6. Standards documents that are proposed, in-progress or ratified carry enforceable rules.
+//    Format: `## Rules` lists `- **R<n>.** ...` (numbers unique); `## Enforcement` is a table whose
+//    first column is `R<n>` and whose last column holds one status: ✅ ◐ ⬜ ❌.
+const ENFORCEMENT_STATUSES = '✅ ◐ ⬜ ❌';
+const ruleCache = new Map();
+const rulesOf = (abs) => {
+  if (!ruleCache.has(abs)) ruleCache.set(abs, ruleIds(read(abs)));
+  return ruleCache.get(abs);
+};
+for (const [abs, file] of mdFiles) {
+  if (!file.startsWith('docs/') || isTemplateFile(file) || /^docs\/04-adr\/ADR-\d+/.test(file)) continue;
+  const text = read(abs);
+  const fm = frontmatter(text);
+  if (!fm || !['proposed', 'in-progress', 'ratified'].includes(fm.status) || 'spec' in fm || 'story' in fm) continue;
+
+  const ids = rulesOf(abs);
+  if (!ids.length) {
+    fail(file, `is ${fm.status} but its "## Rules" section has no rules; write each as "- **R1.** MUST ..." (a not-started document is exempt)`);
+    continue;
+  }
+  const seen = new Set();
+  for (const n of ids) {
+    if (seen.has(n)) fail(file, `rule number R${n} is used more than once in "## Rules"; rule numbers are unique`);
+    seen.add(n);
+  }
+  const rows = enforcementRows(text);
+  const covered = new Set();
+  for (const row of rows) {
+    for (const n of row.ids) {
+      covered.add(n);
+      if (!seen.has(n)) fail(file, `"## Enforcement" has a row for R${n}, which is not a rule in "## Rules"`);
+    }
+    if (!row.status) fail(file, `"## Enforcement" row has no status (use one of ${ENFORCEMENT_STATUSES}): ${row.raw}`);
+  }
+  for (const n of seen) {
+    if (!covered.has(n)) fail(file, `R${n} has no row in "## Enforcement"; add "| R${n} | <mechanism> | <${ENFORCEMENT_STATUSES.split(' ').join(' | ')}> |"`);
+  }
+}
+
+// 7. Cross-document rule references: "`path.md` R3" must name a rule that exists in that document.
+const XREF_RE = /`?((?:[\w.-]+\/)*[\w.-]+\.md)`?[ \t]+(R\d+(?:[ \t]*(?:,|and|&)[ \t]*R\d+)*)/g;
+for (const [abs, file] of mdFiles) {
+  if (isTemplateFile(file)) continue;
+  const prose = read(abs).replace(/```[\s\S]*?```/g, '').replace(/<!--[\s\S]*?-->/g, '');
+  for (const m of prose.matchAll(XREF_RE)) {
+    const p = m[1].replace(/^\.\//, '');
+    const target = [join(ROOT, 'docs', p), join(ROOT, p), resolve(dirname(abs), p)].find((c) => existsSync(c));
+    if (!target) { fail(file, `reference "${m[1]} ${m[2]}" points to a document that does not exist (write the path relative to docs/, e.g. \`08-reliability/timeouts-retries.md\` R3)`); continue; }
+    const have = new Set(rulesOf(target));
+    for (const r of m[2].matchAll(/R(\d+)/g)) {
+      if (!have.has(Number(r[1]))) fail(file, `reference "${m[1]} R${r[1]}" names a rule that does not exist in ${rel(target)}`);
+    }
+  }
+}
+
+// 8. Check plugins: every scripts/checks/*.mjs (except *.test.mjs) is run as `node <file>` with the
+//    project root as cwd. Exit 0 = pass. Non-zero = fail; each stdout line is one problem ("path: message").
+const checksDir = join(ROOT, 'scripts', 'checks');
+if (existsSync(checksDir)) {
+  const plugins = walk(checksDir, (p) => p.endsWith('.mjs') && !p.endsWith('.test.mjs') && dirname(p) === checksDir).sort();
+  for (const plugin of plugins) {
+    const r = spawnSync(process.execPath, [plugin], { cwd: ROOT, encoding: 'utf8', timeout: 120000 });
+    if (r.status === 0) continue;
+    const lines = (r.stdout ?? '').split('\n').map((l) => l.trim()).filter(Boolean);
+    if (lines.length) failures.push(...lines);
+    else {
+      const why = (r.stderr ?? '').trim().split('\n')[0] || (r.error ? r.error.message : '');
+      fail(rel(plugin), `check plugin exited with code ${r.status ?? 'none'} and printed no problems${why ? ` (${why})` : ''}`);
+    }
+  }
+}
 
 if (failures.length) {
   console.error(`check: ${failures.length} problem(s)\n`);

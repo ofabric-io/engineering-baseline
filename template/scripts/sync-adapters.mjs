@@ -27,6 +27,21 @@ for (const p of POINTERS) {
   }
 }
 
+// Tool-hook adapters hold wiring only: every hook command must call a script in scripts/guards/.
+const settingsPath = join(ROOT, '.claude', 'settings.json');
+if (existsSync(settingsPath)) {
+  try {
+    const hooks = Object.values(JSON.parse(read(settingsPath)).hooks ?? {}).flat().flatMap((h) => h.hooks ?? []);
+    for (const h of hooks) {
+      if (!/^node\s+"?[^\s"]*scripts\/guards\/[\w.-]+\.mjs"?(\s+\S+)*$/.test(h.command ?? '')) {
+        problems.push(`.claude/settings.json: hook "${h.command}" must only run "node scripts/guards/<name>.mjs"; put logic in scripts/guards/, not in the adapter`);
+      }
+    }
+  } catch {
+    problems.push('.claude/settings.json: not valid JSON');
+  }
+}
+
 // Canonical skills.
 const skillsDir = join(ROOT, '.agents', 'skills');
 const skills = existsSync(skillsDir)
