@@ -1,0 +1,90 @@
+# The spec workflow, declared once. Skills read this file instead of hard-coding the chain.
+# Stage order is the order of `stages`. A skill is named by its path, never by a command.
+# Rules live in docs/16-ai/ and docs/17-specs/; this file only wires stages to skills.
+
+version: 1
+
+tracker_cli: node scripts/tracker/cli.mjs
+
+# Tracker states (docs/17-specs/work-tracking.md `tracker_states`; names in scripts/tracker/states.json).
+states: [to do, in progress, complete]
+
+# Spec statuses (docs/17-specs/spec-lifecycle.md). Only a human moves a spec to approved.
+spec_statuses: [draft, approved, implemented, superseded, abandoned]
+
+stages:
+  - id: feature-spec
+    title: Write the feature spec
+    skill: .agents/skills/new-feature-spec/SKILL.md
+    inputs:
+      - the request, in the requester's words
+      - ratified standards the feature touches (docs/16-ai/autonomy-and-context.md)
+      - docs/17-specs/feature-spec-template.md
+    outputs:
+      - docs/17-specs/FEAT-NNN-<slug>.md   # status: draft
+      - a tracker item for the feature
+    next: story
+
+  - id: story
+    title: Break the feature into stories
+    skill: .agents/skills/new-story/SKILL.md
+    inputs:
+      - the parent feature spec
+      - docs/17-specs/story-spec-template.md
+    outputs:
+      - docs/17-specs/STORY-NNN-<slug>.md   # status: draft
+      - a tracker item for the story, state to do
+    next: approve
+
+  - id: approve
+    title: Approve a spec (a human decision)
+    skill: .agents/skills/approve-spec/SKILL.md
+    triage: .agents/skills/triage-specs/SKILL.md   # finds candidates; changes nothing
+    inputs:
+      - one draft spec
+    outputs:
+      - the spec with status: approved, only after an explicit human yes
+      - the tracker item still to do (only the spec's status is the gate)
+    next: start
+
+  - id: start
+    title: Claim a story and cut its branch
+    skill: .agents/skills/start-story/SKILL.md
+    inputs:
+      - an approved story whose dependencies are implemented
+    outputs:
+      - the tracker item assigned to the current user and in progress
+      - a topic branch named after the story
+    next: implement
+
+  - id: implement
+    title: Implement the story
+    skill: null   # no skill: the agent follows AGENTS.md, the story and its "Standards to read"
+    inputs:
+      - the story spec, its parent, the documents under "Standards to read"
+    outputs:
+      - commits on the topic branch
+      - the story's Deviations section filled in
+    next: open-pr
+
+  - id: open-pr
+    title: Open the pull request
+    skill: .agents/skills/open-pr/SKILL.md
+    inputs:
+      - committed work on the topic branch
+      - the pull-request template for the project's git host
+    outputs:
+      - a pull request whose body answers every template section
+      - the pull request linked from the tracker item, which stays in progress
+    next: judge
+
+  - id: judge
+    title: Verify against the spec
+    skill: .agents/agents/judge.md   # an agent role, not a skill
+    inputs:
+      - the story spec and its acceptance criteria
+      - the diff and the validation output
+    outputs:
+      - PASS or FAIL with evidence per acceptance criterion
+      - on merge, the spec moves to implemented and the tracker item to complete
+    next: null

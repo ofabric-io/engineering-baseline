@@ -1,0 +1,13 @@
+# Work queue
+
+The tracker for this project (`tracker: none`). It holds **workflow state only**: which spec is
+waiting, claimed or complete. It never copies a rule or an acceptance criterion; the spec is
+the source of truth.
+
+Do not edit the table by hand. Use `node scripts/tracker/cli.mjs` (`create`, `set-status`, `claim`,
+`list --startable`). States (`tracker_states` in `docs/17-specs/work-tracking.md`, names in
+`scripts/tracker/states.json`): `to do` · `in progress` · `complete`. Rows are never deleted: a
+spec that is dropped becomes `abandoned` in its own frontmatter and its row goes to `complete`.
+
+| ID | Title | Kind | Parent | Status | Assignee | Spec |
+| --- | --- | --- | --- | --- | --- | --- |

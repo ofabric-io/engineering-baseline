@@ -1,0 +1,73 @@
+// Tracker adapter: GitHub Issues, through the `gh` CLI (must be installed and authenticated).
+// Status is a `status:<name>` label; the complete state also closes the issue. Nothing is ever deleted.
+// Contract (shared by every adapter): list() get(id) create(req) setStatus(id, status) assign(id, email)
+import { execFileSync } from 'node:child_process';
+import { STATES } from '../states.mjs';
+
+const { todo: TODO, 'in-progress': IN_PROGRESS, complete: COMPLETE } = STATES;
+const label = (name) => `status:${name.replace(/\s+/g, '-')}`;
+
+function gh(args) {
+  try {
+    return execFileSync('gh', args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
+  } catch (e) {
+    if (e.code === 'ENOENT') throw new Error('the gh CLI is not installed; install it and run `gh auth login`');
+    throw new Error(`gh ${args.slice(0, 2).join(' ')} failed: ${String(e.stderr || e.message).trim()}`);
+  }
+}
+
+const FIELDS = 'number,title,state,labels,assignees,url';
+
+function shape(issue) {
+  const id = (issue.title.match(/^((?:FEAT|STORY)-\d+)/) ?? [])[1];
+  if (!id) return null;
+  const names = issue.labels.map((l) => l.name);
+  const status = issue.state === 'CLOSED' ? COMPLETE : [TODO, IN_PROGRESS].find((n) => names.includes(label(n))) ?? TODO;
+  const login = issue.assignees[0]?.login ?? '';
+  return { id, title: issue.title, status, assignee: login, assigneeIsSelf: Boolean(login) && login === me(), ref: issue.url, number: issue.number };
+}
+
+let cachedMe;
+function me() { return (cachedMe ??= gh(['api', 'user', '--jq', '.login'])); }
+
+export async function list() {
+  const issues = JSON.parse(gh(['issue', 'list', '--state', 'all', '--limit', '1000', '--json', FIELDS]));
+  return issues.map(shape).filter(Boolean);
+}
+
+export async function get(id) {
+  const issues = JSON.parse(gh(['issue', 'list', '--state', 'all', '--search', `${id} in:title`, '--json', FIELDS]));
+  return issues.map(shape).filter((i) => i && i.id === id)[0] ?? null;
+}
+
+function ensureLabels() {
+  for (const s of [TODO, IN_PROGRESS]) gh(['label', 'create', label(s), '--force']);
+  gh(['label', 'create', 'feature', '--force']);
+  gh(['label', 'create', 'story', '--force']);
+}
+
+export async function create(req) {
+  ensureLabels();
+  const parent = req.parent?.ref ? `\n\nParent: ${req.parent.ref}` : req.parent ? `\n\nParent: ${req.parent.id}` : '';
+  const args = ['issue', 'create', '--title', req.title, '--body', `${req.body}${parent}`,
+    '--label', req.kind === 'feature' ? 'feature' : 'story', '--label', label(req.status)];
+  const url = gh(args).split('\n').pop();
+  return { id: req.id, ref: url };
+}
+
+export async function setStatus(id, status) {
+  ensureLabels();
+  const item = await get(id);
+  const keep = status === COMPLETE ? [] : [label(status)];
+  const remove = [label(TODO), label(IN_PROGRESS)].filter((l) => !keep.includes(l)).join(',');
+  gh(['issue', 'edit', String(item.number), ...(keep.length ? ['--add-label', keep[0]] : []), '--remove-label', remove]);
+  if (status === COMPLETE && item.status !== COMPLETE) gh(['issue', 'close', String(item.number)]);
+  if (status !== COMPLETE && item.status === COMPLETE) gh(['issue', 'reopen', String(item.number)]);
+}
+
+export async function assign(id, _email) {
+  // The authenticated gh user is the current user; the email is not used to look anyone up.
+  const item = await get(id);
+  if (item.assignee) throw new Error(`${id} already has an assignee`);
+  gh(['issue', 'edit', String(item.number), '--add-assignee', '@me']);
+}

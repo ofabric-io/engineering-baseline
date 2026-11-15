@@ -1,0 +1,110 @@
+// Tracker adapter: ClickUp, REST API v2 through fetch. Never issues a DELETE request.
+// Token: env CLICKUP_TOKEN (never stored in the repository). Ids: scripts/tracker/config.json.
+// Mapping: epic = folder (created by a human), feature = list inside it, story = task in that list.
+// Contract (shared by every adapter): list() get(id) create(req) setStatus(id, status) assign(id, email)
+import { readFileSync, existsSync } from 'node:fs';
+import { join } from 'node:path';
+import { STATES } from '../states.mjs';
+
+const API = 'https://api.clickup.com/api/v2';
+const CONFIG = join(process.cwd(), 'scripts', 'tracker', 'config.json');
+// The workspace's statuses must carry the names in scripts/tracker/states.json (tracker_states).
+const { todo: TODO, complete: COMPLETE } = STATES;
+
+function config() {
+  const c = existsSync(CONFIG) ? JSON.parse(readFileSync(CONFIG, 'utf8')) : {};
+  if (!c.workspaceId) throw new Error('scripts/tracker/config.json: workspaceId is empty (the clickup_workspace_id answer)');
+  return c;
+}
+
+async function call(method, path, body) {
+  if (method === 'DELETE') throw new Error('the tracker CLI never deletes');
+  const token = process.env.CLICKUP_TOKEN;
+  if (!token) throw new Error('CLICKUP_TOKEN is not set; export a personal API token in your environment');
+  const res = await fetch(`${API}${path}`, {
+    method,
+    headers: { Authorization: token, 'Content-Type': 'application/json' },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  if (!res.ok) throw new Error(`ClickUp ${method} ${path.split('?')[0]} -> ${res.status} ${(await res.text()).slice(0, 200)}`);
+  return res.json();
+}
+
+const idOf = (name) => (String(name).match(/^((?:FEAT|STORY)-\d+)/) ?? [])[1];
+const known = (status) => Object.values(STATES).find((n) => n.toLowerCase() === String(status).toLowerCase()) ?? TODO;
+
+function shape(task, c, selfId) {
+  const a = task.assignees?.[0];
+  return {
+    id: idOf(task.name), title: task.name, status: known(task.status?.status),
+    assignee: a ? a.email || a.username : '', assigneeIsSelf: Boolean(a) && a.id === selfId, ref: task.url, taskId: task.id,
+  };
+}
+
+let selfCache;
+async function self() { return (selfCache ??= (await call('GET', '/user')).user); }
+
+async function tasks(c) {
+  const out = [];
+  const me = await self();
+  for (let page = 0; ; page++) {
+    const r = await call('GET', `/team/${c.workspaceId}/task?include_closed=true&subtasks=true&page=${page}`);
+    out.push(...r.tasks.filter((t) => idOf(t.name)).map((t) => shape(t, c, me.id)));
+    if (r.last_page || r.tasks.length === 0) break;
+  }
+  return out;
+}
+
+async function featureLists(c) {
+  if (!c.spaceId) return [];
+  const folders = (await call('GET', `/space/${c.spaceId}/folder`)).folders;
+  const loose = (await call('GET', `/space/${c.spaceId}/list`)).lists;
+  return [...folders.flatMap((f) => f.lists), ...loose].filter((l) => idOf(l.name)).map((l) => ({ id: idOf(l.name), title: l.name, status: TODO, assignee: '', ref: `https://app.clickup.com/${c.workspaceId}/v/li/${l.id}` }));
+}
+
+export async function list() {
+  const c = config();
+  return [...(await tasks(c)), ...(await featureLists(c))];
+}
+
+export async function get(id) {
+  return (await list()).find((i) => i.id === id) ?? null;
+}
+
+export async function create(req) {
+  const c = config();
+  if (req.kind === 'feature') {
+    if (!req.epic) throw new Error('a feature is a list inside an epic folder: pass --epic <folder id or name>; epics are created by a human');
+    let folderId = req.epic;
+    if (!/^\d+$/.test(folderId)) {
+      const f = (await call('GET', `/space/${c.spaceId}/folder`)).folders.find((x) => x.name.toLowerCase() === String(req.epic).toLowerCase());
+      if (!f) throw new Error(`no epic folder named "${req.epic}" in the space; ask a human to create it`);
+      folderId = f.id;
+    }
+    const l = await call('POST', `/folder/${folderId}/list`, { name: req.title, content: req.body });
+    return { id: req.id, ref: `https://app.clickup.com/${c.workspaceId}/v/li/${l.id}` };
+  }
+  const listId = (String(req.parent?.ref ?? '').match(/\/li\/(\d+)/) ?? [])[1];
+  if (!listId) throw new Error(`parent ${req.parent?.id}: its tracker: field has no ClickUp list URL; create the feature first`);
+  const t = await call('POST', `/list/${listId}/task`, { name: req.title, description: req.body, status: req.status });
+  return { id: req.id, ref: t.url };
+}
+
+export async function setStatus(id, status) {
+  const c = config();
+  const item = (await tasks(c)).find((i) => i.id === id);
+  if (!item) throw new Error(`${id}: no ClickUp task (a feature list has no status)`);
+  await call('PUT', `/task/${item.taskId}`, { status });
+}
+
+export async function assign(id, email) {
+  const c = config();
+  const item = (await tasks(c)).find((i) => i.id === id);
+  if (!item) throw new Error(`${id}: no ClickUp task`);
+  if (item.assignee) throw new Error(`${id} already has an assignee`);
+  const members = (await call('GET', '/team')).teams.find((t) => t.id === String(c.workspaceId))?.members ?? [];
+  // Match by email, never by display name.
+  const m = members.find((x) => x.user.email?.toLowerCase() === email.toLowerCase());
+  if (!m) throw new Error(`no workspace member with email ${email}`);
+  await call('PUT', `/task/${item.taskId}`, { assignees: { add: [m.user.id] } });
+}

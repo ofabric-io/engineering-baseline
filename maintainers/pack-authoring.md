@@ -38,4 +38,5 @@ Packs are not written for hypothetical projects. A new pack is grown inside a re
 3. Add the Copier choice, the validator entry and the bootstrap row.
 4. Add a CHANGELOG entry and release a minor version.
 
-The `promote-pack` skill (ROADMAP M3) will automate steps 1–3.
+The `promote-pack` skill (`template/.agents/skills/promote-pack/SKILL.md`) walks steps 1–3 and adds
+the render scenario; run it from a checkout of this repository.
