@@ -21,7 +21,6 @@ Where a transaction begins and ends, what may happen inside it, and which isolat
 ## Open decisions
 
 - [ ] Ratify this document with the project (`.agents/skills/ratify-standard/SKILL.md`).
-- [ ] Which operations need a stricter isolation than `transaction_isolation`, and which invariant does each protect?
 
 ## Rules
 

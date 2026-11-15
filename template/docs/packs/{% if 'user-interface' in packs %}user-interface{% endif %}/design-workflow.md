@@ -26,8 +26,7 @@ How designs are produced, stored and handed to implementation, and how the imple
 ## Open decisions
 
 - [ ] Ratify this document with the project (`.agents/skills/ratify-standard/SKILL.md`).
-- [ ] Which screen sizes, form factors and themes does a fidelity check cover?
-- [ ] What tolerance counts as a match, and who may accept a deviation?
+- [ ] What tolerance counts as a match for a screen?
 
 ## Rules
 

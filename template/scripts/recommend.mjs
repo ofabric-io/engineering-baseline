@@ -4,6 +4,8 @@
 //   node scripts/recommend.mjs          write or merge .baseline/recommendations.md
 //   node scripts/recommend.mjs --check  fail if the sheet is missing rows or a row is incomplete
 //   node scripts/recommend.mjs --json   print the rows as JSON (with `answered` per row)
+//   --kinds cli,library                 the project's component kinds, when the Components table and
+//                                       answers.yaml do not have them yet; marks rows n/a
 // What counts as a decision, and its id, is defined in scripts/decisions.mjs. Re-running keeps
 // every filled row, adds new ones, and shows a row answered in .baseline/answers.yaml as `user`
 // when it was still `ask`. Exit 1 when the questionnaire names a document or parameter that does
@@ -14,7 +16,8 @@ import { join, dirname } from 'node:path';
 import { loadDecisions, cells, esc, phaseOf, SHEET, SOURCES, PHASES } from './decisions.mjs';
 
 const args = process.argv.slice(2);
-const { rows, errors } = loadDecisions();
+const kindsArg = args.includes('--kinds') ? args[args.indexOf('--kinds') + 1] ?? '' : '';
+const { rows, errors } = loadDecisions({ kinds: kindsArg.split(',').map((k) => k.trim()).filter(Boolean) });
 if (errors.length) {
   for (const e of errors) console.error(`recommend: ${e}`);
   process.exit(1);
@@ -55,7 +58,9 @@ if (args.includes('--check')) {
 
 const merged = rows.map((r) => {
   const s = existing.get(r.id);
-  const out = s && (s.recommended || s.source !== r.source || s.why) ? { ...r, ...s } : { ...r };
+  // An untouched default row turns n/a once the kinds are known; anything filled in is kept.
+  const untouched = s && r.plain && s.source === r.plain.source && s.recommended === r.plain.recommended && !s.why;
+  const out = s && !untouched && (s.recommended || s.source !== r.source || s.why) ? { ...r, ...s } : { ...r };
   if (r.answered && (out.source === 'ask' || !out.recommended)) Object.assign(out, { source: 'user', recommended: r.answer });
   return out;
 });

@@ -16,7 +16,7 @@ How concurrent writes are controlled, how any operation with an external side ef
 | Parameter | Answer | Default | Trade-off |
 | --- | --- | --- | --- |
 | `default_concurrency_control` | [[default_concurrency_control]] | optimistic (version check on write) | pessimistic locks only where named |
-| `idempotency_required_for` | [[idempotency_required_for]] | every operation with an external side effect | exactly-once does not exist across a network |
+| `idempotency_required_for` | [[idempotency_required_for]] | every operation with an external side effect, listed by name | exactly-once does not exist across a network |
 | `idempotency_retention` | [[idempotency_retention]] | 24 hours | longer covers slower retry windows and stores more; a replay after expiry re-executes |
 | `dedupe_window` | [[dedupe_window]] | 7 days for messages received from external parties | longer catches late redelivery and stores more |
 | `lock_timeout` | [[lock_timeout]] | 3 seconds | longer tolerates contention and stalls pools |
@@ -25,7 +25,6 @@ How concurrent writes are controlled, how any operation with an external side ef
 
 - [ ] Ratify this document with the project (`.agents/skills/ratify-standard/SKILL.md`).
 - [ ] Which operations require pessimistic locking, and why (R2)?
-- [ ] Which operations are in `idempotency_required_for`, listed by name?
 
 ## Rules
 
@@ -54,7 +53,7 @@ How concurrent writes are controlled, how any operation with an external side ef
 ### Background work
 
 - **R17.** Every job and message handler MUST be idempotent and MUST be written on the assumption it will run twice.
-- **R18.** A scheduled job MUST run as a single instance, coordinated by leader election or a lock.
+- **R18.** A scheduled job MUST run as a single instance, coordinated by leader election or a lock. _(applies to: service, daemon, batch)_
 - **R19.** A distributed lock MAY be used to avoid duplicated work but MUST NOT be relied on for correctness; correctness MUST come from a unique constraint, a version check or a transactional lock.
 - **R20.** A job that has exhausted its retries MUST be moved to a dead-letter destination with its context and MUST NOT be silently dropped (`08-reliability/timeouts-retries.md` R14).
 

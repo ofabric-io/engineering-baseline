@@ -18,15 +18,13 @@ agent works through a task is `operating-procedure.md`; what it must never do is
 
 | Parameter | Answer | Default | Trade-off |
 | --- | --- | --- | --- |
-| `autonomy_tiers` | [[autonomy_tiers]] | 1 docs · 2 tests · 3 feature code · 4 security, data migrations, CI, infrastructure, dependencies | which change types need a plan and per-step approval: more in tier 4 means more safety and slower delivery |
+| `autonomy_tiers` | [[autonomy_tiers]] | 1 docs · 2 tests · 3 feature code · 4 security, data migrations, CI, infrastructure, dependencies | which change types need a plan and per-step approval: more in tier 4 means more safety and slower delivery; add project-specific tier-4 types such as a regulated data flow |
 | `auto_merge` | [[auto_merge]] | never, at any tier | speed vs. a human having read every change |
 
 ## Open decisions
 
 - [ ] Ratify this document with the project (`.agents/skills/ratify-standard/SKILL.md`).
 - [ ] Adjust the path-to-layer table in R9 to the project's real directory layout once it exists.
-- [ ] Which change types beyond the defaults belong in tier 4 for this project (for example,
-      changes to a regulated data flow)?
 
 ## Rules
 

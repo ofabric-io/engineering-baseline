@@ -16,7 +16,7 @@ How entities are identified internally and publicly, and what an identifier must
 | Parameter | Answer | Default | Trade-off |
 | --- | --- | --- | --- |
 | `internal_id_format` | [[internal_id_format]] | UUIDv7 (RFC 9562) | time-ordered and index-friendly; a sequential integer leaks volume and order |
-| `public_id_format` | [[public_id_format]] | type-prefixed opaque string, e.g. `<prefix>_<encoded>` | self-describing in logs and support tickets; a raw UUID is not |
+| `public_id_format` | [[public_id_format]] | type-prefixed opaque string, e.g. `<prefix>_<encoded>` | self-describing in logs and support tickets; a raw UUID is not; the encoding should be case-insensitive with unambiguous characters |
 | `natural_keys_as_primary_keys` | [[natural_keys_as_primary_keys]] | forbidden | natural keys change; identifiers must not |
 | `type_prefixes` | [[type_prefixes]] | one short unique prefix per publicly addressable resource, listed in the project's table below | a prefix per resource aids debugging; sub-resources reached only through a parent can go without |
 
@@ -32,7 +32,6 @@ One row per publicly addressable resource (R6, R8).
 
 - [ ] Ratify this document with the project (`.agents/skills/ratify-standard/SKILL.md`).
 - [ ] The prefix table: which resources are publicly addressable, and what is each prefix?
-- [ ] Which encoding renders the public identifier (a case-insensitive, unambiguous-character encoding is recommended)?
 
 ## Rules
 

@@ -25,7 +25,7 @@ contains zones).
 | Parameter | Answer | Default | Trade-off |
 | --- | --- | --- | --- |
 | `isolation_unit_name` | [[isolation_unit_name]] | tenant | use the domain's own word (account, workspace, organization…); the glossary forbids the others |
-| `isolation_axes` | [[isolation_axes]] | 1 axis. Alternatives: 2 independent axes, or `nested` levels (outer → inner, for example account → zone) | each extra axis or level multiplies policies and adds its own leak tests; nested levels share one hierarchy, independent axes do not |
+| `isolation_axes` | [[isolation_axes]] | 1 axis. Alternatives: 2 independent axes, or `nested` levels (outer → inner, for example account → zone) | each extra axis or level multiplies policies and adds its own leak tests; nested levels share one hierarchy, independent axes do not; with more than one, name each axis or level and which record kinds carry which keys |
 | `enforcement` | [[enforcement]] | two independent layers: one enforced below the application, one in data-access code; mechanisms chosen in `13-technology/` | one layer is one bug away from a leak |
 | `operator_cross_access_roles` | [[operator_cross_access_roles]] | none until named | every role that can cross units is a role to audit |
 | `platform_workload_roles` | [[platform_workload_roles]] | none until named | a workload that runs without a unit key (sweeps, fan-out) is powerful; each one named is one to audit |
@@ -36,8 +36,6 @@ contains zones).
 - [ ] Ratify this document with the project (`.agents/skills/ratify-standard/SKILL.md`).
 - [ ] Which stores or record kinds, if any, legitimately belong to no isolation unit (identity,
       credentials)? Each needs a named justification.
-- [ ] If `isolation_axes` is more than 1: what are the axes or levels, and which record kinds
-      carry which keys?
 - [ ] Anonymous routes: which public identifiers resolve to an isolation unit?
 - [ ] Which platform-scoped workloads exist, and does each need unit data or only a list of units?
 
@@ -60,7 +58,7 @@ contains zones).
 - **R4.** A background job, event consumer and scheduled task MUST each carry the key explicitly
   in its payload and MUST fail fast when it is absent. Only a platform-scoped workload (R12)
   MAY run without a key.
-- **R5.** An anonymous route MAY resolve an opaque public identifier server-side and take the key
+- **R5.** An anonymous route MAY resolve an opaque public identifier server-side and take the key _(applies to: service)_
   from the record that lookup returns. The client MUST NOT assert the key itself; this is R2
   applied without a session, not an exception to it.
 - **R6.** The key MUST accompany every log line and trace for work done on behalf of a unit

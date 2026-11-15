@@ -19,13 +19,13 @@ How events are recorded and published reliably, what delivery guarantee holds, a
 | `event_delivery_guarantee` | [[event_delivery_guarantee]] | at-least-once; consumers deduplicate on event `id` | At-most-once loses events; exactly-once does not exist across a network boundary |
 | `ordering` | [[ordering]] | per entity (`subject`) only | Global ordering serialises everything and does not scale |
 | `dedupe_store` | [[dedupe_store]] | the same durable store as the consumer's state, written atomically with its effect | A cache is faster and forgets, which turns a duplicate into a repeated effect |
+| `outbox_retention` | [[outbox_retention]] | 90 days after dispatch, then archived | Longer keeps more delivery audit trail and costs storage; shorter loses the ability to answer late "was it sent" questions |
 | `dead_letter_alert` | [[dead_letter_alert]] | alert when any dead-lettered event has waited longer than 24 hours, around the clock | A tighter threshold wakes people for transient faults; a looser one hides stuck consumers |
 
 ## Open decisions
 
 - [ ] Ratify this document with the project (`.agents/skills/ratify-standard/SKILL.md`).
-- [ ] How long are processed outbox rows retained before archival? (They are the delivery audit trail; see R5.)
-- [ ] Which consumers are in-process and which are remote, and does each remote consumer have its own retry schedule?
+- [ ] Which consumers are in-process and which remote, and does each remote consumer have its own retry schedule?
 
 ## Rules
 
@@ -35,7 +35,7 @@ How events are recorded and published reliably, what delivery guarantee holds, a
 - **R2.** An event MUST NOT be published directly from a request handler, use case or repository when `publish_mechanism` is the outbox; publishing outside the transaction reintroduces the dual-write problem.
 - **R3.** A drain process MUST dispatch recorded events to consumers, and MUST be deployable and scalable independently of the request path.
 - **R4.** Concurrent drains MUST claim work so that no row is dispatched twice concurrently (a row-level claim or lease; mechanism chosen in `13-technology/`).
-- **R5.** A dispatched row MUST be marked with its outcome and MUST NOT be deleted by the drain. The recorded events are the delivery audit trail, retained per the open decision above.
+- **R5.** A dispatched row MUST be marked with its outcome and MUST NOT be deleted by the drain. The recorded events are the delivery audit trail, retained for `outbox_retention`.
 
 ### Guarantees
 

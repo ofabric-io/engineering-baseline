@@ -16,13 +16,12 @@ Where secrets live, how they rotate, and which cryptographic practices are allow
 | Parameter | Answer | Default | Trade-off |
 | --- | --- | --- | --- |
 | `secret_store` | [[secret_store]] | decided in 13-technology/ | never in the repository |
-| `rotation_policy` | [[rotation_policy]] | every secret rotatable without downtime | two valid versions during rotation |
+| `rotation_policy` | [[rotation_policy]] | every secret rotatable without downtime; cadence and owner set per secret class | two valid versions during rotation |
 | `min_transport_security` | [[min_transport_security]] | TLS 1.2 or higher for every network connection that leaves a trust zone | older clients break; weaker protocols are exploitable |
 
 ## Open decisions
 
 - [ ] Ratify this document with the project (`.agents/skills/ratify-standard/SKILL.md`).
-- [ ] Rotation cadence per secret class, and who owns each rotation.
 - [ ] Encryption at rest: volume-level only, or field-level for named fields?
 - [ ] Is mutual authentication needed for any integration?
 

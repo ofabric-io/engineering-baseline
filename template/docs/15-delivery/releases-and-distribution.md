@@ -31,8 +31,7 @@ libraries, images and installers. Getting a version running in the project's own
 ## Open decisions
 
 - [ ] Ratify this document with the project (`.agents/skills/ratify-standard/SKILL.md`).
-- [ ] Which components are published outside the project (`03-architecture/system.md` Components
-      table), and through which channels?
+- [ ] Which components in the `03-architecture/system.md` Components table are published outside the project?
 - [ ] Who may cut a release, and who holds the signing key?
 
 ## Rules
@@ -41,18 +40,14 @@ libraries, images and installers. Getting a version running in the project's own
 
 - **R1.** Every release MUST carry exactly one version under `release_versioning_scheme`, derived
   from the release tag, and the version MUST NOT be stored by hand in more than one place.
-- **R2.** The project MUST list its public surfaces in `public_surfaces`; anything not listed is
-  internal and MAY change in any release. _(applies to: library, cli, daemon, ui)_
-- **R3.** A change that breaks a public surface MUST be released as a new major version under the
-  scheme, never in a minor or patch release. _(applies to: library, cli, daemon, ui)_
+- **R2.** The project MUST list its public surfaces in `public_surfaces`; anything not listed is internal and MAY change in any release. _(applies to: library, cli, daemon, ui)_
+- **R3.** A change that breaks a public surface MUST be released as a new major version under the scheme, never in a minor or patch release. _(applies to: library, cli, daemon, ui)_
 - **R4.** A pre-release MUST be labelled as one in its version, and the artifact promoted to a final
   release MUST be the identical artifact (`15-delivery/deployments-and-rollback.md` R2).
 
 ### Publishing
 
-- **R5.** Packages, binaries and libraries MUST be published by the release pipeline from a version
-  tag on the default branch, to the channels in `distribution_channels` only; a person MUST NOT
-  publish from a workstation. _(applies to: library, cli, daemon, ui)_
+- **R5.** Packages, binaries and libraries MUST be published by the release pipeline from a version tag on the default branch, to the channels in `distribution_channels` only; a person MUST NOT publish from a workstation. _(applies to: library, cli, daemon, ui)_
 - **R6.** Publishing credentials MUST be available only to the release pipeline and MUST be scoped to
   publishing (`06-security/secrets-and-crypto.md`).
 - **R7.** A published version MUST NOT be overwritten or deleted; a defect is corrected by a new
@@ -66,10 +61,8 @@ libraries, images and installers. Getting a version running in the project's own
 
 ### Trust
 
-- **R10.** Published artifacts MUST be signed per `artifact_signing`, and the means of verifying a
-  signature MUST be published. _(applies to: library, cli, daemon, ui)_
-- **R11.** Each release MUST publish the provenance described in `provenance_attestation`, produced
-  by the release pipeline and not by a person. _(applies to: library, cli, daemon, ui)_
+- **R10.** Published artifacts MUST be signed per `artifact_signing`, and the means of verifying a signature MUST be published. _(applies to: library, cli, daemon, ui)_
+- **R11.** Each release MUST publish the provenance described in `provenance_attestation`, produced by the release pipeline and not by a person. _(applies to: library, cli, daemon, ui)_
 - **R12.** The dependencies bundled in a published artifact MUST follow
   `06-security/dependencies-and-supply-chain.md`.
 
@@ -77,20 +70,14 @@ libraries, images and installers. Getting a version running in the project's own
 
 - **R13.** The versions receiving fixes MUST follow `supported_versions_policy`, MUST be published,
   and the end of support of a version MUST be announced before it happens.
-- **R14.** The platforms, runtimes and dependency ranges in `compatibility_matrix` MUST each be tested
-  in the pipeline; dropping one MUST be announced in the release notes of the release that drops it.
-  _(applies to: library, cli, daemon, ui)_
+- **R14.** The platforms, runtimes and dependency ranges in `compatibility_matrix` MUST each be tested in the pipeline; dropping one MUST be announced in the release notes of the release that drops it. _(applies to: library, cli, daemon, ui)_
 - **R15.** A security fix MUST be released for every supported version it affects, with an advisory
   published that names the affected and fixed versions.
 
 ### Deprecation of non-HTTP interfaces
 
-- **R16.** A public surface MUST be deprecated before it is removed: announced in the release notes
-  and signalled at the surface itself (a warning from the program, a marker in the library API, a
-  log line for a deprecated configuration key). _(applies to: library, cli, daemon)_
-- **R17.** The interval between the deprecation announcement and removal MUST be at least
-  `interface_deprecation_notice`, and removal MUST happen only in a major version.
-  _(applies to: library, cli, daemon)_
+- **R16.** A public surface MUST be deprecated before it is removed: announced in the release notes and signalled at the surface itself (a warning from the program, a marker in the library API, a log line for a deprecated configuration key). _(applies to: library, cli, daemon)_
+- **R17.** The interval between the deprecation announcement and removal MUST be at least `interface_deprecation_notice`, and removal MUST happen only in a major version. _(applies to: library, cli, daemon)_
 
 ## Enforcement
 

@@ -21,7 +21,7 @@ Requires pack(s): `money`, `events`.
 | Parameter | Answer | Default | Trade-off |
 | --- | --- | --- | --- |
 | `ledger_owner` | [[ledger_owner]] | the account holder; plus one platform owner | finer owners give finer balances and more ledgers to reconcile; coarser owners hide who is owed what |
-| `chart_of_accounts` | [[chart_of_accounts]] | `holder_balance`, `holder_held`, `platform_fees`, `external_clearing` — illustrative only; the project replaces it | every account is a thing to reconcile; too few hides where money is |
+| `chart_of_accounts` | [[chart_of_accounts]] | `holder_balance`, `holder_held`, `platform_fees`, `external_clearing` — illustrative only; the project replaces it and gives each account its normal side and who may post to it | every account is a thing to reconcile; too few hides where money is |
 | `balance_projection` | [[balance_projection]] | balance rows updated in the same transaction as the entries; reconciled against entries on a schedule | summing entries per request does not scale |
 | `reconciliation_schedule` | [[reconciliation_schedule]] | daily | more frequent finds drift sooner and costs more reads |
 | `overdraft_policy` | [[overdraft_policy]] | no holder account may go negative unless the chart marks it as allowed | allowing a negative balance simplifies reversals and moves risk to the platform |
@@ -29,10 +29,9 @@ Requires pack(s): `money`, `events`.
 ## Open decisions
 
 - [ ] Ratify this document with the project (`.agents/skills/ratify-standard/SKILL.md`).
-- [ ] The chart of accounts: which accounts exist, each one's normal side, and who may post to it.
 - [ ] Which domain events cause postings, and which journal entry each produces.
 - [ ] Time-based movements (a receivable maturing, a scheduled release): which exist, and what
-      posts them? Specify per project; this document gives no default.
+      posts them?
 - [ ] Does any movement need an approval step before it posts?
 
 ## Rules

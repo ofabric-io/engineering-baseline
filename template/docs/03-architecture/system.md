@@ -44,7 +44,6 @@ Other documents scope a rule to some kinds by ending its first line with ` _(app
 - [ ] Ratify this document with the project (`.agents/skills/ratify-standard/SKILL.md`).
 - [ ] What is the deploy target, or is it deliberately undecided? Nothing may assume one until recorded.
 - [ ] Which boundaries, if any, share an ownership or isolation key, and which must not be merged?
-- [ ] Is the system one deployable, several, or a control plane with a data plane? If several, which component runs where?
 
 ## Rules
 

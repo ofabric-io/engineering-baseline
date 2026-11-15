@@ -33,8 +33,6 @@ sequenced belongs to the project's data-store documentation, when it has a data 
 ## Open decisions
 
 - [ ] Ratify this document with the project (`.agents/skills/ratify-standard/SKILL.md`).
-- [ ] What is the deployment target, and which ADR records it?
-- [ ] How long must a shutdown be allowed to drain in-flight work (R10)?
 - [ ] Which operations are performed for customers rather than as deployments (R4), and who may
       start each?
 
@@ -64,25 +62,19 @@ sequenced belongs to the project's data-store documentation, when it has a data 
 
 ### Rollout and rollback
 
-- **R6.** A rollout MUST follow `rollout_strategy` and MUST NOT reduce serving capacity below what
-  `01-business/availability.md` requires.
+- **R6.** A rollout MUST follow `rollout_strategy` and MUST NOT reduce serving capacity below what `01-business/availability.md` requires. _(applies to: service, daemon)_
 - **R7.** A rollout MUST proceed through `rollout_stages`. _(applies to: service, daemon)_
   Each stage MUST be held until its signals are healthy before the next begins.
-- **R8.** A rollout MUST halt, without proceeding to the next stage, when any signal in
-  `regression_halt_signals` regresses. _(applies to: service, daemon)_
+- **R8.** A rollout MUST halt, without proceeding to the next stage, when any signal in `regression_halt_signals` regresses. _(applies to: service, daemon)_
   A halted rollout MUST be resolved by a human decision to continue or to roll back.
-- **R9.** A deployment MUST roll back automatically when the new version fails its health checks.
-- **R10.** The shutdown grace period MUST be long enough for readiness to fail, background work to
-  stop and in-flight work to finish (`07-observability/health.md`). _(applies to: service, daemon)_
-- **R11.** A deploy MUST be verified after the call returns: steady state reached and health
-  endpoints answering; until then it is not done. _(applies to: service, daemon)_
+- **R9.** A deployment MUST roll back automatically when the new version fails its health checks. _(applies to: service, daemon)_
+- **R10.** The platform's shutdown grace period MUST exceed `drain_timeout` (`07-observability/health.md` R8), so readiness fails, background work stops and in-flight work finishes before the process is killed. _(applies to: service, daemon)_
+- **R11.** A deploy MUST be verified after the call returns: steady state reached and health endpoints answering; until then it is not done. _(applies to: service, daemon)_
 - **R12.** A rollback for any reason other than R9 MUST be a human decision, performed by
   redeploying the previous artifact and never by rebuilding.
-- **R13.** The last known good artifact and its configuration MUST remain deployable for
-  `last_known_good_retention`. _(applies to: service, daemon)_
+- **R13.** The last known good artifact and its configuration MUST remain deployable for `last_known_good_retention`. _(applies to: service, daemon)_
   A rollback target outside that set MUST NOT be assumed to exist.
-- **R14.** During a rollout, versions running side by side MUST interoperate for the whole of
-  `version_skew_window`. _(applies to: service, daemon)_
+- **R14.** During a rollout, versions running side by side MUST interoperate for the whole of `version_skew_window`. _(applies to: service, daemon)_
   A change that breaks interoperation with the previous version MUST be split into compatible steps
   across releases.
 

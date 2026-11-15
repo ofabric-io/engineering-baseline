@@ -20,15 +20,13 @@ particular way of modelling the domain are added by the packs that adopt it.
 | --- | --- | --- | --- |
 | `duplication_threshold` | [[duplication_threshold]] | 3 — duplication is tolerated until the third occurrence | a lower number extracts sooner and couples code that only looks alike; a higher one leaves more to maintain |
 | `cqs_strictness` | [[cqs_strictness]] | strict, except for atomic operations that must both change state and return a result (take, compare-and-swap, create returning an identifier) | strict is simple to review; the exceptions avoid races that two separate calls would create |
-| `port_boundaries` | [[port_boundaries]] | storage, clock, outbound client, queue | a longer list permits more single-implementation interfaces; a shorter one forces concrete types |
+| `port_boundaries` | [[port_boundaries]] | storage, clock, outbound client, queue; listed in `03-architecture/dependency-rules.md` | a longer list permits more single-implementation interfaces; a shorter one forces concrete types |
 | `cqrs_scope` | [[cqrs_scope]] | naming discipline only; a separate read model needs a measured need and an ADR | separate models scale reads and add synchronisation and cost |
 
 ## Open decisions
 
 - [ ] Ratify this document with the project (`.agents/skills/ratify-standard/SKILL.md`).
-- [ ] Which approved patterns in R1 does the project never need? Strike them rather than leave them
-      as invitations.
-- [ ] Which infrastructure boundaries count as ports for R4? Answer `port_boundaries` and list them in `03-architecture/dependency-rules.md`.
+- [ ] Which approved patterns in R1 does the project never need? Strike them.
 
 ## Rules
 

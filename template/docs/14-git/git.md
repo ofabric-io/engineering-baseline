@@ -43,9 +43,7 @@ parameter back to `no`.
 ## Open decisions
 
 - [ ] Ratify this document with the project (`.agents/skills/ratify-standard/SKILL.md`).
-- [ ] Which hosting platform enforces branch protection, and does its plan support every rule below?
-- [ ] How are releases cut — by tag only, or by a release workflow? (see
-      `15-delivery/releases-and-distribution.md`)
+- [ ] Does the hosting platform's plan support branch protection for every rule below?
 
 ## Rules
 

@@ -29,7 +29,6 @@ document decides what is audited, the shape of a record, its delivery guarantee 
 - [ ] If `audit_delivery_guarantee` is best-effort: which facts must stay provable by other means, so a
       lost record never leaves a dispute unanswerable?
 - [ ] Who may resolve a token back to a person (`audit_personal_data`), under which approval, and how is that resolution audited?
-- [ ] Are audit records visible to end users, and in which wording?
 
 ## Rules
 

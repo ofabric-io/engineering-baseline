@@ -9,7 +9,7 @@
 // question that offers its document. Ids: `<question>`, `<question>/<doc>/<param>`,
 // `<question>/<doc>/open-<n>` (n counts the section's bullets, ticked or not, from 1, skipping the
 // "Ratify" bullet, so it is stable when bullets are ticked or queued).
-import { ROOT, walk, rel, read, frontmatter, parameterRows, isTemplatePath, linesWithContext } from './lib.mjs';
+import { ROOT, walk, rel, read, frontmatter, parameterRows, isTemplatePath, linesWithContext, parseList, ruleBlocks, projectKinds, COMPONENT_KINDS } from './lib.mjs';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 
@@ -88,15 +88,28 @@ export function readAnswers() {
   return map;
 }
 
-/** Every decision, with errors when the questionnaire and the documents disagree. */
-export function loadDecisions() {
+/**
+ * Every decision, with errors when the questionnaire and the documents disagree.
+ * `kinds`: component kinds known from elsewhere (e.g. `recommend.mjs --kinds cli,library`). With the
+ * Components table, the `component_kinds` answer and the answer to 0.5, they decide which
+ * parameters and open decisions are `n/a`: those of a document whose `applies-to` names none of
+ * the project's kinds, and a parameter whose every citing rule is scoped to absent kinds.
+ */
+export function loadDecisions({ kinds: extraKinds = [] } = {}) {
   const errors = [];
   const docsDir = join(ROOT, 'docs');
   const docFiles = walk(docsDir, (p) => p.endsWith('.md')).map((p) => rel(p).replace(/^docs\//, '')).filter((p) => !isTemplatePath(p)).sort();
   const docInfo = new Map();
   for (const d of docFiles) {
     const text = read(join(docsDir, d));
-    docInfo.set(d, { status: frontmatter(text)?.status, params: parameterRows(text), bullets: openBullets(text) });
+    const fm = frontmatter(text);
+    docInfo.set(d, {
+      status: fm?.status,
+      appliesTo: fm && 'applies-to' in fm ? parseList(fm['applies-to']) : null,
+      params: parameterRows(text),
+      bullets: openBullets(text),
+      rules: ruleBlocks(text),
+    });
   }
   const isOpen = (p) => /\[\[[^\]]+\]\]/.test(p.answer);
   const closed = (info) => info.status === 'ratified' || info.status === 'not-applicable';
@@ -205,6 +218,24 @@ export function loadDecisions() {
     const hasNamed = [...named].some((k) => k.startsWith(`${doc}#`));
     if (info.params.some(isOpen) && !hasNamed) errors.push(`${QUESTIONNAIRE}: no question offers docs/${doc}, which has open parameters; name it in a question's "Writes to"`);
     else if (info.bullets.some((b) => !b.ticked && !b.queued)) errors.push(`${QUESTIONNAIRE}: no question offers docs/${doc}, which has open decisions; name it in a question's "Writes to"`);
+  }
+  // Not applicable, from the project's component kinds.
+  const answerKinds = COMPONENT_KINDS.filter((k) => new RegExp(`\\b${k}\\b`).test(answers.get('0.5')?.answer ?? ''));
+  const kinds = projectKinds([...extraKinds, ...answerKinds]);
+  const absent = (list) => kinds.size > 0 && list.length > 0 && !list.some((k) => kinds.has(k));
+  const have = [...kinds].join(', ');
+  for (const r of rows) {
+    if (!kinds.size || (r.kind !== 'param' && r.kind !== 'open')) continue;
+    const info = docInfo.get(r.doc);
+    let why = null;
+    if (info.appliesTo && absent(info.appliesTo)) why = `the document applies to ${info.appliesTo.join(', ')}; the project has ${have}`;
+    else if (r.kind === 'param') {
+      const citing = info.rules.filter((rule) => rule.text.includes(`\`${r.param}\``));
+      if (citing.length && citing.every((rule) => rule.kinds && absent(rule.kinds))) {
+        why = `only ${citing.map((rule) => rule.id).join(', ')} use it, scoped to ${[...new Set(citing.flatMap((rule) => rule.kinds))].join(', ')}; the project has ${have}`;
+      }
+    }
+    if (why) Object.assign(r, { plain: { recommended: r.recommended, source: r.source }, recommended: 'n/a', source: 'n/a', why });
   }
   for (const r of rows) {
     const a = answers.get(r.id);

@@ -21,7 +21,6 @@ Which parts of the code may depend on which, and how violations are prevented. T
 ## Open decisions
 
 - [ ] Ratify this document with the project (`.agents/skills/ratify-standard/SKILL.md`).
-- [ ] What are the layer names and the allowed arrows between them in this project?
 - [ ] Which categories of shared code exist (shared utilities, published contracts), and which boundaries may use each?
 - [ ] Is there a hot path that must skip a layer? If so, which, recorded in which ADR?
 

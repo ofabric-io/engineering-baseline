@@ -29,7 +29,6 @@ browser holds sessions and stored data. General application security stays in
 ## Open decisions
 
 - [ ] Ratify this document with the project (`.agents/skills/ratify-standard/SKILL.md`).
-- [ ] Which surfaces, if any, are meant to be embedded by third parties, and by whom?
 
 ## Rules
 

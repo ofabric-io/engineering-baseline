@@ -23,7 +23,6 @@ How data is classified, how long each class is kept, how it is redacted, kept ou
 
 - [ ] Ratify this document with the project (`.agents/skills/ratify-standard/SKILL.md`).
 - [ ] Which fields are in each of `data_classes`? Fill the field-to-class table under Rules.
-- [ ] Which regimes constrain the data (`01-business/compliance-and-data.md`)?
 
 ## Rules
 

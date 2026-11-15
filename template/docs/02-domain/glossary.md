@@ -54,7 +54,7 @@ baseline's use to the forbidden synonyms.
 - **R6.** A new concept MUST be added to the glossary in the change that introduces it; a term used in code but absent from the glossary is a defect.
 - **R7.** Renaming a term MUST be one change that updates the glossary, the forbidden list and every use, and MUST NOT leave the old name as an alias.
 - **R8.** A qualifier that disambiguates a term across entities (for example a field called `status`) MUST be part of the identifier, not left bare in a shared type or an event payload.
-- **R9.** Where the project has a user interface, the UI label MAY differ from the term; the term MUST NOT change to match a label.
+- **R9.** Where the project has a user interface, the UI label MAY differ from the term; the term MUST NOT change to match a label. _(applies to: ui)_
 
 ## Enforcement
 

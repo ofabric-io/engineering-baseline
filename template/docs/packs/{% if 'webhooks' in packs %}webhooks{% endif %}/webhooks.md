@@ -24,14 +24,14 @@ Requires pack(s): `events`.
 | `auto_disable_after` | [[auto_disable_after]] | 7 days of continuous failure | Shorter frees queue capacity sooner and disables flaky receivers that recover on their own |
 | `delivery_timeout` | [[delivery_timeout]] | 10 seconds to a complete response | Longer tolerates slow receivers and ties up dispatch capacity |
 | `secret_overlap` | [[secret_overlap]] | the old secret stays valid for 24 hours after rotation, or until revoked | A longer overlap eases receiver rollout and prolongs exposure of a leaked secret |
+| `attempt_log_retention` | [[attempt_log_retention]] | 30 days | Longer lets receivers debug older failures and costs storage |
 | `url_policy` | [[url_policy]] | HTTPS only, public addresses only, no redirects followed, no credentials in the URL | Allowing private addresses or plain HTTP enables internal integrations and opens request-forgery risk |
 
 ## Open decisions
 
 - [ ] Ratify this document with the project (`.agents/skills/ratify-standard/SKILL.md`).
-- [ ] Who is notified when an endpoint is disabled, and through which channel?
+- [ ] Through which channel is an endpoint's owner notified when it is disabled?
 - [ ] Is there a self-service endpoint test (a synthetic event) and what does it send?
-- [ ] How long are delivery attempt logs retained for the receiver to inspect?
 
 ## Rules
 
@@ -62,7 +62,7 @@ Requires pack(s): `events`.
 - **R14.** An endpoint that has failed continuously for `auto_disable_after` MUST be disabled automatically and its owner notified; re-enabling MUST be an explicit action.
 - **R15.** Every event whose attempts are exhausted MUST be dead-lettered, visible to operators and to the endpoint's owner, counted by a metric with an alert on depth (`07-observability/metrics-and-tracing.md`).
 - **R16.** A dead-lettered or failed event MUST be replayable on demand; a replay MUST keep the original event `id`, MUST be signed afresh with a current timestamp, and MUST be recorded as a new attempt.
-- **R17.** Each attempt MUST be recorded with endpoint, event `id`, attempt number, outcome (status class or error), duration and time, so "did it go out" is answerable.
+- **R17.** Each attempt MUST be recorded with endpoint, event `id`, attempt number, outcome (status class or error), duration and time, so "did it go out" is answerable, and kept for `attempt_log_retention` for the receiver to inspect.
 
 ## Enforcement
 

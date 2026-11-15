@@ -22,7 +22,7 @@ Input handling, abuse limits, outbound-call hygiene, threat modelling and the se
 ## Open decisions
 
 - [ ] Ratify this document with the project (`.agents/skills/ratify-standard/SKILL.md`).
-- [ ] Which inbound interfaces exist, and which of them are reachable by untrusted parties?
+- [ ] Which inbound interfaces are reachable by untrusted parties?
 - [ ] Who triages a vulnerability report, and within what time?
 
 ## Rules

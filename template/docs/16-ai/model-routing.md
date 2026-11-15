@@ -18,12 +18,12 @@ changes one table and no rule.
 | Parameter | Answer | Default | Trade-off |
 | --- | --- | --- | --- |
 | `tiers` | [[tiers]] | `strong` · `standard` · `fast`, mapped per vendor in the table below | naming vendor models in rules locks the rules to a vendor |
+| `model_mapping_review_cadence` | [[model_mapping_review_cadence]] | every quarter, and whenever a vendor retires a model in the table | rarer review leaves the table naming retired models; more frequent review is churn |
 
 ## Open decisions
 
 - [ ] Ratify this document with the project (`.agents/skills/ratify-standard/SKILL.md`).
 - [ ] Fill the mapping table: one row per AI vendor the project uses, with the model for each tier.
-- [ ] How often is the mapping reviewed as vendors release and retire models?
 
 ## Rules
 
@@ -39,7 +39,8 @@ changes one table and no rule.
   | `fast` | Cheapest, quickest, least capable | Narrow mechanical work with an easily checked result |
 
 - **R2.** The project MUST keep a mapping table in this document with one row per vendor it uses
-  and one column per tier. Model names appear only there.
+  and one column per tier, and MUST review it per `model_mapping_review_cadence`. Model names appear
+  only there.
 
   | Vendor | `strong` | `standard` | `fast` |
   | --- | --- | --- | --- |

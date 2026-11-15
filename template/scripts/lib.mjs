@@ -145,3 +145,52 @@ export function parameterRows(text) {
   }
   return rows;
 }
+
+/**
+ * The component kinds this project has: the Kind column of the Components table in
+ * docs/03-architecture/system.md, plus any kind named in its `component_kinds` answer, plus
+ * `extra` (kinds known from elsewhere, e.g. a command-line flag). Empty means unknown.
+ */
+export function projectKinds(extra = []) {
+  const kinds = new Set(extra.filter((k) => COMPONENT_KINDS.includes(k)));
+  const p = join(ROOT, 'docs', '03-architecture', 'system.md');
+  if (!existsSync(p)) return kinds;
+  for (const { line, section, fenced } of linesWithContext(read(p))) {
+    if (fenced) continue;
+    const c = tableCells(line);
+    if (!c) continue;
+    const kind = (c[1] ?? '').replace(/`/g, '');
+    if (section === 'Components' && COMPONENT_KINDS.includes(kind)) kinds.add(kind);
+    if (section === 'Parameters' && c[0] === '`component_kinds`' && !/\[\[/.test(c[1]) && c[1] !== 'default') {
+      for (const k of COMPONENT_KINDS) if (new RegExp(`\\b${k}\\b`).test(c[1])) kinds.add(k);
+    }
+  }
+  return kinds;
+}
+
+/** Rule id -> kinds from its scope tag `_(applies to: …)_`; a rule without a tag is absent. */
+export function scopedRules(text) {
+  const scoped = new Map();
+  for (const r of ruleBlocks(text)) if (r.kinds) scoped.set(r.id, r.kinds);
+  return scoped;
+}
+
+/** Rules of the `## Rules` section: [{ id, kinds (from a scope tag, or null), text (all lines) }]. */
+export function ruleBlocks(text) {
+  const out = [];
+  let cur = null;
+  for (const { line, section, fenced } of linesWithContext(text)) {
+    if (fenced || section !== 'Rules') { cur = null; continue; }
+    const id = line.match(/^\s*(?:[-*]|\d+\.)\s+\*\*([RP]\d+)\.\*\*/)?.[1];
+    if (id) {
+      const tag = line.match(/\s_\(applies to: ([^)]*)\)_$/)?.[1];
+      cur = { id, kinds: tag ? tag.split(',').map((k) => k.trim()) : null, text: line };
+      out.push(cur);
+    } else if (cur && /^\s+\S/.test(line)) {
+      cur.text += `\n${line}`;
+    } else {
+      cur = null;
+    }
+  }
+  return out;
+}

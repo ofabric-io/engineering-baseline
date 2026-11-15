@@ -16,12 +16,11 @@ Which published standards the project adopts instead of inventing its own, which
 | Parameter | Answer | Default | Trade-off |
 | --- | --- | --- | --- |
 | `adopt_before_invent` | [[adopt_before_invent]] | yes | a local convention only where no standard applies, and recorded here |
-| `core_standards` | [[core_standards]] | RFC 2119, RFC 3339, RFC 9562, ISO 8601, SemVer, Conventional Commits, OpenTelemetry + W3C Trace Context | packs add their own; every addition needs a reason and a version |
+| `core_standards` | [[core_standards]] | RFC 2119, RFC 3339, RFC 9562, ISO 8601, SemVer, Conventional Commits, OpenTelemetry + W3C Trace Context | packs add their own; every addition, including any the project adopts before choosing a pack, needs a reason and a version |
 
 ## Open decisions
 
 - [ ] Ratify this document with the project (`.agents/skills/ratify-standard/SKILL.md`).
-- [ ] Which standards beyond `core_standards` does this project adopt now, before any pack is chosen?
 
 ## Rules
 

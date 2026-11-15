@@ -134,6 +134,10 @@ for (const s of scenarios) {
   const unrendered = walk(dst).filter((f) => /\{%|\{\{/.test(relative(dst, f)));
   record(`${s.name}: no unrendered file names`, unrendered.length === 0, unrendered.join('\n'));
 
+  const pipeline = join(dst, 'docs/15-delivery/pipeline-and-gates.md');
+  const ciNone = (data.ci ?? 'github-actions') === 'none';
+  const pipelineText = existsSync(pipeline) ? readFileSync(pipeline, 'utf8') : '';
+  record(`${s.name}: ci_system default follows the ci answer`, ciNone ? /\| `ci_system` \| \[\[ci_system\]\] \| none yet/.test(pipelineText) : /\| `ci_system` \| \[\[ci_system\]\] \| the CI service chosen when the project was generated \(github-actions\)/.test(pipelineText));
   const sync = run('node', ['scripts/sync-adapters.mjs'], { cwd: dst });
   record(`${s.name}: sync-adapters`, sync.ok, sync.out);
   const check = run('node', ['scripts/check.mjs'], { cwd: dst });
@@ -229,6 +233,18 @@ function recommendChecks(dst) {
     record('recommend.mjs fails when the questionnaire names a parameter that does not exist', !drift.ok && /names parameter `priority_ordr`/.test(drift.out), drift.out);
     const orphan = edit('docs/02-domain/zz-orphan.md', () => readFileSync(join(dst, 'docs/02-domain/time.md'), 'utf8').replace(/^\| `([\w-]+)` \|/gm, '| `orphan_$1` |'), () => rec('--json'));
     record('recommend.mjs fails when a document with open parameters is offered by no question', !orphan.ok && /no question offers docs\/02-domain\/zz-orphan\.md/.test(orphan.out), orphan.out);
+    const kindsRows = (...a) => { try { return new Map(JSON.parse(rec('--json', ...a).out).map((r) => [r.id, r])); } catch { return new Map(); } };
+    const plain = kindsRows();
+    const cliLib = kindsRows('--kinds', 'cli,library');
+    const svc = kindsRows('--kinds', 'service');
+    const drain = '4.3/07-observability/health.md/drain_timeout';
+    const slo = '1.8/01-business/availability.md/slo_exhaustion_response';
+    record('recommend.mjs --kinds marks n/a a document whose applies-to names none of the kinds',
+      plain.get(drain)?.source === 'default' && cliLib.get(drain)?.source === 'n/a' && /applies to service, daemon/.test(cliLib.get(drain)?.why ?? '') && svc.get(drain)?.source === 'default',
+      JSON.stringify([plain.get(drain), cliLib.get(drain), svc.get(drain)]).slice(0, 600));
+    record('recommend.mjs --kinds marks n/a a parameter whose every citing rule is scoped to absent kinds',
+      plain.get(slo)?.source === 'default' && cliLib.get(slo)?.source === 'n/a' && svc.get(slo)?.source === 'default',
+      JSON.stringify([plain.get(slo), cliLib.get(slo)]).slice(0, 600));
     const withSheet = run('node', ['scripts/check.mjs'], { cwd: dst });
     record('check.mjs passes with a recommendation sheet present', withSheet.ok, withSheet.out);
     applyChecks(dst);
@@ -523,6 +539,7 @@ function wave2Checks(dst) {
   rejects('a ratified document with an open decision not in the queue', [[TIME, ratified('- [ ] still open')]], /open decision not in the queue/);
   const queueRow = (x) => x.replace(/(\| # \| Question \| Belongs to \| Blocking\? \| Raised \|\n\| --- \| --- \| --- \| --- \| --- \|\n)/, `$1| D1 | later | \`${TIME.replace(/^docs\//, '')}\` | no | 2026-01-01 |\n`);
   accepts('a ratified document whose open decisions are ticked or queued', [[TIME, ratified('- [x] done\n- [ ] later\n      continued here → DECISION-QUEUE')], ['docs/DECISION-QUEUE.md', queueRow]]);
+  rejects('a scope tag on a rule\'s later line', [[TIME, (x) => x.replace('## Rules\n', '## Rules\n\n- **R99.** Something MUST hold\n  for some kinds. _(applies to: service)_\n')]], /R99 has its scope tag on a later line/);
   rejects('a ratified document that queues an open decision with no queue row', [[TIME, ratified('- [ ] later → DECISION-QUEUE')]], /queues an open decision, but docs\/DECISION-QUEUE\.md/);
 
   // ADRs: index parity and completeness of an accepted ADR.

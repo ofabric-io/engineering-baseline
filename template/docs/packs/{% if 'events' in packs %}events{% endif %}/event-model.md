@@ -20,14 +20,13 @@ What an event is, its envelope, its name, and what it may carry. Reliable delive
 | `naming` | [[naming]] | `<org>.<context>.<entity>.<past-tense-verb>.v<n>` | A shorter name is easier to type; the full form avoids collisions across contexts and organisations |
 | `event_id_format` | [[event_id_format]] | a time-ordered UUID (RFC 9562 version 7) | Random UUIDs avoid leaking time; ordered ones index better |
 | `context_attributes` | [[context_attributes]] | isolation key (if the project has an isolation unit), `correlationid`, `causationid` | Fewer attributes are cheaper; without them a cross-service causal chain cannot be reconstructed |
-| `integration_event_content` | [[integration_event_content]] | identifiers plus the changed fields only; no personal data, no secrets, and no field class the project lists as withheld | Richer payloads save consumers a fetch and widen what leaks if a consumer is compromised; a project whose consumers are all trusted may allow more |
+| `integration_event_content` | [[integration_event_content]] | identifiers plus the changed fields only; no personal data, no secrets, and no field class the project lists as withheld | Richer payloads save consumers a fetch and widen what leaks if a consumer is compromised; a project whose consumers are all trusted may allow more; it applies to everything a consumer outside the project's control receives |
 
 ## Open decisions
 
 - [ ] Ratify this document with the project (`.agents/skills/ratify-standard/SKILL.md`).
 - [ ] Which field classes are withheld from integration events (`integration_event_content`)? Name them; "sensitive" is not testable.
 - [ ] What is the `source` attribute's format, and who owns the registry of sources?
-- [ ] Does any consumer outside the project's control receive events? If yes, `integration_event_content` applies to everything they receive.
 
 ## Rules
 

@@ -30,7 +30,6 @@ How visual decisions are named and layered: primitives hold raw values, semantic
 ## Open decisions
 
 - [ ] Ratify this document with the project (`.agents/skills/ratify-standard/SKILL.md`).
-- [ ] Is a third (component) tier needed, and for which library? Answer when the component inventory is chosen (`components.md`).
 - [ ] How is a theme selected at runtime: explicit user choice, system preference, or both, and in what order?
 
 ## Rules

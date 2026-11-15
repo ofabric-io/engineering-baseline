@@ -22,7 +22,7 @@ How instants, dates, durations and time zones are represented, and where time co
 ## Open decisions
 
 - [ ] Ratify this document with the project (`.agents/skills/ratify-standard/SKILL.md`).
-- [ ] Which named zone is the `business_time_zone` (per isolation unit, if they differ), and which holiday or non-working-day calendar applies, if business days matter at all?
+- [ ] Which holiday or non-working-day calendar applies, if business days matter at all?
 
 ## Rules
 

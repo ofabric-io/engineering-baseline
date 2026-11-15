@@ -15,7 +15,7 @@ Every outbound call has a timeout, per-request retries are bounded with backoff 
 
 | Parameter | Answer | Default | Trade-off |
 | --- | --- | --- | --- |
-| `default_timeout` | [[default_timeout]] | set explicitly per call, by dependency class, recorded in this document; none unbounded | a missing timeout turns a slow dependency into an outage |
+| `default_timeout` | [[default_timeout]] | set explicitly per call, by dependency class (data store, cache, internal service, third-party service), recorded in this document; none unbounded | a missing timeout turns a slow dependency into an outage |
 | `retry_policy` | [[retry_policy]] | capped attempts, exponential backoff with jitter, only for idempotent operations | retry storms |
 | `jitter_strategy` | [[jitter_strategy]] | full jitter: each wait is drawn uniformly between zero and the backoff ceiling | decorrelated or equal jitter keep a minimum wait and spread load less evenly |
 | `reconnect_backoff_ceiling` | [[reconnect_backoff_ceiling]] | the longest wait between reconnect attempts is 60 seconds | a low ceiling recovers fast and hammers a dependency that is down; a high one recovers slowly |
@@ -25,7 +25,6 @@ Every outbound call has a timeout, per-request retries are bounded with backoff 
 ## Open decisions
 
 - [ ] Ratify this document with the project (`.agents/skills/ratify-standard/SKILL.md`).
-- [ ] Timeout budget per dependency class (data store, cache, internal service, third-party service).
 - [ ] For each operation, the behaviour when its dependency is down (R15).
 
 ## Rules

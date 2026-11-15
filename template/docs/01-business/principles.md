@@ -23,8 +23,7 @@ What the product is and is not, and the priority order that settles conflicts be
 ## Open decisions
 
 - [ ] Ratify this document with the project (`.agents/skills/ratify-standard/SKILL.md`).
-- [ ] Which published interfaces (API, CLI flags, file formats, events) does the project promise to keep stable, and from which release? Answered in R12; the list lives in `15-delivery/`.
-- [ ] How long is the notice period for removing a published interface? Not a baseline default; the project decides it and records it in an ADR.
+- [ ] Which published interfaces (API, CLI flags, file formats, events) does the project promise to keep stable, and from which release?
 
 ## Rules
 
@@ -50,7 +49,7 @@ What the product is and is not, and the priority order that settles conflicts be
 
 ### Backward compatibility
 
-- **R12.** A published interface MUST NOT be changed incompatibly, or removed, without advance notice to its consumers.
+- **R12.** A published interface MUST NOT be changed incompatibly, or removed, without advance notice to its consumers of at least `interface_deprecation_notice` (`15-delivery/releases-and-distribution.md` R17).
 - **R13.** Internal refactoring is unconstrained by R12; the boundary is the published contract, not the code behind it.
 
 ### AI agents

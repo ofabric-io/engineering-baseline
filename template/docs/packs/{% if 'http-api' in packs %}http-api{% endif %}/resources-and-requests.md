@@ -18,7 +18,7 @@ How resources, paths, methods and request bodies are shaped. Response shapes and
 | `allowed_methods` | [[allowed_methods]] | GET, POST, PUT, PATCH, DELETE, narrowed per resource kind in the API description | A resource that must never be replaced or removed (an append-only record) forbids PUT, PATCH and DELETE; every method you allow is a behaviour to specify and test |
 | `patch_semantics` | [[patch_semantics]] | RFC 7396 JSON Merge Patch (`application/merge-patch+json`) | RFC 6902 JSON Patch can express array edits and `null` values but is harder for clients; "no PATCH" is valid if every change is a sub-resource action |
 | `path_casing` | [[path_casing]] | kebab-case paths, camelCase JSON members | One casing everywhere is simpler to learn; matching the host language's convention may be cheaper to implement |
-| `scope_selection` | [[scope_selection]] | none: the scope comes from the credential alone. Alternatives: a request header, or a path segment, naming which isolation unit or account the call acts on | A principal that belongs to several units needs a way to choose; every selector is client input that must be authorized |
+| `scope_selection` | [[scope_selection]] | none: the scope comes from the credential alone. Alternatives: a request header, or a path segment, naming which isolation unit or account the call acts on | A principal that belongs to several units needs a way to choose; every selector is client input that must be authorized; name the selector and say what a principal with one unit may omit |
 | `max_nesting_depth` | [[max_nesting_depth]] | 2 levels below the collection | Deeper paths encode joins into URLs; flatter paths need more query parameters |
 | `unknown_fields` | [[unknown_fields]] | rejected | A tolerant reader hides client bugs but survives client-ahead-of-server skew |
 | `max_request_body` | [[max_request_body]] | 1 MB, with an explicit bound on every string and array | Larger bodies need streaming or upload endpoints, not a higher cap |
@@ -29,7 +29,6 @@ How resources, paths, methods and request bodies are shaped. Response shapes and
 - [ ] Which resource kinds exist, and which methods does each allow? (Recorded per kind in the API description, constrained by `allowed_methods`.)
 - [ ] Does the API have several audiences (public, internal, administrative)? If so, does the path carry an audience segment?
 - [ ] Which request headers beyond `Idempotency-Key`, `X-Request-Id` and the `scope_selection` selector are part of the contract?
-- [ ] If `scope_selection` is not none: the selector's name, and what a principal with one unit may omit.
 
 ## Rules
 

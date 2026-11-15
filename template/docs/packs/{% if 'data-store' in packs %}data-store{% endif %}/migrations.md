@@ -45,9 +45,9 @@ data change needs a human is its R17.
 
 ### Execution
 
-- **R5.** Migrations MUST run as a separate pipeline step that completes successfully before the
-  application is updated, MUST NOT run on application start, and a failed migration MUST stop the
-  pipeline without deploying the application. _(applies to: service, daemon, batch)_
+- **R5.** Migrations MUST run as a separate pipeline step that completes before the application is updated. _(applies to: service, daemon, batch)_
+  They MUST NOT run on application start, and a failed migration MUST stop the pipeline without
+  deploying the application.
 - **R6.** A backfill MUST follow `backfill_execution` and MUST NOT run inside a migration.
 - **R7.** An agent MAY author a migration; executing one against a shared environment is governed
   by `16-ai/prohibitions.md` P16.

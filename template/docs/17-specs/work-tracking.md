@@ -19,12 +19,12 @@ estimates or velocity.
 | Parameter | Answer | Default | Trade-off |
 | --- | --- | --- | --- |
 | `tracker` | [[tracker]] | the `tracker` answer in `.copier-answers.yml`; `none` means a Markdown queue file in the repository | an external tracker gives boards and notifications but is a surface outside the repository's controls |
+| `feature_grouping` | [[feature_grouping]] | none: features are the highest level | an epic, milestone or label groups features for planning and adds a level that must be kept in step with the specs |
 | `tracker_states` | [[tracker_states]] | `to do` · `in progress` · `complete` | more states give finer visibility, but state that only the tracker holds cannot be checked from the repository |
 
 ## Open decisions
 
 - [ ] Ratify this document with the project (`.agents/skills/ratify-standard/SKILL.md`).
-- [ ] What groups features above them (an epic, a milestone, a label), if anything?
 
 ## Rules
 
@@ -88,7 +88,7 @@ estimates or velocity.
   story per R19, move a story's status per R21, and comment.
 - **R18.** An agent MUST NOT delete any tracked item, comment or field; MUST NOT edit or
   reassign an item it did not create, except for the self-claim in R19; MUST NOT create a
-  grouping above features unless the project's rules allow it; and MUST NOT mark a task complete
+  grouping above features other than the one `feature_grouping` names; and MUST NOT mark a task complete
   before its pull request is merged. Deletion is a human act.
 
 ### Claiming work

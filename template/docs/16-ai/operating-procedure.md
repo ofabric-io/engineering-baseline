@@ -22,8 +22,8 @@ produces changes a human must re-derive.
 ## Open decisions
 
 - [ ] Ratify this document with the project (`.agents/skills/ratify-standard/SKILL.md`).
-- [ ] Which verification commands make up "done" for this project? They live in
-      `15-delivery/pipeline-and-gates.md`; each story spec lists the ones it needs.
+- [ ] Which verification commands make up "done" for this project (listed in
+      `15-delivery/pipeline-and-gates.md`)?
 
 ## Rules
 

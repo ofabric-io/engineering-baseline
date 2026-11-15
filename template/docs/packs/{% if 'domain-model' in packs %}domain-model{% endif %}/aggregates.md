@@ -21,7 +21,6 @@ How the project groups entities into aggregates, the units that are loaded, chan
 ## Open decisions
 
 - [ ] Ratify this document with the project (`.agents/skills/ratify-standard/SKILL.md`).
-- [ ] Which entities must keep an invariant together, and which only reference each other by identifier?
 
 ## Rules
 

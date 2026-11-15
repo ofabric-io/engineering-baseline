@@ -13,7 +13,7 @@
 // project does not have.
 import { existsSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
-import { ROOT, walk, rel, read, frontmatter, enforcementRows, isTemplatePath, COMPONENT_KINDS, parseList, expandRuleList, linesWithContext, tableCells } from './lib.mjs';
+import { ROOT, walk, rel, read, frontmatter, enforcementRows, isTemplatePath, parseList, expandRuleList, projectKinds, scopedRules } from './lib.mjs';
 
 export const DUE = ['before-first-release', 'before-production', 'when-stack-decided', 'later'];
 const START = '<!-- debt:start -->';
@@ -46,39 +46,6 @@ function rewrite(text, from) {
 
 const dueOf = (cells) => DUE.find((d) => cells.join(' ').includes(d)) ?? 'when-stack-decided';
 const ruleNo = (s) => Number((s.match(/\d+/) ?? [0])[0]);
-
-/**
- * The component kinds this project has: the Kind column of the Components table in
- * docs/03-architecture/system.md, plus any kind named in its `component_kinds` answer. Empty while
- * neither is filled in, which means "unknown": nothing is filtered.
- */
-function projectKinds() {
-  const p = join(ROOT, 'docs', '03-architecture', 'system.md');
-  if (!existsSync(p)) return new Set();
-  const kinds = new Set();
-  for (const { line, section, fenced } of linesWithContext(read(p))) {
-    if (fenced) continue;
-    const c = tableCells(line);
-    if (!c) continue;
-    if (section === 'Components' && c.length >= 2 && COMPONENT_KINDS.includes(c[1].replace(/`/g, ''))) kinds.add(c[1].replace(/`/g, ''));
-    if (section === 'Parameters' && c[0] === '`component_kinds`' && !/\[\[/.test(c[1]) && c[1] !== 'default') {
-      for (const k of COMPONENT_KINDS) if (new RegExp(`\\b${k}\\b`).test(c[1])) kinds.add(k);
-    }
-  }
-  return kinds;
-}
-
-/** Rule id -> kinds from its scope tag `_(applies to: …)_`; a rule without a tag is absent. */
-function scopedRules(text) {
-  const scoped = new Map();
-  for (const { line, section, fenced } of linesWithContext(text)) {
-    if (fenced || section !== 'Rules') continue;
-    const id = line.match(/^\s*(?:[-*]|\d+\.)\s+\*\*([RP]\d+)\.\*\*/)?.[1];
-    const tag = line.match(/\s_\(applies to: ([^)]*)\)_$/)?.[1];
-    if (id && tag) scoped.set(id, tag.split(',').map((k) => k.trim()));
-  }
-  return scoped;
-}
 
 function debtRows() {
   const out = [];

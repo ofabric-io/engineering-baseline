@@ -6,7 +6,7 @@ import { join, dirname, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import {
   ROOT, walk, rel, read, frontmatter, stripNonProse, ruleIds, enforcementRows, sections,
-  COMPONENT_KINDS, parseList, isTemplatePath, tableCells, linesWithContext,
+  COMPONENT_KINDS, parseList, isTemplatePath, tableCells, linesWithContext, ruleBlocks,
 } from './lib.mjs';
 
 const failures = [];
@@ -67,6 +67,12 @@ for (const [abs, file] of mdFiles) {
       const kinds = m[1].split(',').map((k) => k.trim());
       const bad = kinds.filter((k) => !COMPONENT_KINDS.includes(k));
       if (bad.length) fail(`${file}:${n}`, `scope tag names unknown kind(s) ${bad.join(', ')}; the kinds are ${COMPONENT_KINDS.join(', ')}`);
+    }
+    // A scope tag anywhere but the rule's first line is read by nothing: say so.
+    for (const r of ruleBlocks(text)) {
+      if (r.text.split('\n').slice(1).some((l) => /_\(applies to:/i.test(l))) {
+        fail(file, `${r.id} has its scope tag on a later line, where nothing reads it; move " _(applies to: …)_" to the end of the rule's first line`);
+      }
     }
   }
 

@@ -18,6 +18,7 @@ commands are technology choices recorded in `13-technology/`; deployment is in
 
 | Parameter | Answer | Default | Trade-off |
 | --- | --- | --- | --- |
+| `ci_system` | [[ci_system]] | {% if ci == 'none' %}none yet: the project was generated without CI, so the gates run locally before merge (R15) until a CI service is chosen in `13-technology/`{% else %}the CI service chosen when the project was generated ({{ ci }}); its configuration is recorded in `13-technology/`{% endif %} | without CI a bypassed hook goes unnoticed; a CI service is one more system to keep running |
 | `required_checks` | [[required_checks]] | baseline checks, format, lint, type check, tests at every level, build, security scan | set per technology in 13-technology/; every extra check costs pipeline time |
 | `job_time_budget_minutes` | [[job_time_budget_minutes]] | 15 per pipeline job | a larger budget tolerates slow suites; a smaller one forces sharding sooner |
 | `quarantine_expiry_days` | [[quarantine_expiry_days]] | 7 | a longer window lets a flaky test linger; a shorter one forces a fix or a delete |
@@ -67,6 +68,13 @@ commands are technology choices recorded in `13-technology/`; deployment is in
   with an owner, fixed by sharding or speeding up, not by raising the budget.
 - **R14.** Build and dependency caching MUST be enabled; a cold cache is not a reason to relax R13.
 
+### Without a CI service
+
+- **R15.** While `ci_system` is none, every check in `required_checks` MUST run locally before a
+  merge, through the git hooks where it can and by hand otherwise, and the pull request body MUST
+  say that they passed. R2–R5, R7–R10, R13 and R14 need a CI service: they take effect when
+  `ci_system` names one, and their Enforcement rows are due `before-first-release`.
+
 ## Enforcement
 
 | Rule | Mechanism | Status |
@@ -83,6 +91,7 @@ commands are technology choices recorded in `13-technology/`; deployment is in
 | R11, R12 | Quarantine list file with expiry dates; a CI job fails an expired entry | ⬜ scheduled |
 | R13 | Per-job timeout in the pipeline definition | ⬜ scheduled |
 | R14 | Cache configuration in the pipeline definition | ⬜ scheduled |
+| R15 | The pull-request template's checklist; review | ❌ review-only |
 
 ## AI guardrails
 

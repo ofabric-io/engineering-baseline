@@ -59,8 +59,11 @@ In 0.5, kinds come only from the fixed list `service`, `daemon`, `cli`, `library
 
 ## 3. The recommendation sheet
 
-1. Run `node scripts/recommend.mjs`. It writes `.baseline/recommendations.md` with one row per
-   open decision, pre-filled with `default` or `ask`. That includes every unticked bullet under a
+1. Run `node scripts/recommend.mjs --kinds <kinds from 0.5>` (for example `--kinds cli,library`).
+   It writes `.baseline/recommendations.md` with one row per open decision, pre-filled with
+   `default` or `ask`. It marks as `n/a` the parameters and open decisions of documents whose
+   `applies-to` names none of those kinds, and the parameters whose every citing rule is scoped to
+   absent kinds. That includes every unticked bullet under a
    document's `## Open decisions` (ids ending `/open-<n>`). Their default is `later`, so they are
    deferred to the queue unless the brief or another answer settles them. Never resolve one
    outside the sheet: the user must see every decision before choosing 0.6.

@@ -19,17 +19,16 @@ that; the register itself is project content.
 | Parameter | Answer | Default | Trade-off |
 | --- | --- | --- | --- |
 | `readiness_closer` | [[readiness_closer]] | a named human other than the owner of the work the row unblocks | a smaller team may have to allow a peer; self-closing defeats the gate |
+| `production_definition` | [[production_definition]] | the first moment anyone outside the project's team uses it or it holds real data, whichever comes first | an earlier moment gates sooner and slows the first release; a later one lets relaxations harden before the gate applies |
 | `register_review_cadence` | [[register_review_cadence]] | at every release-planning point | less frequent review finds the list late |
 
 ## Open decisions
 
 - [ ] Ratify this document with the project (`.agents/skills/ratify-standard/SKILL.md`).
-- [ ] What counts as "production" for this project: first external user, first real data, or first
-      paying customer? The register's gate (R1) applies from that moment.
 
 ## Rules
 
-- **R1.** Production deployment MUST be blocked until every open row in the register is closed.
+- **R1.** Production deployment, from the moment in `production_definition`, MUST be blocked until every open row in the register is closed.
 - **R2.** A row MUST be closed by `readiness_closer`; the owner of the work a row unblocks MUST NOT
   close it.
 - **R3.** A row MAY be closed as "accepted risk" instead of done, but only with a named human, a

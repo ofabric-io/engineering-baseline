@@ -26,7 +26,7 @@ technology choice recorded in `13-technology/`.
 ## Open decisions
 
 - [ ] Ratify this document with the project (`.agents/skills/ratify-standard/SKILL.md`).
-- [ ] Where is the documentation published, and for which versions of the product (R7)?
+- [ ] Where is the documentation published?
 - [ ] Who owns each audience's pages?
 
 ## Rules
@@ -37,9 +37,7 @@ technology choice recorded in `13-technology/`.
   User documentation is organised by task. Operator documentation covers installing, configuring,
   upgrading, backing up and restoring, and diagnosing the product, and links to the incident
   runbook (`07-observability/incident-management.md`). Reference documentation is exhaustive.
-- **R2.** Reference documentation MUST cover every public surface listed in
-  `15-delivery/releases-and-distribution.md` `public_surfaces`, including defaults, errors or exit
-  codes, and deprecations. _(applies to: service, daemon, cli, library)_
+- **R2.** Reference documentation MUST cover every public surface listed in `15-delivery/releases-and-distribution.md` `public_surfaces`, including defaults, errors or exit codes, and deprecations. _(applies to: service, daemon, cli, library)_
 - **R3.** Reference MUST come from `reference_source`; text copied by hand from the source of truth
   MUST NOT be committed.
 - **R4.** Documentation MUST NOT contain secrets, real customer data or internal-only details

@@ -24,7 +24,6 @@ standards layers and never overrides them. Where the work is tracked is `work-tr
 ## Open decisions
 
 - [ ] Ratify this document with the project (`.agents/skills/ratify-standard/SKILL.md`).
-- [ ] Are there changes below tier 3 that this project wants a story spec for anyway?
 
 ## Rules
 

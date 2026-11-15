@@ -25,7 +25,6 @@ CSS pixel width, focus and zoom behaviour, and the browser's own preference sign
 ## Open decisions
 
 - [ ] Ratify this document with the project (`.agents/skills/ratify-standard/SKILL.md`).
-- [ ] Which screen reader and browser pairs are in the manual review matrix?
 
 ## Rules
 

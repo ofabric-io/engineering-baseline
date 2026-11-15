@@ -24,7 +24,6 @@ Error categories, stable error codes, how failures are signalled in the project'
 
 - [ ] Ratify this document with the project (`.agents/skills/ratify-standard/SKILL.md`).
 - [ ] Where does the single error-code catalogue live, and who may append to it?
-- [ ] Which expected outcomes are modelled as results rather than raised errors?
 
 ## Rules
 

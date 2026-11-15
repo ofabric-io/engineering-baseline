@@ -24,8 +24,7 @@ How available the system must be, how that is measured, and which operations alw
 ## Open decisions
 
 - [ ] Ratify this document with the project (`.agents/skills/ratify-standard/SKILL.md`).
-- [ ] Which user-facing journeys get an SLO, and who is accountable for each number?
-- [ ] Who is the named person who decides how to proceed when a budget is exhausted, and how long may a review last?
+- [ ] Who is the named person who decides how to proceed when a budget is exhausted?
 
 ## Rules
 

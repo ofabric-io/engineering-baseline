@@ -6,6 +6,36 @@ A change that alters a document a project may already have ratified is called ou
 
 ## [Unreleased]
 
+### Changed — fewer questions: duplicate open decisions, component kinds, CI
+
+- **Open decisions pruned.** About 45 bullets that repeated a question their own document's
+  Parameters table already decides were removed. Where a bullet added a nuance, it was folded into
+  the setting's Default or Trade-off. The bullets kept are project-specific facts with no
+  sensible default.
+- **New parameters** (each cited by a rule): `outbox_retention` (events), `attempt_log_retention`
+  (webhooks), `production_definition` (production readiness), `feature_grouping` (work tracking),
+  `model_mapping_review_cadence` (model routing), `ci_system` (pipeline and gates).
+  **Projects must review** the rules that now cite them, and these other rule changes:
+  - `01-business/principles.md` R12 now cites `interface_deprecation_notice` in
+    `15-delivery/releases-and-distribution.md`.
+  - `15-delivery/deployments-and-rollback.md` R10 now requires the platform's grace period to
+    exceed `drain_timeout`.
+  - `06-security/authn-authz.md` gains R17, which applies `session_lifetime` (the setting had no
+    rule).
+- **Without CI.** `15-delivery/pipeline-and-gates.md` gains `ci_system`, whose default follows
+  the `ci` answer. New R15: while there is no CI service, the gates run locally before merge,
+  and the rules that need a CI service wait for one.
+- **Not applicable, automatically.** `node scripts/recommend.mjs --kinds <kinds>` (or the
+  Components table, or the answer to 0.5) marks a decision `n/a` in two cases: its document's
+  `applies-to` names none of the project's kinds, or every rule that cites the parameter is scoped
+  to absent kinds. The kind helpers moved into `scripts/lib.mjs` and are shared with
+  `queue.mjs`.
+- **Scope tags that were never read.** Tags written at the end of a rule's last line had no
+  effect. They now sit on the first line, in `deployments-and-rollback.md`,
+  `product-documentation.md`, `releases-and-distribution.md` and `data-store/migrations.md`.
+  `check.mjs` now reports a misplaced tag. New tags: concurrency R18, deployments R6 and R9,
+  multi-tenant R5, authn-authz R8, R10 and R17.
+
 ### Changed — fixes from the first brief-first trial run
 
 A full bootstrap of a solo command-line project (176 decisions, mode `all`) found these gaps.
