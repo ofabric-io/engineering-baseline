@@ -11,7 +11,7 @@ import { join, relative, sep } from 'node:path';
 const ROOT = join(import.meta.dirname, '..');
 const TMP = join(ROOT, '.tmp');
 const KEEP = process.argv.includes('--keep');
-const ALL_PACKS = ['http-api', 'events', 'webhooks', 'money', 'ledger', 'multi-tenant', 'audit-trail'];
+const ALL_PACKS = ['http-api', 'events', 'webhooks', 'money', 'ledger', 'multi-tenant', 'audit-trail', 'user-interface'];
 
 const scenarios = [
   { name: 'minimal', data: { packs: [], tracker: 'none', ci: 'none' } },

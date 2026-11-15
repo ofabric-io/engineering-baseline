@@ -53,6 +53,7 @@ packs:
     "ledger — double-entry bookkeeping (requires money)": ledger
     "multi-tenant — isolation unit, enforcement, leak tests": multi-tenant
     "audit-trail — what is audited, record shape, retention": audit-trail
+    "user-interface — design tokens, accessibility, UI states, i18n, components, design workflow": user-interface
   default: []
   validator: >-
     {% if 'webhooks' in packs and 'events' not in packs %}The webhooks pack requires the events pack{% elif 'ledger' in packs and 'money' not in packs %}The ledger pack requires the money pack{% endif %}

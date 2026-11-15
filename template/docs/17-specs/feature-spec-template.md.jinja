@@ -24,6 +24,14 @@ supersedes: null
 ## Goal and success metric
 
 <!-- What changes if this works, and the number that would show it. -->
+{% if 'user-interface' in packs %}
+## Design
+
+<!-- Link the committed design artifact this feature realises, and the screen specs it covers
+     (docs/packs/user-interface/design-workflow.md). Write `None yet — <why>` if design has not
+     happened; the spec may be approved without one only if design does not block the work.
+     A feature with no interface writes `Not applicable — no user interface`. -->
+{% endif %}
 
 ## Scope
 
@@ -103,6 +111,12 @@ Cite the rule; do not restate it. Write `None` where the feature does not touch 
 
 <!-- Which isolation axis each new piece of data belongs to, and the leak test that proves it
      (docs/packs/multi-tenant/). -->
+{% endif %}{% if 'user-interface' in packs %}
+### User interface
+
+<!-- Surfaces touched; new or changed tokens and status roles; every async state of each new
+     view; irreversible actions; new copy keys in every locale; accessibility of new components
+     (docs/packs/user-interface/). -->
 {% endif %}{% if 'audit-trail' in packs %}
 ### Audit
 

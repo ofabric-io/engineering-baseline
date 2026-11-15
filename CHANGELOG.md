@@ -6,6 +6,14 @@ A change that alters a document a project may already have ratified is called ou
 
 ## [Unreleased]
 
+### Added
+
+- `user-interface` pack (stubs): design tokens and semantic roles, accessibility, UI states,
+  content and i18n, components, design workflow. Selecting it adds a Design section and a
+  User interface impact section to the feature-spec template, and a bootstrap row.
+- Glossary `## Terms` table with a **UI label** column, so interface wording comes from the
+  domain language.
+
 ### Changed
 
 - The `ai_tools` creation question is gone. Every project ships pointers for Claude Code,

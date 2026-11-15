@@ -44,6 +44,11 @@ generalized from a source project per the maintainer's local extraction map
 
 - [ ] `http-api`, `events`, `webhooks`, `money`, `ledger`, `multi-tenant`, `audit-trail` filled
       with proposed rules; every product-specific choice a parameter
+- [ ] `user-interface` filled: design tokens and semantic roles, accessibility, UI states,
+      content and i18n, components, tool-neutral design workflow. Its token rules come from a
+      source document that was never ratified, so review them more closely than the others
+- [ ] Optional checks for the `user-interface` pack: token-contrast check across themes,
+      catalog-parity check (both stack-independent where possible)
 - [ ] Feature-spec template sections per pack (already conditional) checked against the packs
 
 ## M5 — Enforcement and fixtures (v0.5.0)
@@ -63,5 +68,5 @@ generalized from a source project per the maintainer's local extraction map
 
 ## Later
 
-- Packs grown in real projects and promoted: `fx`, `frontend`, `control-plane`,
+- Packs grown in real projects and promoted: `fx`, `control-plane`,
   `progressive-delivery`, `quotas-and-rate-limits`, `sre`, `client-surfaces`, `metering`.
