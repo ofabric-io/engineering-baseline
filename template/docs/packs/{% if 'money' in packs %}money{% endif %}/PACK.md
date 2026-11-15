@@ -2,7 +2,8 @@
 pack: money
 version: 0.1.0
 requires: []
-amends: []
+amends:
+  - 05-protocols/rfc-profile.md  # adds ISO 4217 to the adopted standards, for currency codes
 documents:
   - money.md  # Monetary Amounts
 ---
