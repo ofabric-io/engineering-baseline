@@ -195,7 +195,7 @@ technology the brief names is a `brief` recommendation.
 | 5.6 | Messaging / queues | later / n/a | `13-technology/<area>.md` + ADR |
 | 5.7 | Hosting and deployment target | later | `13-technology/<area>.md` + ADR |
 | 5.8 | Observability backend | later | `13-technology/<area>.md` + ADR |
-{% if 'user-interface' in packs %}| 5.9 | Contents of `.baseline/ui.json` (catalog path, locales as BCP 47 tags such as `en-US`, token files per theme, contrast pairs). Written after 5.4 | later | `.baseline/ui.json` |
+{% if 'user-interface' in packs %}| 5.9 | Contents of `.baseline/ui.json` (catalog path, locales as BCP 47 tags such as `en-US`, token files per theme, contrast pairs, and the `designMd` options), then `node scripts/design-md.mjs`. Written after 5.4 | later | `.baseline/ui.json` |
 {% endif %}| 5.10 | The process for technology decisions. Written last, once every area above is answered or deferred | accept | `13-technology/README.md` |
 
 ## Phase 6 — Process

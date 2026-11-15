@@ -166,6 +166,7 @@ for (const s of scenarios) {
   record(`${s.name}: no leftover terms`, hits.length === 0, hits.join('\n'));
 
   if (s.name === 'everything') recommendChecks(dst);
+  if (s.name === 'everything') designMdChecks(dst);
   if (s.name === 'everything') {
     const fixture = join(dst, FIXTURE_DOC);
     writeFileSync(fixture, readFileSync(join(dst, 'docs/02-domain/time.md'), 'utf8')
@@ -250,6 +251,62 @@ function recommendChecks(dst) {
     applyChecks(dst);
   } finally {
     rmSync(sheet, { force: true });
+  }
+}
+
+// DESIGN.md is generated from the DTCG token source; the plugin fails on drift; the contrast
+// plugin resolves aliases into a separate primitives file.
+function designMdChecks(dst) {
+  const node = (...a) => run('node', a, { cwd: dst });
+  const ui = join(dst, '.baseline/ui.json');
+  const designMd = join(dst, 'DESIGN.md');
+  const tokensDir = join(dst, 'design-test-tokens');
+  try {
+    mkdirSync(tokensDir, { recursive: true });
+    writeFileSync(join(tokensDir, 'primitives.json'), JSON.stringify({
+      palette: { $type: 'color', ink: { $value: '#111827' }, paper: { $value: '#f9fafb' }, blue: { $value: '#1d4ed8' }, sky: { $value: '#93c5fd' } },
+      size: { $type: 'dimension', 4: { $value: { value: 4, unit: 'px' } }, 8: { $value: { value: 8, unit: 'px' } } },
+    }));
+    const theme = (bg, fg, action) => JSON.stringify({
+      color: { $type: 'color', surface: { $value: bg }, text: { $value: fg }, action: { primary: { $value: action } } },
+      radius: { $type: 'dimension', md: { $value: '{size.4}' } },
+      space: { $type: 'dimension', md: { $value: '{size.8}' } },
+      font: { body: { $type: 'typography', $value: { fontFamily: ['Inter', 'sans-serif'], fontSize: { value: 1, unit: 'rem' }, fontWeight: 400, lineHeight: 1.5 } } },
+    });
+    writeFileSync(join(tokensDir, 'light.json'), theme('{palette.paper}', '{palette.ink}', '{palette.blue}'));
+    writeFileSync(join(tokensDir, 'dark.json'), theme('{palette.ink}', '{palette.paper}', '{palette.sky}'));
+    const config = {
+      tokens: { light: 'design-test-tokens/light.json', dark: 'design-test-tokens/dark.json' },
+      primitives: 'design-test-tokens/primitives.json',
+      contrastPairs: [['color.text', 'color.surface']],
+      designMd: { primary: 'color.action.primary' },
+    };
+    writeFileSync(ui, JSON.stringify(config));
+
+    const missing = node('scripts/check.mjs');
+    record('check.mjs requires DESIGN.md once token files are configured', !missing.ok && /DESIGN\.md: missing; run node scripts\/design-md\.mjs/.test(missing.out), missing.out);
+    record('ui-token-contrast resolves aliases into the primitives file', !/does not exist/.test(missing.out), missing.out);
+    const gen = node('scripts/design-md.mjs');
+    const text = existsSync(designMd) ? readFileSync(designMd, 'utf8') : '';
+    record('design-md.mjs writes DESIGN.md with the DESIGN.md front matter',
+      gen.ok && /^---\nversion: "alpha"\nname: "Sample everything"/.test(text) && /\n  primary: "#1d4ed8"/.test(text) && /\n  text: "#111827"/.test(text)
+      && /\n  radius-md: "4px"/.test(text) && /\n  space-md: "8px"/.test(text) && /fontFamily: "Inter"/.test(text), text.slice(0, 600));
+    record('DESIGN.md has the format\'s sections in order',
+      ['## Overview', '## Colors', '## Typography', '## Layout', '## Elevation & Depth', '## Shapes', '## Components', "## Do's and Don'ts"].every((h, i, a) => text.indexOf(h) >= 0 && (i === 0 || text.indexOf(h) > text.indexOf(a[i - 1]))), text.slice(0, 300));
+    record('DESIGN.md lists every theme\'s colours', /\| `action-primary` \| `color\.action\.primary` \| #1d4ed8 \| #93c5fd \|/.test(text), text);
+    const fresh = node('scripts/check.mjs');
+    record('check.mjs accepts a freshly generated DESIGN.md', fresh.ok, fresh.out);
+    writeFileSync(designMd, text.replace('#1d4ed8', '#000000'));
+    const edited = node('scripts/check.mjs');
+    record('check.mjs refuses a hand-edited DESIGN.md', !edited.ok && /DESIGN\.md: out of date/.test(edited.out), edited.out);
+    writeFileSync(ui, JSON.stringify({ ...config, designMd: { enabled: false } }));
+    rmSync(designMd, { force: true });
+    const off = node('scripts/check.mjs');
+    record('designMd.enabled false turns DESIGN.md off', off.ok, off.out);
+  } finally {
+    rmSync(ui, { force: true });
+    rmSync(designMd, { force: true });
+    rmSync(tokensDir, { recursive: true, force: true });
   }
 }
 

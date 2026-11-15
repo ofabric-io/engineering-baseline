@@ -1,0 +1,9 @@
+#!/usr/bin/env node
+// Check plugin (user-interface pack): DESIGN.md matches what scripts/design-md.mjs generates from
+// the token source and the pack's answers (design-tokens.md R17). Passes when .baseline/ui.json
+// lists no token files, or sets "designMd": { "enabled": false }. Output: `path: message`.
+import { check } from '../design-md.mjs';
+
+const problems = check();
+for (const p of problems) console.log(p);
+process.exit(problems.length ? 1 : 0);

@@ -6,6 +6,24 @@ A change that alters a document a project may already have ratified is called ou
 
 ## [Unreleased]
 
+### Added — DESIGN.md (user-interface pack)
+
+- **`scripts/design-md.mjs`** generates `DESIGN.md` in Google's open
+  [DESIGN.md format](https://github.com/google-labs-code/design.md) (version `alpha`) from the
+  W3C Design Tokens source and the pack's answers. The token source stays the only source;
+  `DESIGN.md` is an output, like the AI-tool adapter files.
+  - Colours, typography, corner radii and spacing go into the front matter, from one theme.
+  - The Colors section lists every theme's values.
+  - The sections follow the format's order, and the dos and don'ts come from the pack's rules.
+- **New check plugin `ui-design-md.mjs`**: fails when `DESIGN.md` is missing or out of date.
+- **New setting and rule:** `design_md` (default: generated; `none` turns it off) and
+  `design-tokens.md` R17.
+- **New `.baseline/ui.json` options:** `designMd` (`theme`, `primary`, `path`, `enabled`, and
+  the path segments that mark radii and spacing) and `primitives`.
+- **Fixed:** `ui-token-contrast.mjs` now resolves aliases into a separate primitives file, which
+  the pack's default token layout recommends.
+- **`AGENTS.md`** points interface work at `DESIGN.md` when the pack is installed.
+
 ### Changed — fewer questions: duplicate open decisions, component kinds, CI
 
 - **Open decisions pruned.** About 45 bullets that repeated a question their own document's

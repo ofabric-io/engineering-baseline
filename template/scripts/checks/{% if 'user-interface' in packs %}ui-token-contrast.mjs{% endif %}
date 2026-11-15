@@ -5,6 +5,7 @@
 //   "tokens":        { "<theme>": "<W3C DTCG JSON file>", ... }
 //   "contrastPairs": [["text-token", "background-token"], ...]   (dotted token paths)
 //   "minContrast":   4.5   (optional)
+//   "primitives":    "<DTCG file>"   (optional; merged under every theme so aliases resolve)
 // Colours must be hex (#rgb, #rrggbb) or an object with a "hex" field; aliases ({a.b}) are resolved.
 // Absent config (or no "tokens"/"contrastPairs") = pass. Output: `path: message` per problem.
 import { existsSync, readFileSync } from 'node:fs';
@@ -79,6 +80,11 @@ function main() {
     problems.push(`${configPath}: "contrastPairs" must be a list of [text-token, background-token] pairs`);
     return;
   }
+  let primitives = new Map();
+  if (config.primitives) {
+    if (!existsSync(config.primitives)) problems.push(`${config.primitives}: the primitives token file does not exist`);
+    else primitives = flatten(readJson(config.primitives) ?? {});
+  }
   for (const [theme, file] of Object.entries(config.tokens)) {
     if (!existsSync(file)) {
       problems.push(`${file}: token file for theme "${theme}" does not exist`);
@@ -86,7 +92,7 @@ function main() {
     }
     const tree = readJson(file);
     if (!tree) continue;
-    const tokens = flatten(tree);
+    const tokens = new Map([...primitives, ...flatten(tree)]);
     for (const [fg, bg] of pairs) {
       try {
         const ratio = contrast(toRgb(resolve(tokens, fg)), toRgb(resolve(tokens, bg)));

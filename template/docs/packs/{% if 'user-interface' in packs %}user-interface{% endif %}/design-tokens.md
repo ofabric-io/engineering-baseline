@@ -25,6 +25,7 @@ How visual decisions are named and layered: primitives hold raw values, semantic
 | `status_map_location` | [[status_map_location]] | one table in this document's project copy, keyed by aggregate (or entity) and state (`02-domain/lifecycles.md`) | keyed by state alone, two aggregates with a state of the same name collide; a map scattered across components drifts |
 | `scales` | [[scales]] | spacing, type, radius, elevation, stacking order and motion are each a named scale | an unscaled value is a one-off that nobody can change globally |
 | `units` | [[units]] | sizes relative to the user's text-size setting; no fixed-size type | fixed units ignore user zoom preferences |
+| `design_md` | [[design_md]] | generated: `DESIGN.md` at the repository root, in the open DESIGN.md format, written by `scripts/design-md.mjs` from the token source and this pack's answers | coding agents that read DESIGN.md get the project's identity; the format is still `alpha`, so it is an output and never the source. `none` turns it off |
 | `motion` | [[motion]] | durations and easings from tokens; reduced-motion preference always honoured | — |
 
 ## Open decisions
@@ -61,6 +62,7 @@ How visual decisions are named and layered: primitives hold raw values, semantic
 
 - **R15.** Removing or renaming a semantic token, or changing the role it names, MUST be treated as a breaking change and recorded in the change log; adding a token is not.
 - **R16.** A value a design needs and no token provides MUST be added to the token source first; it MUST NOT be hard-coded in the design or the code.
+- **R17.** Unless `design_md` is `none`, `DESIGN.md` MUST be generated from the token source by `scripts/design-md.mjs` and committed with every change to the tokens or to this pack's answers; it MUST NOT be edited by hand, and it MUST NOT become a second token source (R1).
 
 ## Enforcement
 
@@ -82,6 +84,7 @@ How visual decisions are named and layered: primitives hold raw values, semantic
 | R14 | end-to-end test with the preference emulated | ⬜ scheduled |
 | R15 | PR review against the change log | ❌ review-only |
 | R16 | PR review of designs and code against the token source | ❌ review-only |
+| R17 | `scripts/checks/ui-design-md.mjs` fails when `DESIGN.md` is missing or differs from what `scripts/design-md.mjs` generates | ✅ automated |
 
 ## AI guardrails
 

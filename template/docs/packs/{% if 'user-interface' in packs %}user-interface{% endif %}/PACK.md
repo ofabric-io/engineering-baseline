@@ -35,8 +35,8 @@ Documents in this folder depend on the core layers; no core document links here.
 
 ## Checks
 
-Two check plugins ship with this pack in `scripts/checks/` and are run by `scripts/check.mjs`.
-Both read the optional `.baseline/ui.json` and pass when it is absent.
+Three check plugins ship with this pack in `scripts/checks/` and are run by `scripts/check.mjs`.
+All read the optional `.baseline/ui.json` and pass when it is absent.
 
 ```json
 {
@@ -44,7 +44,9 @@ Both read the optional `.baseline/ui.json` and pass when it is absent.
   "locales": ["en-US", "pt-BR"],
   "tokens": { "light": "path/to/light.tokens.json", "dark": "path/to/dark.tokens.json" },
   "contrastPairs": [["text-primary", "surface-default"]],
-  "minContrast": 4.5
+  "minContrast": 4.5,
+  "primitives": "path/to/primitives.tokens.json",
+  "designMd": { "theme": "light", "primary": "color.action.primary" }
 }
 ```
 
@@ -52,6 +54,18 @@ Locales are BCP 47 tags and are also the catalog directory names.
 
 - `ui-catalog-parity.mjs`: every key path exists in every locale, per namespace file.
 - `ui-token-contrast.mjs`: declared pairs meet the contrast minimum in every theme.
+- `ui-design-md.mjs`: `DESIGN.md` matches what `node scripts/design-md.mjs` generates.
+
+## DESIGN.md
+
+`node scripts/design-md.mjs` writes `DESIGN.md` in the open
+[DESIGN.md format](https://github.com/google-labs-code/design.md) (version `alpha`), which some
+coding agents read for a project's visual identity. It is generated from the token source and
+this pack's answers (`design-tokens.md` R17), so the tokens stay the only source. Colours,
+typography, corner radii and spacing go into the front matter, taken from one theme (`designMd.theme`,
+by default the first). Every theme's colours are in the Colors section, and the dos and don'ts come
+from this pack's rules. The format's own linter is optional:
+`npx -p @google/design.md designmd lint DESIGN.md`.
 
 ## Bootstrap
 

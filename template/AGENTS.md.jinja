@@ -17,7 +17,8 @@ contributor. Tool-specific files (`CLAUDE.md`, `GEMINI.md`, `.github/copilot-ins
    A `proposed` document is a default not yet adopted; a `not-started` one has no rules —
    **never infer a rule from it, ask.**
 3. For implementation work: the story spec and its parent feature spec
-   (`docs/17-specs/spec-lifecycle.md`).
+   (`docs/17-specs/spec-lifecycle.md`).{% if 'user-interface' in packs %} For interface work, also `DESIGN.md`
+   (the visual identity, generated from the token source; change the tokens, never this file).{% endif %}
 4. `docs/16-ai/` — what you may do on your own, what needs approval, and what is prohibited.
 
 ## Bootstrap state

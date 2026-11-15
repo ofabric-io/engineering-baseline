@@ -207,7 +207,8 @@ Then run `node scripts/check.mjs` again and commit.
 - **Phase 5:** a technology choice is an ADR plus `docs/13-technology/<area>.md`. A technology the
   brief names is a `brief` row. Rules in higher layers that say "decided in `13-technology/`"
   now link to it. With the `user-interface` pack only, write `.baseline/ui.json` (5.9) after the
-  frontend decision. Close the phase with `13-technology/README.md` (5.10).
+  frontend decision. Once token files exist, run `node scripts/design-md.mjs` to generate
+  `DESIGN.md`, unless `design_md` is `none`. Close the phase with `13-technology/README.md` (5.10).
 - **Phase 6:**
   - **6.3 and 6.8:** a solo project uses the solo mode of `required_approvals`, and `lightweight`
     `spec_depth` is the usual recommendation for it. Say so in the row's Why when the brief
