@@ -68,11 +68,11 @@ defaults every project starts with; add and close rows as the project proceeds.
 
 | # | What | Source |
 | --- | --- | --- |
-| O1 | A backup restored, not merely taken | `15-delivery/deployments-and-rollback.md` R18 |
+| O1 | A backup restored, not merely taken | `01-business/availability.md` R7 |
 | O2 | Recovery time and recovery point objectives demonstrated, not assumed | `01-business/availability.md` |
 | O3 | Alerting live on the service-level objectives, with an owner per alert | `01-business/availability.md` |
-| O4 | End-to-end tests passing for each critical user flow | `12-testing/strategy.md` |
-| O5 | First incident runbook written | `docs/README.md` |
+| O4 | Tests passing at the highest level in `12-testing/strategy.md` `test_levels` for each critical user flow | `12-testing/strategy.md` |
+| O5 | First incident runbook written, following the incident process | `07-observability/incident-management.md` |
 
 ## Enforcement
 
@@ -94,7 +94,8 @@ defaults every project starts with; add and close rows as the project proceeds.
 
 ## References
 
-- `15-delivery/deployments-and-rollback.md` — restore exercise and release
+- `15-delivery/deployments-and-rollback.md` — deployment and rollback
 - `15-delivery/pipeline-and-gates.md` — gates the register depends on
-- `01-business/availability.md` — objectives behind the operational rows
+- `01-business/availability.md` — objectives, backups and restore behind the operational rows
+- `07-observability/incident-management.md` — the incident runbook behind O5
 - `04-adr/README.md` — recording a deferral as a decision

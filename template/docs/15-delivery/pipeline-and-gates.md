@@ -21,7 +21,7 @@ commands are technology choices recorded in `13-technology/`; deployment is in
 | `required_checks` | [[required_checks]] | baseline checks, format, lint, type check, tests at every level, build, security scan | set per technology in 13-technology/; every extra check costs pipeline time |
 | `job_time_budget_minutes` | [[job_time_budget_minutes]] | 15 per pipeline job | a larger budget tolerates slow suites; a smaller one forces sharding sooner |
 | `quarantine_expiry_days` | [[quarantine_expiry_days]] | 7 | a longer window lets a flaky test linger; a shorter one forces a fix or a delete |
-| `full_run_triggers` | [[full_run_triggers]] | after merge to `main`; on change to a lockfile or shared tool configuration | a nightly full run catches drift at the cost of compute |
+| `full_run_triggers` | [[full_run_triggers]] | after merge to the default branch; on change to a lockfile or shared tool configuration | a nightly full run catches drift at the cost of compute |
 
 ## Open decisions
 
@@ -38,7 +38,7 @@ commands are technology choices recorded in `13-technology/`; deployment is in
   the language has it, one gate per level in `12-testing/strategy.md` `test_levels`, build, and a
   security scan (dependency audit and secret scan).
 - **R2.** Each gate's command MUST be defined once and invoked by both the pull-request and the
-  `main` pipelines; the two MAY differ only in scope (R7).
+  default-branch pipelines; the two MAY differ only in scope (R7).
 - **R3.** Every check run by a local hook MUST be repeated in CI, because a hook can be bypassed.
 - **R4.** A gate MUST NOT be non-blocking (`continue-on-error` or equivalent); a gate that does not
   block is a report and MUST be labelled as one.
@@ -58,21 +58,14 @@ commands are technology choices recorded in `13-technology/`; deployment is in
 - **R10.** An external system's own hosted test environment MUST NOT be called from the
   pull-request path; it MAY be called from a scheduled job.
 
-### Migrations in CI
-
-- **R11.** A migration-safety check MUST reject, within a single release: dropping a column or
-  table, renaming, narrowing a type, adding a non-null constraint without a default or backfill,
-  and building an index in a way that blocks writes.
-- **R12.** Modifying a migration already merged to `main` MUST be rejected by a hook and again in CI.
-
 ### Flakiness and budget
 
-- **R13.** A flaky test MUST be quarantined with a named owner and an expiry no further out than
+- **R11.** A flaky test MUST be quarantined with a named owner and an expiry no further out than
   `quarantine_expiry_days`; on expiry it is fixed or deleted.
-- **R14.** The quarantine list MUST NOT grow for two consecutive weeks.
-- **R15.** Each pipeline job MUST finish within `job_time_budget_minutes`; exceeding it is a defect
+- **R12.** The quarantine list MUST NOT grow for two consecutive weeks.
+- **R13.** Each pipeline job MUST finish within `job_time_budget_minutes`; exceeding it is a defect
   with an owner, fixed by sharding or speeding up, not by raising the budget.
-- **R16.** Build and dependency caching MUST be enabled; a cold cache is not a reason to relax R15.
+- **R14.** Build and dependency caching MUST be enabled; a cold cache is not a reason to relax R13.
 
 ## Enforcement
 
@@ -87,17 +80,15 @@ commands are technology choices recorded in `13-technology/`; deployment is in
 | R7 | Pipeline scope flag | ⬜ scheduled |
 | R8 | A fixture of deliberate violations run in CI | ⬜ scheduled |
 | R9, R10 | Pipeline definition; credentials exist only in the scheduled job | ⬜ scheduled |
-| R11, R12 | Migration-safety script run in CI and in the pre-commit hook (tool chosen in `13-technology/`) | ⬜ scheduled |
-| R13, R14 | Quarantine list file with expiry dates; a CI job fails an expired entry | ⬜ scheduled |
-| R15 | Per-job timeout in the pipeline definition | ⬜ scheduled |
-| R16 | Cache configuration in the pipeline definition | ⬜ scheduled |
+| R11, R12 | Quarantine list file with expiry dates; a CI job fails an expired entry | ⬜ scheduled |
+| R13 | Per-job timeout in the pipeline definition | ⬜ scheduled |
+| R14 | Cache configuration in the pipeline definition | ⬜ scheduled |
 
 ## AI guardrails
 
 - Never mark a gate non-blocking. Never remove a required check to unblock your change.
 - Never downgrade a lint rule to a warning to pass.
 - Never call an external test environment from the pull-request path.
-- Never edit a migration already in `main`; add a new one.
 - A flaky test is quarantined with an owner and an expiry, then fixed or deleted. Never retried.
 - Prove a new gate fails on a deliberate violation before relying on it.
 
@@ -107,3 +98,4 @@ commands are technology choices recorded in `13-technology/`; deployment is in
 - `14-git/git.md` — pull-request requirements these gates back
 - `15-delivery/deployments-and-rollback.md` — what happens after merge
 - `13-technology/README.md` — CI system and commands
+- The project's data-store documentation, where it has a data store, owns the migration-specific gates
