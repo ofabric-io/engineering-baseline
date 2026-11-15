@@ -9,7 +9,7 @@ last-reviewed: never
 
 ## Purpose
 
-How concurrent writes are controlled, how any operation with an external side effect is made safe to retry, and how background work behaves under at-least-once execution. The idempotency rules are transport-neutral; a transport pack adds its wire format.
+How concurrent writes are controlled, how any operation with an external side effect is made safe to retry, and how background work behaves under at-least-once execution. This document owns the idempotency protocol (R7 to R16) and `idempotency_retention`. The rules are transport-neutral; a transport document adds only its wire expression and does not define a retention of its own.
 
 ## Parameters
 
@@ -47,7 +47,7 @@ How concurrent writes are controlled, how any operation with an external side ef
 - **R11.** A replay with the same key and the same payload MUST return the original result and MUST NOT execute the effect again.
 - **R12.** A replay with the same key and a different payload MUST be rejected as a conflict and MUST NOT act on either version.
 - **R13.** A request that arrives while the original with the same key is still in flight MUST be rejected as in progress; it MUST NOT wait and MUST NOT execute.
-- **R14.** Idempotency records MUST be kept for `idempotency_retention`, and the retention MUST be documented to callers.
+- **R14.** Idempotency records MUST be kept for `idempotency_retention`, and that retention MUST be documented to callers.
 - **R15.** A message received from an external party MUST be deduplicated on the sender's own identifier within `dedupe_window`.
 - **R16.** A duplicate or already-processed message MUST be acknowledged as success.
 
@@ -57,6 +57,10 @@ How concurrent writes are controlled, how any operation with an external side ef
 - **R18.** A scheduled job MUST run as a single instance, coordinated by leader election or a lock.
 - **R19.** A distributed lock MAY be used to avoid duplicated work but MUST NOT be relied on for correctness; correctness MUST come from a unique constraint, a version check or a transactional lock.
 - **R20.** A job that has exhausted its retries MUST be moved to a dead-letter destination with its context and MUST NOT be silently dropped (`08-reliability/timeouts-retries.md` R14).
+
+### Ownership
+
+- **R21.** A document that expresses idempotency for a transport MUST cite R7 to R14 here and MUST NOT restate or change their semantics or define its own retention parameter.
 
 ## Enforcement
 
@@ -82,6 +86,7 @@ How concurrent writes are controlled, how any operation with an external side ef
 | R18 | Integration test with two instances | ⬜ scheduled |
 | R19 | PR review | ❌ review-only |
 | R20 | Queue configuration and alert review | ❌ review-only |
+| R21 | PR review of transport documents | ❌ review-only |
 
 ## AI guardrails
 

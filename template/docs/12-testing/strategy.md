@@ -17,9 +17,10 @@ libraries and fixtures are technology choices and live in `13-technology/`.
 
 | Parameter | Answer | Default | Trade-off |
 | --- | --- | --- | --- |
-| `test_levels` | [[test_levels]] | five: unit, integration, contract, architecture, end-to-end | fewer levels are cheaper to run; each dropped level leaves a class of defect to production |
-| `coverage_gate` | [[coverage_gate]] | per changed file, not a global percentage | a global number is satisfiable by testing the wrong things |
-| `coverage_minimum` | [[coverage_minimum]] | 80% of changed lines, and 100% branch coverage of code holding business rules | higher minimums slow delivery; lower ones let logic ship untested |
+| `test_levels` | [[test_levels]] | derived per component kind from the table after the rules (a library has no end-to-end level) | fewer levels are cheaper to run; each dropped level leaves a class of defect to production |
+| `extra_test_levels` | [[extra_test_levels]] | none; performance and fault-injection levels MAY be added | each added level needs an environment and upkeep, and finds a class unit tests cannot |
+| `coverage_gate` | [[coverage_gate]] | per changed file; `none` is allowed | a project-wide number is satisfiable by testing the wrong things; no gate relies on review alone |
+| `coverage_minimum` | [[coverage_minimum]] | 80% of changed lines, the only granularity used | higher minimums slow delivery; lower ones let logic ship untested |
 | `bug_fix_rule` | [[bug_fix_rule]] | a failing test first | none significant; without it a fix cannot be verified |
 | `property_based_testing_for` | [[property_based_testing_for]] | arithmetic and state machines | broader use finds more defects and costs more to write |
 
@@ -34,7 +35,7 @@ libraries and fixtures are technology choices and live in `13-technology/`.
 
 ### Levels
 
-- **R1.** Every level in `test_levels` MUST exist and MUST be a blocking CI gate
+- **R1.** Every level that `test_levels` assigns to a component's kind, and every level in `extra_test_levels`, MUST exist for that component and MUST be a blocking CI gate
   (`15-delivery/pipeline-and-gates.md`).
 - **R2.** The level MUST be chosen by what is verified, not by convenience:
 
@@ -53,9 +54,9 @@ libraries and fixtures are technology choices and live in `13-technology/`.
 
 ### Coverage
 
-- **R5.** The coverage gate MUST follow `coverage_gate` and `coverage_minimum`, and MUST block merge.
-- **R6.** A project-wide coverage percentage MUST NOT be the gate.
-- **R7.** Coverage thresholds MUST NOT be lowered to make a build pass; lowering one needs its own
+- **R5.** Where `coverage_gate` is not `none`, the gate MUST follow `coverage_gate` and `coverage_minimum`, at the one granularity they name, and MUST block merge.
+- **R6.** Where `coverage_gate` is not a project-wide percentage, no project-wide percentage threshold MUST be configured as a gate.
+- **R7.** Where a coverage gate exists, its thresholds MUST NOT be lowered to make a build pass; lowering one needs its own
   change, reviewed separately.
 
 ### Mandatory tests
@@ -94,6 +95,19 @@ libraries and fixtures are technology choices and live in `13-technology/`.
   rejection, timeout, duplicate, partial success and a malformed response.
 - **R21.** A test suite that matches zero tests MUST fail.
 
+## Default levels per component kind
+
+When `test_levels` is left at its default, a component of each kind (`03-architecture/system.md`) has these levels. `extra_test_levels` adds to them.
+
+| Kind | Levels |
+| --- | --- |
+| `service` | unit, integration, contract, architecture, end-to-end |
+| `daemon` | unit, integration, architecture |
+| `cli` | unit, integration (running the command), architecture where it has layers |
+| `library` | unit, contract (the public interface), architecture |
+| `ui` | unit, integration, end-to-end |
+| `batch` | unit, integration |
+
 ## Enforcement
 
 | Rule | Mechanism | Status |
@@ -102,7 +116,7 @@ libraries and fixtures are technology choices and live in `13-technology/`.
 | R2, R3 | PR review; the regression test appears in the same change as the fix | ❌ review-only |
 | R4 | Architecture suite in CI (tool chosen in `13-technology/`) | ⬜ scheduled |
 | R5 | Coverage thresholds plus a changed-code coverage step | ⬜ scheduled |
-| R6 | No global threshold is configured | ❌ review-only |
+| R6 | No project-wide threshold is configured unless `coverage_gate` names one | ❌ review-only |
 | R7, R12 | Test-count and skip-count comparison against the base branch in CI; PR review | ⬜ scheduled |
 | R8 | Property-based tests in the relevant suites | ⬜ scheduled |
 | R9 | Lifecycle test helper enumerating the transition table; PR review | ⬜ scheduled |
@@ -119,7 +133,7 @@ libraries and fixtures are technology choices and live in `13-technology/`.
 ## AI guardrails
 
 - Never weaken, skip or delete a test to make a build pass.
-- Never lower a coverage threshold.
+- Never lower a coverage threshold where a gate exists.
 - For a bug, write the failing regression test first, then fix it.
 - The level follows what changed: logic, unit; storage, integration; shape, contract.
 - Every lifecycle transition gets a legal and an illegal test.

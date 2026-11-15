@@ -9,7 +9,7 @@ last-reviewed: never
 
 ## Purpose
 
-Which signals are emitted, how they are named, how label cardinality is kept bounded, and how traces propagate. The source project's version of this document was never ratified; the rules here are deliberately limited to widely agreed basics.
+Which signals are emitted, how they are named, how label cardinality is kept bounded, and how traces propagate.
 
 ## Parameters
 
@@ -17,7 +17,8 @@ Which signals are emitted, how they are named, how label cardinality is kept bou
 | --- | --- | --- | --- |
 | `telemetry_standard` | [[telemetry_standard]] | OpenTelemetry; W3C Trace Context for propagation | vendor SDKs lock in the backend |
 | `metric_name_pattern` | [[metric_name_pattern]] | `<project>_<area>_<thing>_<unit>`, lower snake case | a rigid pattern aids discovery and costs renames |
-| `trace_sampling` | [[trace_sampling]] | keep every trace containing an error; sample the rest | full capture is costly; heavy sampling loses rare cases |
+| `trace_sampling` | [[trace_sampling]] | per component kind: keep every trace containing an error; sample the rest, heavily for high-volume `service` and `daemon` paths, fully for `batch` and `cli` runs | full capture is costly; heavy sampling loses rare cases |
+| `label_cardinality_limit` | [[label_cardinality_limit]] | 100 distinct values per label | a higher limit gives finer breakdowns and raises storage and query cost |
 
 ## Open decisions
 
@@ -36,9 +37,9 @@ Which signals are emitted, how they are named, how label cardinality is kept bou
 ### Metrics
 
 - **R3.** Metric names MUST follow `metric_name_pattern` and MUST include the unit.
-- **R4.** Metric labels MUST be bounded and enumerable. A label whose values come from user input, or that identifies an individual (a user, a request, a resource), MUST NOT be used.
+- **R4.** Metric labels MUST be bounded and enumerable within `label_cardinality_limit`. A label whose values come from user input, or that identifies an individual (a user, a request, a resource), MUST NOT be used. A label for where the work ran (node, region, zone) MAY be used when its value set is bounded and documented.
 - **R5.** Per-entity breakdowns MUST go on logs and trace attributes, not metric labels.
-- **R6.** Every service MUST emit the request-level golden signals (rate, errors, duration) per unit-of-work name, and the saturation of each bounded resource it owns (queue depth, pool usage).
+- **R6.** Every long-running component MUST emit the request-level golden signals (rate, errors, duration) per unit-of-work name, and the saturation of each bounded resource it owns (queue depth, pool usage). _(applies to: service, daemon)_
 - **R7.** Every outbound dependency MUST have call duration and error-rate metrics, labelled by dependency name.
 - **R8.** A metric that measures a quantity with a unit MUST carry the unit in its name or metadata; a value MUST NOT be summed across incompatible units.
 
@@ -71,7 +72,7 @@ Which signals are emitted, how they are named, how label cardinality is kept bou
 ## AI guardrails
 
 - Instrument through the standard API; never call a vendor SDK.
-- Never put an identifier or user input in a metric label.
+- Never put an identifier or user input in a metric label. Node or region labels are fine when bounded.
 - Put units in metric names.
 - Never continue a trace id from an untrusted caller.
 - Never put personal data in a span attribute.
