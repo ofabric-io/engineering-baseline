@@ -2,7 +2,8 @@
 pack: webhooks
 version: 0.1.0
 requires: [events]
-amends: []
+amends:
+  - 08-reliability/timeouts-retries.md  # retry_schedule overrides max_attempts for webhook deliveries (webhooks.md R11)
 documents:
   - webhooks.md  # Outbound Webhooks
 ---
@@ -11,8 +12,9 @@ documents:
 
 Standards for projects that deliver events to HTTP endpoints registered by external parties.
 Documents in this folder depend on the core layers and on the events pack; no core document
-links here. The pack amends no core rule: it narrows the events pack's delivery rules for the
-HTTP case.
+links here. The pack narrows the events pack's delivery rules for the HTTP case and overrides one core
+parameter: `retry_schedule` replaces `max_attempts` of `08-reliability/timeouts-retries.md` for
+webhook deliveries.
 
 ## Parameters worth deciding first
 

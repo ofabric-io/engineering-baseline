@@ -16,10 +16,10 @@ How events are recorded and published reliably, what delivery guarantee holds, a
 | Parameter | Answer | Default | Trade-off |
 | --- | --- | --- | --- |
 | `publish_mechanism` | [[publish_mechanism]] | transactional outbox: the event row commits with the state change and a separate drain dispatches it | Publishing directly to a broker is simpler and loses or duplicates events when the state change and the publish disagree |
-| `delivery_guarantee` | [[delivery_guarantee]] | at-least-once; consumers deduplicate on event `id` | At-most-once loses events; exactly-once does not exist across a network boundary |
+| `event_delivery_guarantee` | [[event_delivery_guarantee]] | at-least-once; consumers deduplicate on event `id` | At-most-once loses events; exactly-once does not exist across a network boundary |
 | `ordering` | [[ordering]] | per entity (`subject`) only | Global ordering serialises everything and does not scale |
 | `dedupe_store` | [[dedupe_store]] | the same durable store as the consumer's state, written atomically with its effect | A cache is faster and forgets, which turns a duplicate into a repeated effect |
-| `dead_letter_alert` | [[dead_letter_alert]] | alert when any dead-lettered event exists for longer than one business day | A tighter threshold wakes people for transient faults; a looser one hides stuck consumers |
+| `dead_letter_alert` | [[dead_letter_alert]] | alert when any dead-lettered event has waited longer than 24 hours, around the clock | A tighter threshold wakes people for transient faults; a looser one hides stuck consumers |
 
 ## Open decisions
 
@@ -39,7 +39,7 @@ How events are recorded and published reliably, what delivery guarantee holds, a
 
 ### Guarantees
 
-- **R6.** The project MUST state its delivery guarantee as `delivery_guarantee`; under the default, any component MUST assume an event can arrive more than once.
+- **R6.** The project MUST state its delivery guarantee as `event_delivery_guarantee`; under the default, any component MUST assume an event can arrive more than once.
 - **R7.** Every consumer MUST be idempotent (`08-reliability/concurrency-and-idempotency.md`).
 - **R8.** Every consumer MUST deduplicate on the event `id` using `dedupe_store`, writing the dedupe record atomically with the effect it guards.
 - **R9.** Ordering MUST be guaranteed as `ordering` says; with the default, rows for the same `subject` are dispatched in recording order. A consumer MUST NOT assume any ordering the parameter does not give.

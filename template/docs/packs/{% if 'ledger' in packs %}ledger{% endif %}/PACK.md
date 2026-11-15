@@ -1,7 +1,7 @@
 ---
 pack: ledger
 version: 0.1.0
-requires: [money]
+requires: [money, events]
 amends: []
 documents:
   - ledger.md  # Ledger & Balances

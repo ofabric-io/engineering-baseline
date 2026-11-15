@@ -50,20 +50,19 @@ Requires pack(s): `events`.
 - **R8.** The webhook payload MUST be an integration event as defined by the events pack, and nothing else.
 - **R9.** A delivery MUST complete within `delivery_timeout`; a timeout MUST count as a failed attempt.
 - **R10.** Any response other than `2xx`, any connection failure and any timeout MUST be treated as failure and retried per `retry_schedule`; the sender MUST NOT interpret the response body. A redirect MUST be treated as failure.
-- **R11.** Retry timing MUST follow `retry_schedule` with jitter (`08-reliability/timeouts-retries.md`).
+- **R11.** Retry timing MUST follow `retry_schedule` with jitter (`08-reliability/timeouts-retries.md`). For webhook deliveries `retry_schedule` replaces `max_attempts` of that document: the schedule alone sets the attempt count.
 - **R12.** Deliveries to one endpoint MUST NOT block deliveries to another: a broken receiver MUST NOT delay anyone else's events.
 
 ### Safety of outbound requests
 
-- **R13.** The destination URL MUST satisfy `url_policy`, and MUST be validated before every delivery, not only at registration, because DNS can change between the two (`06-security/appsec.md`).
-- **R14.** The connection MUST be made to the address that passed validation (no second resolution between check and connect), and redirects MUST NOT be followed.
+- **R13.** A destination URL MUST be validated as `06-security/appsec.md` R11 requires (the generic outbound-destination rule is owned there) and MUST additionally satisfy `url_policy`, at registration and again before every delivery.
 
 ### Disabling, visibility and replay
 
-- **R15.** An endpoint that has failed continuously for `auto_disable_after` MUST be disabled automatically and its owner notified; re-enabling MUST be an explicit action.
-- **R16.** Every event whose attempts are exhausted MUST be dead-lettered, visible to operators and to the endpoint's owner, counted by a metric with an alert on depth (`07-observability/metrics-and-tracing.md`).
-- **R17.** A dead-lettered or failed event MUST be replayable on demand; a replay MUST keep the original event `id`, MUST be signed afresh with a current timestamp, and MUST be recorded as a new attempt.
-- **R18.** Each attempt MUST be recorded with endpoint, event `id`, attempt number, outcome (status class or error), duration and time, so "did it go out" is answerable.
+- **R14.** An endpoint that has failed continuously for `auto_disable_after` MUST be disabled automatically and its owner notified; re-enabling MUST be an explicit action.
+- **R15.** Every event whose attempts are exhausted MUST be dead-lettered, visible to operators and to the endpoint's owner, counted by a metric with an alert on depth (`07-observability/metrics-and-tracing.md`).
+- **R16.** A dead-lettered or failed event MUST be replayable on demand; a replay MUST keep the original event `id`, MUST be signed afresh with a current timestamp, and MUST be recorded as a new attempt.
+- **R17.** Each attempt MUST be recorded with endpoint, event `id`, attempt number, outcome (status class or error), duration and time, so "did it go out" is answerable.
 
 ## Enforcement
 
@@ -76,16 +75,16 @@ Requires pack(s): `events`.
 | R8 | Architecture test: the webhook payload builder accepts only integration event types | ⬜ scheduled |
 | R9–R11 | Dispatcher test asserting timeout, status handling, redirect-as-failure and the schedule | ⬜ scheduled |
 | R12 | Test with one permanently failing endpoint; other deliveries proceed | ⬜ scheduled |
-| R13, R14 | Outbound client validates per call; tests for private address, redirect, DNS change and plain HTTP | ⬜ scheduled |
-| R15 | Test asserting the disable threshold, the notification and explicit re-enable | ⬜ scheduled |
-| R16–R18 | Dead-letter store, replay tool, depth metric and alert; attempt-log schema test | ⬜ scheduled |
+| R13 | Outbound client validates per call (`06-security/appsec.md` R11); tests for private address, redirect, DNS change and plain HTTP | ⬜ scheduled |
+| R14 | Test asserting the disable threshold, the notification and explicit re-enable | ⬜ scheduled |
+| R15–R17 | Dead-letter store, replay tool, depth metric and alert; attempt-log schema test | ⬜ scheduled |
 
 ## AI guardrails
 
 - Sign every webhook over the raw bytes sent; never re-serialise before signing.
 - Enforce `replay_tolerance`, document verification for receivers, and rotate with two valid secrets.
-- Non-2xx, timeouts and redirects are failures; never interpret the response body.
-- Validate the destination URL before every delivery and connect to the validated address.
+- Non-2xx, timeouts and redirects are failures; never interpret the response body. `retry_schedule` replaces `max_attempts`.
+- Validate the destination as `06-security/appsec.md` R11 says, plus `url_policy`, before every delivery.
 - Retry per `retry_schedule`, then dead-letter; disable after `auto_disable_after` and tell the owner.
 - Dead letters are visible and replayable; a replay keeps the event `id` and is signed afresh.
 - Never log a signing secret.
