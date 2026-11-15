@@ -17,6 +17,7 @@ standards layers and never overrides them. Where the work is tracked is `work-tr
 
 | Parameter | Answer | Default | Trade-off |
 | --- | --- | --- | --- |
+| `spec_depth` | [[spec_depth]] | full: feature and story spec files with a lifecycle. The alternative is lightweight: an ADR for the decision plus the pull request description for the change, suited to small projects | full gives traceability and a review before building; lightweight costs less and relies on the pull request as the record |
 | `spec_required_for` | [[spec_required_for]] | feature spec: a new or changed business capability, or a change spanning more than one context; story spec: any tier 3 or 4 change | requiring a spec everywhere turns specs into a formality nobody reads |
 | `id_prefixes` | [[id_prefixes]] | `FEAT-NNN` for features, `STORY-NNN` for stories; numbers never reused, gaps are reservations | shorter prefixes read better in branch names; changing them later breaks every existing reference |
 
@@ -60,8 +61,8 @@ standards layers and never overrides them. Where the work is tracked is `work-tr
 
 - **R9.** An agent MUST NOT implement from a `draft` spec and MUST NOT move a spec to
   `approved`.
-- **R10.** A spec MUST NOT be approved while it contains an unresolved
-  `[NEEDS CLARIFICATION: ...]` marker or an unfilled `[[...]]` placeholder.
+- **R10.** A spec MUST NOT be approved while it contains an unresolved clarification marker (as
+  defined in the spec templates) or an unfilled `[[...]]` placeholder.
 - **R11.** A `superseded` or `abandoned` spec MUST NOT be deleted; it stays with its reason.
 
 ### Open questions
@@ -77,8 +78,8 @@ standards layers and never overrides them. Where the work is tracked is `work-tr
 - **R15.** A story spec MUST name its parent feature spec.
 - **R16.** Each acceptance criterion MUST be numbered, independently testable, and map to at
   least one test.
-- **R17.** The pull request title MUST reference its story spec ID, and the body MUST tick each
-  acceptance criterion individually (`14-git/git.md`).
+- **R17.** The pull request title and body MUST follow `14-git/git.md` (the title references the
+  story spec ID), and the body MUST tick each acceptance criterion individually.
 - **R18.** A spec MUST record every deviation from it in a `## Deviations` section, and the pull
   request body MUST repeat it (`16-ai/operating-procedure.md` R12).
 - **R19.** A spec MUST list the IDs it depends on in `depends-on`; a story is startable only
@@ -95,6 +96,13 @@ standards layers and never overrides them. Where the work is tracked is `work-tr
   renumbering; renumbering breaks every branch name, commit scope, pull request title and
   tracker link that cites the old number.
 - **R24.** A spec file MUST be named `<ID>-<kebab-slug>.md` and live in `docs/17-specs/`.
+
+### Depth
+
+- **R27.** Where `spec_depth` is lightweight, no feature or story spec file is required: the
+  decision MUST be recorded as an ADR (`04-adr/`), and the pull request description MUST state the
+  scope, the numbered acceptance criteria and the deviations. R4–R5 and R15–R26 then do not apply;
+  R1–R3, R6–R7 and R13 still do.
 
 ### Tracking
 
@@ -125,13 +133,15 @@ standards layers and never overrides them. Where the work is tracked is `work-tr
 | R24 | Filename check in CI | ⬜ scheduled |
 | R25 | Check that every spec past `draft` has a `tracker` value | ⬜ scheduled |
 | R26 | Review | ❌ review-only |
+| R27 | Review of the pull request description against the ADR | ❌ review-only |
 
 ## AI guardrails
 
 - A spec makes a change reviewable before it is built. It never overrides or restates a
   standard.
 - Never implement from a `draft`. Never move a spec to `approved`.
-- Unresolved `[NEEDS CLARIFICATION: ...]` or `[[...]]`? It is not approvable. Stop and ask.
+- Unresolved clarification marker or `[[...]]`? It is not approvable. Stop and ask.
+- With lightweight `spec_depth`, the ADR and the pull request description are the spec.
 - Every story names its parent; every criterion is numbered, testable and has a test.
 - Deviations go in the spec and the pull request.
 - New number = highest in use + 1. Never reuse one. Never close a gap.

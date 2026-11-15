@@ -38,13 +38,13 @@ estimates or velocity.
   implements only the operations R17 permits. Credentials MUST be read from an ignored local
   file or the environment and MUST NOT be committed (`16-ai/prohibitions.md` P6).
 - **R4.** Every call to an external tracker MUST be scoped explicitly to the project's own
-  workspace; a client MUST refuse to run against another workspace the same credential can
-  reach.
+  tracker scope (the part of the tracker that belongs to this project); a client MUST refuse to
+  run against any other scope the same credential can reach.
 
 ### Mapping specs to work items
 
-- **R5.** The mapping is fixed: a feature spec is one tracked feature item (a list, a group or
-  an equivalent); a story spec is one tracked task inside exactly one feature; an implementation
+- **R5.** The mapping is fixed: a feature spec is one tracked feature item (a parent item that
+  groups its stories); a story spec is one tracked task inside exactly one feature; an implementation
   step is a subtask.
 - **R6.** A feature item MUST NOT exist without a `FEAT` spec, and a story task MUST NOT exist
   without a `STORY` spec (identifier format per `id_prefixes` in `17-specs/spec-lifecycle.md`).
@@ -55,7 +55,8 @@ estimates or velocity.
 - **R8.** A story MUST NOT be moved between features to reflect what someone preferred to do;
   re-parenting means the parent spec was wrong, and the spec is fixed first.
 - **R9.** The spec ID is the primary identifier in branch names, commit scopes and pull request
-  titles; the tracker's own ID is a cross-reference, never a substitute.
+  titles, as `14-git/git.md` defines them; the tracker's own ID is a cross-reference, never a
+  substitute.
 - **R10.** The link MUST be recorded on both sides: the spec's `tracker` field holds the
   tracker reference, and the task holds the spec path.
 
@@ -123,7 +124,7 @@ estimates or velocity.
 | --- | --- | --- |
 | R1, R12 | Review. The rule most likely to be broken by good intentions | ❌ review-only |
 | R2 | `scripts/tracker/cli.mjs` with the `none` adapter reads and writes only `docs/17-specs/QUEUE.md` | ✅ automated |
-| R3, R4 | `scripts/tracker/cli.mjs` is the only client and uses only the configured workspace; `scripts/checks/secrets.mjs` rejects a committed token | ◐ partial |
+| R3, R4 | `scripts/tracker/cli.mjs` is the only client and uses only the configured tracker scope; `scripts/checks/secrets.mjs` rejects a committed token | ◐ partial |
 | R5, R6, R8 | Review; spec-creation skill creates the item | ❌ review-only |
 | R7 | Review | ❌ review-only |
 | R9 | Pull request title check in CI | ⬜ scheduled |

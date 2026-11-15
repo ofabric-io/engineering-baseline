@@ -59,12 +59,12 @@ produces changes a human must re-derive.
 - **R9.** A blocked sub-task MUST NOT block the rest of the work. The agent completes every
   independent part, then reports precisely what it could not do and why.
 - **R10.** An agent MUST obtain explicit human approval, per change, before it:
-  - executes a data migration against any shared environment;
-  - installs, upgrades or removes a dependency;
   - edits CI, deployment or infrastructure configuration;
   - edits an agent tool's own settings, hooks or permissions.
-- **R11.** An agent MAY author a migration but MUST NOT execute one; R10 governs execution in
-  every environment, including a development database shared with another person.
+- **R11.** An agent MAY author a migration; executing one is governed by `16-ai/prohibitions.md`
+  P16, which owns that rule.
+- **R15.** Adding, upgrading or removing a dependency MUST follow
+  `06-security/dependencies-and-supply-chain.md`, which owns that policy.
 - **R12.** An agent MUST record every deviation from the spec or a standard in both the spec's
   deviations section and the pull request body.
 - **R13.** An agent MUST state every assumption it made, where no explicit answer existed, in the
@@ -86,7 +86,8 @@ produces changes a human must re-derive.
 | R8 | CI is the source of truth; pull request template field for results | ⬜ scheduled |
 | R9 | Pull request review | ❌ review-only |
 | R10 | Permission prompts and deny rules in the agent tool's settings; code-ownership review of CI and dependency files | ◐ partial |
-| R11 | Same mechanism as R10 covers execution; authoring is unrestricted | ◐ partial |
+| R11 | As P16 in `16-ai/prohibitions.md`; authoring is unrestricted | ◐ partial |
+| R15 | As `06-security/dependencies-and-supply-chain.md` | ⬜ scheduled |
 | R12, R13, R14 | Pull request template sections, asserted by a CI job | ⬜ scheduled |
 
 ## AI guardrails
@@ -98,10 +99,12 @@ produces changes a human must re-derive.
 - Run the verification commands; paste results verbatim; never claim done on a failure.
 - Blocked on one part? Finish the rest, then say what is left.
 - Record deviations and assumptions in the spec and the pull request.
-- Ask before: running a migration, changing dependencies, touching CI, touching tool settings.
+- Never run a migration (P16). Dependency changes follow the dependency policy.
+- Ask before touching CI or tool settings.
 
 ## References
 
 - `16-ai/autonomy-and-context.md`, `16-ai/prohibitions.md`
 - `15-delivery/pipeline-and-gates.md`
+- `06-security/dependencies-and-supply-chain.md`
 - `17-specs/spec-lifecycle.md`

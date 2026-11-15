@@ -19,13 +19,24 @@ The words the project uses, one meaning each, and the words it forbids. Code, sc
 
 ## Terms
 
-One row per term. **UI label** is the wording users see, per locale, when the project has a
-user interface; leave it empty otherwise. Forbidden synonyms are also listed in
-`.baseline/forbidden-terms.txt`, which `scripts/check.mjs` enforces.
+One row per term. **UI label (`<locale>`)** is the wording users see in that locale, when the
+project has a user interface: keep one column per locale and rename the placeholder header
+(for example `UI label (en)`); delete the columns if there is no interface. Forbidden synonyms are
+also listed in `.baseline/forbidden-terms.txt`, which `scripts/check.mjs` enforces.
 
-| Term | Meaning | Forbidden synonyms | UI label |
+| Term | Meaning | Forbidden synonyms | UI label (<locale>) |
 | --- | --- | --- | --- |
 | [[term]] | | | |
+
+### Terms the baseline itself uses
+
+These standards use some everyday words with a specific meaning: **zone** (a time zone, or a
+network or trust zone, never both unqualified), **agent** (an AI agent acting on the project, not
+a software agent installed on a host), **domain** (the business problem space, not an internet
+domain), **configuration** (values that change behaviour without a code change), **operator**
+(vendor personnel who run the system, as distinct from a customer's user). If one collides with
+a term in this project, declare the collision here, choose the project's own word and add the
+baseline's use to the forbidden synonyms.
 
 ## Open decisions
 
@@ -41,7 +52,7 @@ user interface; leave it empty otherwise. Forbidden synonyms are also listed in
 - **R5.** A forbidden synonym MAY appear only where it is external vocabulary (quoting a third-party payload, or a legal or industry phrase), only at an adapter boundary, and MUST be mapped to the glossary term on the way in.
 - **R6.** A new concept MUST be added to the glossary in the change that introduces it; a term used in code but absent from the glossary is a defect.
 - **R7.** Renaming a term MUST be one change that updates the glossary, the forbidden list and every use, and MUST NOT leave the old name as an alias.
-- **R8.** A qualifier that disambiguates a term across aggregates (for example a field called `status`) MUST be part of the identifier, not left bare in a shared type or an event payload.
+- **R8.** A qualifier that disambiguates a term across entities (for example a field called `status`) MUST be part of the identifier, not left bare in a shared type or an event payload.
 - **R9.** Where the project has a user interface, the UI label MAY differ from the term; the term MUST NOT change to match a label.
 
 ## Enforcement
