@@ -5,3 +5,4 @@ node_modules/
 Thumbs.db
 tests/leftover-terms.local.txt
 maintainers/extraction-map.md
+/.claude/
