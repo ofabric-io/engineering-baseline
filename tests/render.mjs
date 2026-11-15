@@ -11,13 +11,18 @@ import { join, relative, sep } from 'node:path';
 const ROOT = join(import.meta.dirname, '..');
 const TMP = join(ROOT, '.tmp');
 const KEEP = process.argv.includes('--keep');
-const ALL_PACKS = ['http-api', 'events', 'webhooks', 'money', 'ledger', 'multi-tenant', 'audit-trail', 'user-interface'];
+const ALL_PACKS = ['http-api', 'events', 'webhooks', 'money', 'ledger', 'multi-tenant', 'audit-trail', 'user-interface', 'web-ui', 'cli', 'data-store', 'domain-model'];
+// Packs are written by different hands in parallel: assert a pack's presence only when its template
+// folder exists. TODO(integrator): once all pack folders are merged, drop this and assert every pack.
+const packFolderExists = (p) => existsSync(join(ROOT, 'template', 'docs', 'packs', `{% if '${p}' in packs %}${p}{% endif %}`));
+const REQUIRES = { webhooks: ['events'], ledger: ['money'], 'web-ui': ['user-interface'] };
 
 const scenarios = [
   { name: 'minimal', data: { packs: [], tracker: 'none', ci: 'none' } },
   { name: 'defaults', data: {} },
   { name: 'everything', data: { packs: ALL_PACKS, tracker: 'github-issues', ci: 'github-actions' } },
   { name: 'missing-requirement', data: { packs: ['webhooks'] }, expectFailure: /requires the events pack/ },
+  { name: 'missing-requirement-web-ui', data: { packs: ['web-ui'] }, expectFailure: /requires the user-interface pack/ },
   // Tracker and host combinations: which files exist must follow the answers.
   { name: 'clickup-gitlab', data: { tracker: 'clickup', git_host: 'gitlab', clickup_workspace_id: '123' },
     expectFiles: ['scripts/tracker/adapters/clickup.mjs', 'scripts/tracker/config.json', '.gitlab/merge_request_templates/Default.md'],
@@ -29,10 +34,13 @@ const scenarios = [
     expectFiles: ['docs/17-specs/QUEUE.md', 'scripts/tracker/adapters/none.mjs'],
     expectAbsent: ['.github/pull_request_template.md', '.gitlab/merge_request_templates/Default.md'],
     commands: [[['scripts/tracker/cli.mjs', 'next-number', '--kind', 'story'], /STORY-001/]] },
+  // The tracker is unreachable (no token): next-number falls back to the specs and says so.
+  { name: 'clickup-offline', data: { tracker: 'clickup', clickup_workspace_id: '123', ci: 'none' }, quick: true,
+    commands: [[['scripts/tracker/cli.mjs', 'next-number', '--kind', 'story'], /^(?=[\s\S]*STORY-001)[\s\S]*offline answer — verify against the tracker before using it/]] },
   // Each pack on its own (plus what it requires): a pack must not silently depend on another.
   ...ALL_PACKS.map((p) => ({
     name: `pack-${p}`,
-    data: { packs: p === 'webhooks' ? ['events', 'webhooks'] : p === 'ledger' ? ['money', 'ledger'] : [p], tracker: 'none', ci: 'none' },
+    data: { packs: [...(REQUIRES[p] ?? []), p], tracker: 'none', ci: 'none' },
     quick: true,
   })),
 ];
@@ -109,11 +117,18 @@ for (const s of scenarios) {
   const packs = data.packs ?? [];
   for (const p of ALL_PACKS) {
     const present = existsSync(join(dst, 'docs', 'packs', p, 'PACK.md'));
+    if (packs.includes(p) && !packFolderExists(p)) continue;
     if (present !== packs.includes(p)) record(`${s.name}: pack ${p} ${packs.includes(p) ? 'present' : 'absent'}`, false);
   }
   for (const f of ['CLAUDE.md', 'GEMINI.md', '.github/copilot-instructions.md', '.cursor/rules/agents.mdc']) {
     if (!existsSync(join(dst, f))) record(`${s.name}: adapter ${f} present`, false);
   }
+  // docs/packs is exempt: it exists (empty) when no pack is chosen. TODO(integrator): rename the folder
+  // to "{% if packs %}packs{% endif %}" once every wave-2 branch has merged, then drop the exemption.
+  const emptyDirs = [];
+  const findEmpty = (d) => { const names = readdirSync(d).filter((n) => n !== '.git'); if (!names.length && d !== dst && relative(dst, d) !== join('docs', 'packs')) emptyDirs.push(relative(dst, d)); for (const n of names) { const p = join(d, n); if (statSync(p).isDirectory()) findEmpty(p); } };
+  findEmpty(dst);
+  record(`${s.name}: no empty directories`, emptyDirs.length === 0, emptyDirs.join('\n'));
   const unrendered = walk(dst).filter((f) => /\{%|\{\{/.test(relative(dst, f)));
   record(`${s.name}: no unrendered file names`, unrendered.length === 0, unrendered.join('\n'));
 
@@ -187,6 +202,7 @@ function negativeChecks(dst) {
   }
   record('check.mjs passes again after restoring', run('node', ['scripts/check.mjs'], { cwd: dst }).ok);
   extraChecks(dst);
+  wave2Checks(dst);
 }
 
 // Rewrites a standards stub: status, and optionally its Rules and Enforcement bodies.
@@ -299,6 +315,107 @@ function extraChecks(dst) {
     const r = guardCmd(cmd);
     record(`command guard allows: ${cmd}`, r.code === 0, `exit ${r.code}: ${r.out}`);
   }
+}
+
+// Negative and positive proofs for the wave-2 checks: forbidden terms, scope tags, not-applicable,
+// parameter uniqueness, open decisions, ADR completeness, references, the debt table.
+function wave2Checks(dst) {
+  const check = () => run('node', ['scripts/check.mjs'], { cwd: dst });
+  const edit = (edits, fn) => {
+    const saved = edits.map(([file, m]) => {
+      const p = join(dst, file);
+      const before = existsSync(p) ? readFileSync(p, 'utf8') : null;
+      mkdirSync(join(p, '..'), { recursive: true });
+      writeFileSync(p, typeof m === 'function' ? m(before ?? '') : m);
+      return [p, before];
+    });
+    try { return fn(); } finally { for (const [p, b] of saved) b === null ? rmSync(p, { force: true }) : writeFileSync(p, b); }
+  };
+  const rejects = (label, edits, re) => {
+    const r = edit(edits, check);
+    record(`check.mjs rejects: ${label}`, !r.ok && re.test(r.out), r.ok ? 'check passed but should have failed' : r.out);
+    return r;
+  };
+  const accepts = (label, edits) => {
+    const r = edit(edits, check);
+    record(`check.mjs accepts: ${label}`, r.ok, r.out);
+  };
+  const TIME = 'docs/02-domain/time.md';
+  const LIFE = 'docs/02-domain/lifecycles.md';
+  const ADR1 = 'docs/04-adr/ADR-001-adopt-engineering-baseline.md';
+  const terms = ['.baseline/forbidden-terms.txt', 'outdatedterm\n'];
+  const twoHits = [LIFE, (x) => `${x}\nThe outdatedterm moves to closed.\nAnd the OutdatedTerm returns.\n`];
+  const paramRow = (row) => (x) => x.replace(/(## Parameters[\s\S]*?\| --- \| --- \| --- \| --- \|\n)/, (m) => `${m}${row}\n`);
+
+  // Forbidden terms: every hit is reported, with file:line and the way to allow-list.
+  const hits = rejects('forbidden terms in project prose', [terms, twoHits], /lifecycles\.md:\d+: uses forbidden term/);
+  record('forbidden-terms check reports every hit and how to allow-list', (hits.out.match(/uses forbidden term/g) ?? []).length === 2 && /forbidden-allow\.txt/.test(hits.out), hits.out);
+  accepts('a forbidden term in a skipped path (ADR-001)', [terms, [ADR1, (x) => `${x}\nThe outdatedterm is mentioned here.\n`]]);
+  accepts('a forbidden term only in a Parameters Default and Trade-off column', [terms, [TIME, paramRow('| `zz_probe` | answer | the outdatedterm default | the outdatedterm trade-off |')]]);
+  accepts('a forbidden term inside hyphen- and underscore-joined compounds', [terms, [LIFE, (x) => `${x}\nSee outdatedterm-id and outdatedterm_id and pre-outdatedterm.\n`]]);
+  accepts('a forbidden term allow-listed by path', [terms, twoHits, ['.baseline/forbidden-allow.txt', `# fixture\n${LIFE}\n`]]);
+  accepts('a forbidden term allow-listed by match:', [terms, twoHits, ['.baseline/forbidden-allow.txt', 'match:moves to closed\nmatch:returns\n']]);
+  accepts('a forbidden term under an allow-listed dir/*', [terms, twoHits, ['.baseline/forbidden-allow.txt', 'docs/02-domain/*\n']]);
+
+  // D1: not-applicable and scope tags.
+  const setStatus = (s) => (x) => x.replace(/^status: [\w-]+/m, s);
+  rejects('not-applicable without a reason', [[TIME, setStatus('status: not-applicable')]], /not-applicable but has no "reason:"/);
+  accepts('not-applicable with a reason (rule checks skipped)', [[TIME, setStatus('status: not-applicable\nreason: no component of this project needs it')]]);
+  const oneRule = (rule) => (x) => setDoc(x, { status: 'proposed', rules: rule, enforcement: '| R1 | review | ❌ |' });
+  rejects('a scope tag naming an unknown kind', [[TIME, oneRule('- **R1.** MUST a. _(applies to: service, robot)_')]], /unknown kind\(s\) robot/);
+  rejects('a malformed scope tag', [[TIME, oneRule('- **R1.** MUST a. (applies to: service)')]], /malformed scope tag/);
+  accepts('a valid scope tag', [[TIME, oneRule('- **R1.** MUST a. _(applies to: service, daemon)_')]]);
+  rejects('applies-to frontmatter with an unknown kind', [[TIME, (x) => x.replace(/^owner:/m, 'applies-to: [service, widget]\nowner:')]], /names unknown kind\(s\) widget/);
+  accepts('applies-to frontmatter with valid kinds', [[TIME, (x) => x.replace(/^owner:/m, 'applies-to: [service, ui]\nowner:')]]);
+
+  // Parameters: unique names across the project, every [[...]] listed, --json keeps working.
+  const dupRow = paramRow('| `terms` | default | duplicate | duplicate |');
+  const dup = edit([[TIME, dupRow]], () => run('node', ['scripts/params.mjs'], { cwd: dst }));
+  record('params.mjs fails on a parameter defined in two documents, naming both', !dup.ok && /"terms" is defined more than once/.test(dup.out) && /time\.md/.test(dup.out) && /glossary\.md/.test(dup.out), dup.out);
+  rejects('a parameter defined in two documents', [[TIME, dupRow]], /"terms" is defined more than once/);
+  const js = run('node', ['scripts/params.mjs', '--json'], { cwd: dst });
+  let parsed = null;
+  try { parsed = JSON.parse(js.out); } catch { /* reported below */ }
+  record('params.mjs --json prints JSON and exits 0 without duplicates', js.ok && Array.isArray(parsed), js.out.slice(0, 300));
+  record('params.mjs lists markers outside Parameters tables (glossary Terms row)', Array.isArray(parsed) && parsed.some((d) => /glossary\.md$/.test(d.file) && d.other.some((o) => o.marker === '[[term]]')), js.out.slice(0, 300));
+
+  // D7: a ratified document keeps an open decision only if it is queued.
+  const ratified = (body) => (x) => setDoc(
+    x.replace(/\[\[[^\]\n]+\]\]/g, 'x').replace(/^owner: .*/m, 'owner: someone').replace(/^last-reviewed: .*/m, 'last-reviewed: 2026-01-01')
+      .replace(/## Open decisions[\s\S]*?(?=\n## Rules)/, `## Open decisions\n\n${body}\n`),
+    { status: 'ratified', rules: '- **R1.** MUST a.', enforcement: '| R1 | review | ❌ |' });
+  rejects('a ratified document with an open decision not in the queue', [[TIME, ratified('- [ ] still open')]], /open decision not in the queue/);
+  accepts('a ratified document whose open decisions are ticked or queued', [[TIME, ratified('- [x] done\n- [ ] later\n      continued here → DECISION-QUEUE')]]);
+
+  // ADRs: index parity and completeness of an accepted ADR.
+  const accept = (x) => x.replace(/^status: [\w-]+/m, 'status: accepted').replace(/^date: .*/m, 'date: 2026-01-01').replace(/^deciders: .*/m, 'deciders: [Ada Lovelace]');
+  rejects('an accepted ADR with a placeholder date and no deciders', [[ADR1, setStatus('status: accepted')]], /date is "YYYY-MM-DD"/);
+  accepts('a complete accepted ADR', [[ADR1, accept]]);
+  rejects('an accepted ADR missing a required section', [[ADR1, (x) => accept(x).replace(/## Compliance[\s\S]*?(?=\n## Amendments)/, '')]], /"## Compliance" section is missing/);
+  rejects('an ADR file missing from the index', [['docs/04-adr/ADR-002-extra.md', '---\nadr: 002\nstatus: proposed\ndate: YYYY-MM-DD\ndeciders: []\nsupersedes: null\nsuperseded-by: null\n---\n\n# ADR-002: Extra\n']], /index does not list ADR-002-extra\.md/);
+  rejects('an index row for an ADR file that does not exist', [['docs/04-adr/README.md', (x) => `${x}| [ADR-009](ADR-009-gone.md) | Gone | proposed | — |\n`]], /ADR-009-gone\.md does not exist/);
+
+  // D9: bare names resolve only when unique.
+  accepts('a bare file name that is unique in the project', [[TIME, oneRule('- **R1.** MUST a.')], ['docs/README.md', (x) => `${x}\nSee \`time.md\` R1.\n`]]);
+  rejects('a bare file name shared by two documents', [['docs/aa/same.md', '# a\n'], ['docs/bb/same.md', '# b\n'], ['docs/README.md', (x) => `${x}\nSee \`same.md\` R1.\n`]], /ambiguous[\s\S]*aa\/same\.md/);
+
+  // The enforcement-debt table (docs/DECISION-QUEUE.md between markers).
+  const Q = 'docs/DECISION-QUEUE.md';
+  const markers = (x) => (x.includes('<!-- debt:start -->') ? x : `${x}\n<!-- debt:start -->\n<!-- debt:end -->\n`);
+  accepts('markers around a debt table that was never generated', [[Q, markers]]);
+  const owed = (x) => setDoc(x, { status: 'proposed', rules: '- **R1.** MUST a.', enforcement: '| R1 | see [system](../03-architecture/system.md) | ⬜ before-production |' });
+  const debt = edit([[Q, markers], [TIME, owed]], () => {
+    const gen = run('node', ['scripts/queue.mjs'], { cwd: dst });
+    const fresh = run('node', ['scripts/check.mjs'], { cwd: dst });
+    const table = readFileSync(join(dst, Q), 'utf8');
+    writeFileSync(join(dst, Q), table.replace('<!-- debt:end -->', '| `x.md` | R1 | y | later |\n<!-- debt:end -->'));
+    const stale = run('node', ['scripts/check.mjs'], { cwd: dst });
+    return { gen, fresh, table, stale };
+  });
+  record('queue.mjs writes the debt table with docs/-relative references and due', debt.gen.ok && /\| `02-domain\/time\.md` \| R1 \| see `03-architecture\/system\.md` \| before-production \|/.test(debt.table), debt.gen.out + debt.table.slice(-600));
+  record('check.mjs accepts a freshly generated debt table', debt.fresh.ok, debt.fresh.out);
+  record('check.mjs rejects: a stale debt table', !debt.stale.ok && /debt table is stale/.test(debt.stale.out), debt.stale.out);
+  record('check.mjs passes again after the wave-2 checks', check().ok);
 }
 
 if (!KEEP) rmSync(TMP, { recursive: true, force: true });

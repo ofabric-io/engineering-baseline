@@ -93,7 +93,55 @@ export function enforcementRows(text) {
     const ids = expandRuleList(cells[0].replace(/[*`]/g, '')); // "R1", "R1–R3, R5", "P2/P4"
     if (!ids) continue;
     const status = (cells.slice(1).join(' ').match(/[✅◐⬜❌]/) ?? [null])[0];
-    rows.push({ ids, status, raw: line.trim() });
+    rows.push({ ids, status, raw: line.trim(), cells });
+  }
+  return rows;
+}
+
+/** The component kinds a rule or document may be scoped to (`03-architecture/system.md`). */
+export const COMPONENT_KINDS = ['service', 'daemon', 'cli', 'library', 'ui', 'batch'];
+
+/** "[a, b]" or "a, b" -> ["a", "b"]; empty and "[]" -> []. */
+export function parseList(value) {
+  const v = (value ?? '').trim().replace(/^\[|\]$/g, '');
+  return v.split(',').map((s) => s.trim().replace(/^["']|["']$/g, '')).filter(Boolean);
+}
+
+/** True for template files, which are never held to the document rules. */
+export const isTemplatePath = (p) => /(^|\/)_[^/]*\.md$|-template\.md(\.jinja)?$/.test(p);
+
+/** Cells of a Markdown table row, or null when the line is not a row. */
+export function tableCells(line) {
+  const t = line.trim();
+  if (!t.startsWith('|')) return null;
+  return t.replace(/^\||\|$/g, '').split('|').map((c) => c.trim());
+}
+
+/** Lines of a document with section, fence state and 1-based number (frontmatter lines are skipped). */
+export function* linesWithContext(text) {
+  let section = null;
+  let fenced = false;
+  let inFm = false;
+  const lines = text.split('\n');
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    if (i === 0 && line === '---') { inFm = true; continue; }
+    if (inFm) { if (line === '---') inFm = false; continue; }
+    if (/^```/.test(line)) { fenced = !fenced; yield { line, n: i + 1, section, fenced: true }; continue; }
+    const h = !fenced && line.match(/^## +(.+?)\s*$/);
+    if (h) section = h[1];
+    yield { line, n: i + 1, section, fenced };
+  }
+}
+
+/** Parameter rows of the `## Parameters` table: [{ name, answer, default, tradeoff, line }]. */
+export function parameterRows(text) {
+  const rows = [];
+  for (const { line, n, section, fenced } of linesWithContext(text)) {
+    if (fenced || section !== 'Parameters') continue;
+    const c = tableCells(line);
+    const name = c?.[0]?.match(/^`([\w-]+)`$/);
+    if (name) rows.push({ name: name[1], answer: c[1] ?? '', default: c[2] ?? '', tradeoff: c[3] ?? '', line: n });
   }
   return rows;
 }
