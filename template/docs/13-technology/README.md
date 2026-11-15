@@ -10,6 +10,16 @@ last-reviewed: never
 The baseline never picks a technology. This layer is where the project does, one document per
 decision area, each backed by an ADR.
 
+This document is ratified at the end of bootstrap phase 5, when every area below is either
+decided (with its ADR and document) or marked `n/a`; an area decided later reopens it through a
+new row here and a document, not through a change to a higher layer.
+
+**The baseline's own tooling is not a project technology choice.** The baseline's checks and
+scripts (`scripts/check.mjs` and the others in `scripts/`) need Node.js 20 or later on every
+developer machine and in CI, whatever language or stack the project chooses. That prerequisite is
+independent of the "Language(s) and runtime" area and MUST NOT be recorded there as the project's
+language.
+
 ## How a technology document is made
 
 1. The bootstrap (phase 5) or a later decision names the area.
@@ -46,8 +56,9 @@ decided area's document MUST cover the ones that apply:
   anti-patterns in `10-patterns/patterns.md`
 - test runners, fixtures, isolation and coverage tooling that implement `12-testing/strategy.md`
 - the module-boundary check that implements `03-architecture/dependency-rules.md`
-- the migration tool and the CI system that implement `15-delivery/pipeline-and-gates.md` and
-  `15-delivery/deployments-and-rollback.md`
+- the CI system that implements `15-delivery/pipeline-and-gates.md` and
+  `15-delivery/deployments-and-rollback.md`, and, where the project has a data store, its
+  migration tool
 
 A technology document MUST NOT restate or relax a rule from a higher layer; it names the tool that
 enforces it. To relax a rule, supersede it with an ADR.
