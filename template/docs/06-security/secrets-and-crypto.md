@@ -57,7 +57,7 @@ Where secrets live, how they rotate, and which cryptographic practices are allow
 
 | Rule | Mechanism | Status |
 | --- | --- | --- |
-| R1 | Git hook and CI secret-scan job | ⬜ scheduled |
+| R1 | `scripts/checks/secrets.mjs`, run by `scripts/check.mjs` in the pre-commit hook (staged files) and in CI (all tracked files); log and artifact leaks by review | ◐ partial |
 | R2 | Deployment configuration review | ❌ review-only |
 | R3 | Start-up test with a missing secret | ⬜ scheduled |
 | R4 | PR review | ❌ review-only |

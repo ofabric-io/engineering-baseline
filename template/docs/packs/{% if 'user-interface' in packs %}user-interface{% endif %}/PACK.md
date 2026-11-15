@@ -11,6 +11,7 @@ documents:
   - content-and-i18n.md  # Content, Copy & Internationalisation
   - components.md  # Components
   - design-workflow.md  # Design Workflow & Fidelity
+  - browser-security.md  # Browser Surface Security (n/a for non-browser interfaces)
 ---
 
 # Pack: user-interface

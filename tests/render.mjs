@@ -18,6 +18,23 @@ const scenarios = [
   { name: 'defaults', data: {} },
   { name: 'everything', data: { packs: ALL_PACKS, tracker: 'github-issues', ci: 'github-actions' } },
   { name: 'missing-requirement', data: { packs: ['webhooks'] }, expectFailure: /requires the events pack/ },
+  // Tracker and host combinations: which files exist must follow the answers.
+  { name: 'clickup-gitlab', data: { tracker: 'clickup', git_host: 'gitlab', clickup_workspace_id: '123' },
+    expectFiles: ['scripts/tracker/adapters/clickup.mjs', 'scripts/tracker/config.json', '.gitlab/merge_request_templates/Default.md'],
+    expectAbsent: ['.github/pull_request_template.md', 'docs/17-specs/QUEUE.md', 'scripts/tracker/adapters/none.mjs'] },
+  { name: 'github-issues-github', data: { tracker: 'github-issues', git_host: 'github' },
+    expectFiles: ['scripts/tracker/adapters/github-issues.mjs', '.github/pull_request_template.md'],
+    expectAbsent: ['scripts/tracker/adapters/none.mjs', 'docs/17-specs/QUEUE.md', 'scripts/tracker/config.json'] },
+  { name: 'none-other', data: { tracker: 'none', git_host: 'other', ci: 'none' },
+    expectFiles: ['docs/17-specs/QUEUE.md', 'scripts/tracker/adapters/none.mjs'],
+    expectAbsent: ['.github/pull_request_template.md', '.gitlab/merge_request_templates/Default.md'],
+    commands: [[['scripts/tracker/cli.mjs', 'next-number', '--kind', 'story'], /STORY-001/]] },
+  // Each pack on its own (plus what it requires): a pack must not silently depend on another.
+  ...ALL_PACKS.map((p) => ({
+    name: `pack-${p}`,
+    data: { packs: p === 'webhooks' ? ['events', 'webhooks'] : p === 'ledger' ? ['money', 'ledger'] : [p], tracker: 'none', ci: 'none' },
+    quick: true,
+  })),
 ];
 
 const copier = spawnSync('copier', ['--version'], { shell: true }).status === 0 ? ['copier'] : ['uvx', 'copier'];
@@ -104,6 +121,14 @@ for (const s of scenarios) {
   record(`${s.name}: sync-adapters`, sync.ok, sync.out);
   const check = run('node', ['scripts/check.mjs'], { cwd: dst });
   record(`${s.name}: check.mjs passes`, check.ok, check.out);
+
+  for (const f of s.expectFiles ?? []) record(`${s.name}: ${f} present`, existsSync(join(dst, f)));
+  for (const f of s.expectAbsent ?? []) record(`${s.name}: ${f} absent`, !existsSync(join(dst, f)));
+  for (const [cmd, expected] of s.commands ?? []) {
+    const c = run('node', cmd, { cwd: dst });
+    record(`${s.name}: node ${cmd.join(' ')}`, c.ok && expected.test(c.out), c.out);
+  }
+  if (s.quick) continue; // pack-alone scenarios only need to render and pass check.mjs
 
   const msgFile = join(dst, '.tmp-msg');
   writeFileSync(msgFile, 'feat(docs): add the first standard\n');

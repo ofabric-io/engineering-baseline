@@ -46,6 +46,20 @@ node scripts/check.mjs       # everything CI runs on the docs and adapters
 Git hooks (`.githooks/`) run the same checks. Enable them once per clone:
 `git config core.hooksPath .githooks`. Never bypass them (`--no-verify`).
 
+- `scripts/checks/*.mjs` are check plugins run by `check.mjs`, including a secret scan. A false
+  positive goes in `.baseline/secrets-allowlist.txt`, never a bypass.
+- `scripts/guards/` holds tool-neutral guards (protected documents, dangerous git commands) that any
+  AI tool's hooks can call.
+
+## Workflow and tools
+
+- `docs/workflow.yaml` declares the spec chain — feature spec → story → start → implement → PR →
+  judge — and the skill that runs each stage.
+- Work items go through `node scripts/tracker/cli.mjs` only (`--help` lists the verbs). There is no
+  delete.
+- Open pull requests with `node scripts/pr/open-pr.mjs`, which refuses a body that does not follow
+  the template.
+
 ## Working rules
 
 - Questions to the user are batched, numbered, and each carries a recommended default.

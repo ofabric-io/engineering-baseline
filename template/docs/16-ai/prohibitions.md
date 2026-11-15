@@ -75,13 +75,13 @@ is the fallback, not the goal.
 | P3 | Self-review of the diff (`operating-procedure.md` R7); pull request review | ❌ review-only |
 | P4 | Pull request review | ❌ review-only |
 | P5 | Module-boundary check (tool chosen in `13-technology/`) | ⬜ scheduled |
-| P6 | Secret scan in the pre-commit hook and CI | ⬜ scheduled |
+| P6 | `scripts/checks/secrets.mjs` in the pre-commit hook (staged files) and CI; real personal data by review | ◐ partial |
 | P7 | Pre-commit check rejecting modification of an existing migration file | ⬜ scheduled |
 | P8 | Lint rules against empty handlers and unhandled failures (chosen in `13-technology/`) | ⬜ scheduled |
-| P9 | Branch protection; tool-specific guards where the tool supports them | ◐ partial |
-| P10 | Pull request review; code-ownership routing of `docs/` | ❌ review-only |
+| P9 | `scripts/guards/command.mjs` refuses hook-skip flags (wired into tools that support hooks); CI re-runs every gate; branch protection | ◐ partial |
+| P10 | `scripts/guards/protected-docs.mjs` refuses edits to ratified documents and accepted ADRs in tools that support hooks; pull request review | ◐ partial |
 | P11 | Frontmatter `status`; the story's reference to its spec is visible in the pull request | ❌ review-only |
-| P12 | Tracker adapter exposes no delete operation (`17-specs/work-tracking.md`) | ⬜ scheduled |
+| P12 | `scripts/tracker/cli.mjs` has no delete verb and refuses one; reassignment by review | ◐ partial |
 | P13 | Instruction only; not mechanizable | ❌ review-only |
 | P14 | Redaction check on outbound tracker payloads, where an adapter exists | ⬜ scheduled |
 | P15 | CI is the source of truth; the pull request body carries the verbatim results | ❌ review-only |

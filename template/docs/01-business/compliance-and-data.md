@@ -16,7 +16,6 @@ Which regulatory regimes apply, what records must be kept and for how long, and 
 | Parameter | Answer | Default | Trade-off |
 | --- | --- | --- | --- |
 | `regulatory_regimes` | [[regulatory_regimes]] | none declared | e.g. GDPR, LGPD, PCI DSS, SOC 2, HIPAA — each adds rules here |
-| `data_classes` | [[data_classes]] | public, internal, confidential, restricted | more classes give finer control but are harder to apply consistently |
 | `record_retention` | [[record_retention]] | decided per data class in `06-security/sensitive-data.md` | a single global period is simpler but rarely correct |
 | `data_residency` | [[data_residency]] | a single region until a regime or contract requires otherwise | each added region multiplies operations and legal surface |
 
@@ -35,7 +34,7 @@ Which regulatory regimes apply, what records must be kept and for how long, and 
 
 ### Data classification
 
-- **R4.** Every field that holds data MUST belong to exactly one class in `data_classes`, decided when the field is added.
+- **R4.** Every field that holds data MUST belong to exactly one data class, decided when the field is added. The classes are the `data_classes` parameter of `06-security/sensitive-data.md`, defined there and only there.
 - **R5.** A field in the most sensitive class MUST be added to the redaction list (`06-security/sensitive-data.md`) in the same change that introduces it.
 - **R6.** Classification MUST follow the data, not the table: derived or copied data inherits the highest class of its sources.
 

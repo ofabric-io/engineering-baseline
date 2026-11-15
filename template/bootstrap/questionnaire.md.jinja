@@ -10,6 +10,11 @@ question is then recorded in `docs/DECISION-QUEUE.md` and is never guessed.
 Questions are asked **one phase at a time**, numbered, with the recommended default and its
 trade-off. A phase is finished when every question in it is answered or deferred.
 
+The rows below are the **headline** questions. Every document also has a `## Parameters` table;
+its remaining open parameters are offered in the same phase as one bulk list — "accept all
+defaults, or name the ones to change". `node scripts/params.mjs <path>` prints that list for the
+documents a phase writes to.
+
 ---
 
 ## Phase 0 — Intake
@@ -32,6 +37,8 @@ trade-off. A phase is finished when every question in it is answered or deferred
 | 1.5 | Regulatory regimes that apply (GDPR, LGPD, PCI DSS, SOC 2, HIPAA, none…) | none | `01-business/compliance-and-data.md` |
 | 1.6 | Operations that always need a human, however automated the rest is | irreversible data changes, production deploys, credential rotation | `01-business/availability.md` |
 | 1.7 | Availability targets | none until the first production deploy | `01-business/availability.md` |
+| 1.8 | Recovery objectives (how much data may be lost, how long recovery may take) and maintenance windows | decided before the first production deploy | `01-business/availability.md` |
+| 1.9 | Where must data reside? | a single region until a regime or contract requires otherwise | `01-business/compliance-and-data.md` |
 
 ## Phase 2 — Domain
 
@@ -42,6 +49,7 @@ trade-off. A phase is finished when every question in it is answered or deferred
 | 2.3 | Internal identifier format | UUIDv7 | `02-domain/identifiers.md` |
 | 2.4 | Public identifier format | type-prefixed opaque (`<prefix>_<encoded>`) | `02-domain/identifiers.md` |
 | 2.5 | Zone of record for business dates (instants are always UTC) | UTC | `02-domain/time.md` |
+| 2.6 | Type prefix for each public identifier (one per entity from 2.2) | derived from the entity names | `02-domain/identifiers.md` |
 
 ## Phase 3 — Architecture
 
@@ -61,13 +69,14 @@ Each core document from layers 05–12 is offered as a whole: **accept** its pro
 | Id | Document | Default |
 | --- | --- | --- |
 | 4.1 | `05-protocols/rfc-profile.md` | accept |
-| 4.2 | `06-security/*` (4 documents) | accept |
+| 4.2 | `06-security/*` (4 documents) — always confirm `data_classes` and the actors in `authn-authz.md` explicitly | accept |
 | 4.3 | `07-observability/*` (3 documents) | accept |
 | 4.4 | `08-reliability/*` (2 documents) | accept |
 | 4.5 | `09-errors/taxonomy.md` | accept |
 | 4.6 | `10-patterns/patterns.md` | accept |
 | 4.7 | `11-style/naming-and-style.md` | accept |
 | 4.8 | `12-testing/strategy.md` | accept |
+| 4.9 | `13-technology/README.md` — the process for technology decisions (the decisions themselves are phase 5) | accept |
 {% if packs %}
 ## Phase 4P — Packs
 
@@ -80,10 +89,10 @@ Each installed pack's parameters, asked the same way. Defaults are in each docum
 {% endif %}{% if 'events' in packs %}| P.events | `packs/events/` | Domain events only, or integration events too? Naming prefix? |
 {% endif %}{% if 'webhooks' in packs %}| P.webhooks | `packs/webhooks/` | Signature scheme? Retry window? Auto-disable threshold? |
 {% endif %}{% if 'money' in packs %}| P.money | `packs/money/` | Single or multi-currency? Internal scale? Rounding mode and where rounding happens? |
-{% endif %}{% if 'ledger' in packs %}| P.ledger | `packs/ledger/` | Chart of accounts? Settlement or withdrawal flows? |
+{% endif %}{% if 'ledger' in packs %}| P.ledger | `packs/ledger/` | **The project's own chart of accounts** (the default is only illustrative)? Who owns a ledger? Overdraft policy? Reconciliation schedule? |
 {% endif %}{% if 'multi-tenant' in packs %}| P.multi-tenant | `packs/multi-tenant/` | **What is the isolation unit called?** One axis or two? Fairness quotas? |
-{% endif %}{% if 'audit-trail' in packs %}| P.audit-trail | `packs/audit-trail/` | Retention? Delivery guarantee? Visible to customers? |
-{% endif %}{% if 'user-interface' in packs %}| P.user-interface | `packs/user-interface/` | Token vocabulary and themes? Brand roles, and the domain-state → status-role map? Accessibility target? Locales? Which actions are irreversible? Design tool and how fidelity is checked? |
+{% endif %}{% if 'audit-trail' in packs %}| P.audit-trail | `packs/audit-trail/` | Which actions are audited? Retention? Delivery guarantee? Who may read records? |
+{% endif %}{% if 'user-interface' in packs %}| P.user-interface | `packs/user-interface/` | Token vocabulary and themes? Brand roles, and the domain-state → status-role map? Accessibility target? Locales? Which actions are irreversible? Design tool and how fidelity is checked? Is any interface browser-based (`browser-security.md`)? Contents of `.baseline/ui.json` (catalog path, locales, token files per theme, contrast pairs) |
 {% endif %}{% endif %}
 ## Phase 5 — Technology
 
@@ -113,12 +122,16 @@ Every answer here is an ADR plus a `13-technology/<area>.md`. `n/a` and `later` 
 | 6.7 | Which AI vendors does the team use, and which model fills each tier (strong / standard / fast)? | later — tiers stay vendor-neutral until answered | `16-ai/model-routing.md` |
 | 6.8 | When is a spec required? | feature spec for business capability; story spec for tier 3–4 | `17-specs/spec-lifecycle.md` |
 | 6.9 | Work tracker | {{ tracker }} | `17-specs/work-tracking.md` |
+| 6.10 | Tracker states | to do · in progress · complete | `17-specs/work-tracking.md`, `scripts/tracker/states.json` |
+| 6.11 | Paths that need a code owner's review (security, migrations, CI, infrastructure…) | security, migrations, CI and infrastructure paths | `14-git/git.md` |
+| 6.12 | Environments, and who approves a production deploy | development, staging, production; a human approves production | `15-delivery/deployments-and-rollback.md` |
 
 ---
 
 ## Done when
 
-- Every question is answered or deferred to `docs/DECISION-QUEUE.md`.
+- Every question is answered or deferred to `docs/DECISION-QUEUE.md`, and
+  `node scripts/params.mjs` lists only parameters that were deliberately deferred.
 - Every document whose questions were all answered is `ratified`, with `owner` and
   `last-reviewed` set.
 - Every answer with a real alternative has an ADR.

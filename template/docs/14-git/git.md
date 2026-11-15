@@ -85,7 +85,7 @@ technology choice recorded in `13-technology/`; the rules here do not depend on 
 | R9 | PR review; a trailer check in CI MAY be added | ❌ review-only |
 | R10 | Server-side checks repeat every hook (`15-delivery/pipeline-and-gates.md` R3) | ◐ partial |
 | R11, R12, R15 | Hosting-platform branch protection: require PR, merge strategy, approvals, no self-approval, no administrator bypass | ⬜ scheduled |
-| R13 | CI job comparing the body's sections with the template | ⬜ scheduled |
+| R13 | `scripts/pr/open-pr.mjs` refuses a body missing a template section (`.github/pull_request_template.md` or `.gitlab/merge_request_templates/Default.md`); a CI job for PRs opened by other means | ◐ partial |
 | R14 | CI job checking the title for a story reference | ⬜ scheduled |
 | R16 | CI warning at the size limit; not blocking | ⬜ scheduled |
 | R17 | Code-owners file in the repository | ⬜ scheduled |

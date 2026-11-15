@@ -24,8 +24,6 @@ estimates or velocity.
 ## Open decisions
 
 - [ ] Ratify this document with the project (`.agents/skills/ratify-standard/SKILL.md`).
-- [ ] Which tracker adapter does the project use, and where does it live? With `tracker` set to
-      `none`, where is the Markdown queue file?
 - [ ] What groups features above them (an epic, a milestone, a label), if anything?
 
 ## Rules
@@ -34,7 +32,7 @@ estimates or velocity.
 
 - **R1.** The tracker is the one place where workflow state lives: status, assignee, ordering
   and dates. It MUST NOT be the place where a rule, a standard or an acceptance criterion lives.
-- **R2.** With `tracker` set to `none`, the tracker is a Markdown queue file in the repository;
+- **R2.** With `tracker` set to `none`, the tracker is the Markdown queue `docs/17-specs/QUEUE.md`;
   every rule below applies to it unchanged, with "task" meaning a row or entry in that file.
 - **R3.** Access to an external tracker MUST go through one project-owned client or adapter that
   implements only the operations R17 permits. Credentials MUST be read from an ignored local
@@ -124,8 +122,8 @@ estimates or velocity.
 | Rule | Mechanism | Status |
 | --- | --- | --- |
 | R1, R12 | Review. The rule most likely to be broken by good intentions | ❌ review-only |
-| R2 | The queue file is a Markdown document in the repository, covered by review | ❌ review-only |
-| R3, R4 | The adapter is the only client and refuses a foreign workspace; the pre-commit secret scan rejects a committed token | ⬜ scheduled |
+| R2 | `scripts/tracker/cli.mjs` with the `none` adapter reads and writes only `docs/17-specs/QUEUE.md` | ✅ automated |
+| R3, R4 | `scripts/tracker/cli.mjs` is the only client and uses only the configured workspace; `scripts/checks/secrets.mjs` rejects a committed token | ◐ partial |
 | R5, R6, R8 | Review; spec-creation skill creates the item | ❌ review-only |
 | R7 | Review | ❌ review-only |
 | R9 | Pull request title check in CI | ⬜ scheduled |
@@ -134,7 +132,7 @@ estimates or velocity.
 | R13 | Offline startability check over spec frontmatter, run in CI; human owns `approved` | ⬜ scheduled |
 | R15, R16 | Review; no tool sees intent | ❌ review-only |
 | R17, R18 | The adapter implements the permitted operations and has no delete or reassign operation | ⬜ scheduled |
-| R19, R20, R22 | Start-of-work skill performs the claim in one step | ⬜ scheduled |
+| R19, R20, R22 | `.agents/skills/start-story/SKILL.md` performs the claim through `scripts/tracker/cli.mjs claim` in one step | ◐ partial |
 | R21, R23 | Review | ❌ review-only |
 | R24 | Redaction scan on outbound payloads in the adapter | ⬜ scheduled |
 | R25 | Review | ❌ review-only |

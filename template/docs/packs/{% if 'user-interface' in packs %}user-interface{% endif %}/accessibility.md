@@ -62,7 +62,7 @@ The conformance target and the checks that hold every interface to it. Contrast 
 | Rule | Mechanism | Status |
 | --- | --- | --- |
 | R1 | PR review against the recorded gap list | ❌ review-only |
-| R2 | `scripts/checks/ui-token-contrast.mjs` computes WCAG contrast for declared pairs in every theme file (hex colours only); becomes automated once `scripts/check.mjs` runs it | ◐ partial |
+| R2 | `scripts/checks/ui-token-contrast.mjs` computes WCAG contrast for declared pairs in every theme file (hex colours only); run by `scripts/check.mjs` | ✅ automated |
 | R3 | `scripts/checks/ui-token-contrast.mjs` fails on a pair naming an unknown token; completeness of the list is PR review | ◐ partial |
 | R4 | automated scan plus PR review | ◐ partial |
 | R5 | end-to-end keyboard tests | ⬜ scheduled |

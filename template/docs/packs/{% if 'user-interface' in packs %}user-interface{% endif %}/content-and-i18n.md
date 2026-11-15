@@ -66,8 +66,8 @@ Where interface text lives, how it is translated and formatted, and how its word
 | R3 | lint rule rejecting concatenated catalog output | ⬜ scheduled |
 | R4 | PR review | ❌ review-only |
 | R5 | pseudo-locale rendering in end-to-end tests | ⬜ scheduled |
-| R6 | `scripts/checks/ui-catalog-parity.mjs` compares every key path across locales per namespace (config `.baseline/ui.json`); becomes automated once `scripts/check.mjs` runs it | ◐ partial |
-| R7 | `scripts/checks/ui-catalog-parity.mjs` fails on a missing locale file or key; becomes automated once `scripts/check.mjs` runs it | ◐ partial |
+| R6 | `scripts/checks/ui-catalog-parity.mjs` compares every key path across locales per namespace (config `.baseline/ui.json`); run by `scripts/check.mjs` | ✅ automated |
+| R7 | `scripts/checks/ui-catalog-parity.mjs` fails on a missing locale file or key; run by `scripts/check.mjs` | ✅ automated |
 | R8 | end-to-end test per locale | ⬜ scheduled |
 | R9 | lint rule rejecting direct formatting calls outside the shared formatters | ⬜ scheduled |
 | R10 | PR review | ❌ review-only |

@@ -20,7 +20,10 @@ resume later; progress lives in `.baseline/answers.yaml`, not in the conversatio
 1. **Read the documents the phase writes to** (the "Writes to" column), including their
    `## Parameters` tables, and every already-ratified document in a higher layer. A choice that
    contradicts a ratified higher layer is not available — say so instead of offering it.
-2. **Ask the whole phase in one message.** Numbered with the questionnaire's ids, each with the
+   Run `node scripts/params.mjs <path>` for those documents to get every open parameter with its
+   default; the questionnaire rows are only the headline ones.
+2. **Ask the whole phase in one message.** Headline questions first; then the remaining open
+   parameters as one bulk list ("accept all defaults, or name the ones to change"). Numbered with the questionnaire's ids, each with the
    recommended default and its trade-off in one line, so the user can reply
    `1.1 …, 1.2 …, 1.3 default, 1.4 later`. Ask as plain text, not through a tool-specific picker.
    Add a question the questionnaire missed if its answer would change what gets built.
