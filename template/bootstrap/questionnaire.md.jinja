@@ -68,7 +68,7 @@ Answer ids in `.baseline/answers.yaml`: `<question id>` for a headline question 
 | Id | Question | Default | Writes to |
 | --- | --- | --- | --- |
 | 2.1 | The 5–15 core terms of the domain, each with one meaning; any words to forbid; and any collision with the words the baseline itself uses (zone, agent, domain, configuration, operator…) — declare it and choose your own word | — (required) | `02-domain/glossary.md` |
-| 2.2 | The core entities that are consistency boundaries (aggregates), and the states of each. Skipped when the product has no persistent domain model | from 1.1 | `02-domain/lifecycles.md` |
+| 2.2 | The core entities that have a lifecycle, and the states of each (aggregates and consistency boundaries are the domain-model pack's questions). Skipped when nothing has a lifecycle | from 1.1 | `02-domain/lifecycles.md` |
 | 2.3 | Internal identifier format | UUIDv7 | `02-domain/identifiers.md` |
 | 2.4 | Public identifier format | type-prefixed opaque (`<prefix>_<encoded>`) | `02-domain/identifiers.md` |
 | 2.5 | `business_time_zone`: the zone business dates are read in (instants are always UTC) | UTC | `02-domain/time.md` |

@@ -11,11 +11,13 @@ import { join, relative, sep } from 'node:path';
 const ROOT = join(import.meta.dirname, '..');
 const TMP = join(ROOT, '.tmp');
 const KEEP = process.argv.includes('--keep');
+// Mutation tests rewrite this copy of time.md, never a document other documents cite.
+const FIXTURE_DOC = 'docs/02-domain/zz-test-fixture.md';
 const ALL_PACKS = ['http-api', 'events', 'webhooks', 'money', 'ledger', 'multi-tenant', 'audit-trail', 'user-interface', 'web-ui', 'cli', 'data-store', 'domain-model'];
 // Packs are written by different hands in parallel: assert a pack's presence only when its template
 // folder exists. TODO(integrator): once all pack folders are merged, drop this and assert every pack.
 const packFolderExists = (p) => existsSync(join(ROOT, 'template', 'docs', 'packs', `{% if '${p}' in packs %}${p}{% endif %}`));
-const REQUIRES = { webhooks: ['events'], ledger: ['money'], 'web-ui': ['user-interface'] };
+const REQUIRES = { webhooks: ['events'], ledger: ['money', 'events'], 'web-ui': ['user-interface'] };
 
 const scenarios = [
   { name: 'minimal', data: { packs: [], tracker: 'none', ci: 'none' } },
@@ -155,13 +157,20 @@ for (const s of scenarios) {
   const hits = leftoverScan(dst, s.name);
   record(`${s.name}: no leftover terms`, hits.length === 0, hits.join('\n'));
 
-  if (s.name === 'everything') negativeChecks(dst);
+  if (s.name === 'everything') {
+    const fixture = join(dst, FIXTURE_DOC);
+    writeFileSync(fixture, readFileSync(join(dst, 'docs/02-domain/time.md'), 'utf8')
+      .replace(/^# .*$/m, '# Test fixture')
+      .replace(/^\| `([\w-]+)` \|/gm, '| `fixture_$1` |')); // parameter names are unique per project
+    negativeChecks(dst);
+    rmSync(fixture, { force: true });
+  }
 }
 
 // Each check must be seen to fail on a known-bad input; a check that never fails proves nothing.
 function negativeChecks(dst) {
   const cases = [
-    ['ratified document with an unresolved parameter', 'docs/02-domain/time.md',
+    ['ratified document with an unresolved parameter', FIXTURE_DOC,
       (t) => `${t.replace(/^status: [\w-]+/m, 'status: ratified').replace(/^owner: .*/m, 'owner: someone').replace(/^last-reviewed: .*/m, 'last-reviewed: 2026-01-01')}\nAnswer: [[still_open]]\n`,
       /unresolved markers/],
     ['ratified document with owner TBD', 'docs/10-patterns/patterns.md',
@@ -174,18 +183,18 @@ function negativeChecks(dst) {
     ['adapter pointer deleted', 'GEMINI.md', null, /adapter is missing/],
     ['edited canonical skill without sync', '.agents/skills/new-adr/SKILL.md', (t) => t.replace('description: Write', 'description: Record'), /out of date/],
     ['forbidden glossary term in use', '.baseline/forbidden-terms.txt', () => 'outdatedterm\n', /forbidden term/, 'docs/02-domain/lifecycles.md', (t) => `${t}\nThe outdatedterm moves to closed.\n`],
-    ['proposed document with no rules', 'docs/02-domain/time.md', (t) => setDoc(t, { status: 'proposed' }), /"## Rules" section has no rules/],
-    ['rule missing from the Enforcement table', 'docs/02-domain/time.md',
+    ['proposed document with no rules', FIXTURE_DOC, (t) => setDoc(t, { status: 'proposed' }), /"## Rules" section has no rules/],
+    ['rule missing from the Enforcement table', FIXTURE_DOC,
       (t) => setDoc(t, { status: 'proposed', rules: '- **R1.** MUST a.\n- **R2.** MUST b.', enforcement: '| R1 | review | ❌ |' }), /R2 has no row in "## Enforcement"/],
-    ['Enforcement row for a rule that does not exist', 'docs/02-domain/time.md',
+    ['Enforcement row for a rule that does not exist', FIXTURE_DOC,
       (t) => setDoc(t, { status: 'in-progress', rules: '- **R1.** MUST a.', enforcement: '| R1 | review | ❌ |\n| R4 | review | ⬜ |' }), /row for R4, which is not a rule/],
-    ['Enforcement row without a status', 'docs/02-domain/time.md',
+    ['Enforcement row without a status', FIXTURE_DOC,
       (t) => setDoc(t, { status: 'proposed', rules: '- **R1.** MUST a.', enforcement: '| R1 | review | automated |' }), /row has no status/],
-    ['duplicate rule number', 'docs/02-domain/time.md',
+    ['duplicate rule number', FIXTURE_DOC,
       (t) => setDoc(t, { status: 'proposed', rules: '- **R1.** MUST a.\n- **R1.** MUST b.', enforcement: '| R1 | review | ❌ |' }), /R1 is used more than once/],
     ['pack document held to the same rules', 'docs/packs/http-api/responses-and-errors.md', (t) => setDoc(t, { status: 'proposed' }), /"## Rules" section has no rules/],
-    ['cross-reference to a rule that does not exist', 'docs/02-domain/time.md', (t) => setDoc(t, { status: 'proposed', rules: '- **R1.** MUST a.', enforcement: '| R1 | review | ❌ |' }),
-      /names a rule that does not exist in docs\/02-domain\/time\.md/, 'docs/README.md', (t) => `${t}\nSee \`02-domain/time.md\` R7.\n`],
+    ['cross-reference to a rule that does not exist', FIXTURE_DOC, (t) => setDoc(t, { status: 'proposed', rules: '- **R1.** MUST a.', enforcement: '| R1 | review | ❌ |' }),
+      /names a rule that does not exist in docs\/02-domain\/zz-test-fixture\.md/, 'docs/README.md', (t) => `${t}\nSee \`02-domain/zz-test-fixture.md\` R7.\n`],
     ['cross-reference to a missing document', 'docs/README.md', (t) => `${t}\nSee \`02-domain/nowhere.md\` R1.\n`, /document that does not exist/],
     ['adapter with logic in its hook', '.claude/settings.json', (t) => t.replace('"command": "node', '"command": "echo inline logic && node'), /must only run/],
   ];
@@ -231,10 +240,10 @@ function extraChecks(dst) {
   };
 
   // Well-formed rules and a valid cross-reference pass.
-  const time = join(dst, 'docs/02-domain/time.md');
+  const time = join(dst, FIXTURE_DOC);
   const timeBefore = readFileSync(time, 'utf8');
   writeFileSync(time, setDoc(timeBefore, { status: 'proposed', rules: '- **R1.** MUST a.\n- **R2.** MAY b.', enforcement: '| R1 | review | ❌ |\n| R2 | `scripts/check.mjs` | ✅ |' }));
-  const goodRef = withFile('docs/README.md', `${readFileSync(join(dst, 'docs/README.md'), 'utf8')}\nSee \`02-domain/time.md\` R2.\n`, check);
+  const goodRef = withFile('docs/README.md', `${readFileSync(join(dst, 'docs/README.md'), 'utf8')}\nSee \`02-domain/zz-test-fixture.md\` R2.\n`, check);
   record('check.mjs accepts well-formed rules and a valid cross-reference', goodRef.ok, goodRef.out);
   writeFileSync(time, timeBefore);
 
@@ -280,9 +289,9 @@ function extraChecks(dst) {
   // Guards: protected documents.
   const guardDoc = (path, opts) => node(['scripts/guards/protected-docs.mjs', path], { cwd: dst, ...opts });
   const adr = 'docs/04-adr/ADR-001-adopt-engineering-baseline.md';
-  record('guard allows editing a proposed standard', guardDoc('docs/02-domain/time.md').code === 0);
+  record('guard allows editing a proposed standard', guardDoc(FIXTURE_DOC).code === 0);
   for (const [label, file, from, to] of [
-    ['a ratified standard', 'docs/02-domain/time.md', /^status: [\w-]+/m, 'status: ratified'],
+    ['a ratified standard', FIXTURE_DOC, /^status: [\w-]+/m, 'status: ratified'],
     ['an accepted ADR', adr, /^status: [\w-]+/m, 'status: accepted'],
   ]) {
     const r = withFile(file, readFileSync(join(dst, file), 'utf8').replace(from, to), () => guardDoc(file));
@@ -291,7 +300,7 @@ function extraChecks(dst) {
       guardDoc('--stdin', { input: JSON.stringify({ tool_name: 'Edit', tool_input: { file_path: join(dst, file) } }) }));
     record(`guard refuses ${label} (tool-hook payload on stdin)`, viaStdin.code === 2, `exit ${viaStdin.code}: ${viaStdin.out}`);
   }
-  record('guard allows a document again after restoring', guardDoc('docs/02-domain/time.md').code === 0);
+  record('guard allows a document again after restoring', guardDoc(FIXTURE_DOC).code === 0);
 
   // Guards: commands.
   const guardCmd = (cmd) => node(['scripts/guards/command.mjs', cmd], { cwd: dst });
@@ -340,7 +349,7 @@ function wave2Checks(dst) {
     const r = edit(edits, check);
     record(`check.mjs accepts: ${label}`, r.ok, r.out);
   };
-  const TIME = 'docs/02-domain/time.md';
+  const TIME = FIXTURE_DOC;
   const LIFE = 'docs/02-domain/lifecycles.md';
   const ADR1 = 'docs/04-adr/ADR-001-adopt-engineering-baseline.md';
   const terms = ['.baseline/forbidden-terms.txt', 'outdatedterm\n'];
@@ -396,7 +405,7 @@ function wave2Checks(dst) {
   rejects('an index row for an ADR file that does not exist', [['docs/04-adr/README.md', (x) => `${x}| [ADR-009](ADR-009-gone.md) | Gone | proposed | — |\n`]], /ADR-009-gone\.md does not exist/);
 
   // D9: bare names resolve only when unique.
-  accepts('a bare file name that is unique in the project', [[TIME, oneRule('- **R1.** MUST a.')], ['docs/README.md', (x) => `${x}\nSee \`time.md\` R1.\n`]]);
+  accepts('a bare file name that is unique in the project', [[TIME, oneRule('- **R1.** MUST a.')], ['docs/README.md', (x) => `${x}\nSee \`zz-test-fixture.md\` R1.\n`]]);
   rejects('a bare file name shared by two documents', [['docs/aa/same.md', '# a\n'], ['docs/bb/same.md', '# b\n'], ['docs/README.md', (x) => `${x}\nSee \`same.md\` R1.\n`]], /ambiguous[\s\S]*aa\/same\.md/);
 
   // The enforcement-debt table (docs/DECISION-QUEUE.md between markers).
@@ -412,7 +421,7 @@ function wave2Checks(dst) {
     const stale = run('node', ['scripts/check.mjs'], { cwd: dst });
     return { gen, fresh, table, stale };
   });
-  record('queue.mjs writes the debt table with docs/-relative references and due', debt.gen.ok && /\| `02-domain\/time\.md` \| R1 \| see `03-architecture\/system\.md` \| before-production \|/.test(debt.table), debt.gen.out + debt.table.slice(-600));
+  record('queue.mjs writes the debt table with docs/-relative references and due', debt.gen.ok && /\| `02-domain\/zz-test-fixture\.md` \| R1 \| see `03-architecture\/system\.md` \| before-production \|/.test(debt.table), debt.gen.out + debt.table.slice(-600));
   record('check.mjs accepts a freshly generated debt table', debt.fresh.ok, debt.fresh.out);
   record('check.mjs rejects: a stale debt table', !debt.stale.ok && /debt table is stale/.test(debt.stale.out), debt.stale.out);
   record('check.mjs passes again after the wave-2 checks', check().ok);

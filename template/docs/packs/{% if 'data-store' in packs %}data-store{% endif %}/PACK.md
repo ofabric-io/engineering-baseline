@@ -7,7 +7,7 @@ amends:
   - 15-delivery/pipeline-and-gates.md  # the migration-specific CI gates live here, not in the core gates
 documents:
   - migrations.md  # Schema Migrations
-  - transactions.md  # Transactions & Boundaries
+  - transactions.md  # Transactions
 ---
 
 # Pack: data-store

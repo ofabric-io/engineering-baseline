@@ -100,7 +100,7 @@ sequenced belongs to the project's data-store documentation, when it has a data 
 
 ### Data protection and releases
 
-- **R18.** Backups and restore exercises MUST meet `01-business/availability.md` R7; this document
+- **R18.** Backups and restore exercises MUST meet `01-business/availability.md` R7, R14; this document
   adds no restore rule of its own.
 - **R19.** A release MUST be produced by a pipeline from a version tag on the default branch, which
   also produces the changelog per `14-git/git.md` R19, and published per

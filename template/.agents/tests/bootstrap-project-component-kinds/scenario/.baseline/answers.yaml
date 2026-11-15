@@ -1,5 +1,5 @@
 # Fixture: phases 0 to 2 are done; the next phase to ask is phase 3 (Architecture).
-phase: 2
+phase: "2"
 answers:
   "0.1": { answer: "A command-line tool that converts invoices between formats. It does not store them.", decided: 2026-01-10, adr: null }
   "0.2": { answer: default, decided: 2026-01-10, adr: null }

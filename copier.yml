@@ -50,7 +50,7 @@ packs:
     "events — domain/integration events, outbox, delivery, schema evolution": events
     "webhooks — outbound webhooks: signing, retries, rotation (requires events)": webhooks
     "money — monetary amounts, rounding, allocation, serialization": money
-    "ledger — double-entry bookkeeping (requires money)": ledger
+    "ledger — double-entry bookkeeping (requires money and events)": ledger
     "multi-tenant — isolation unit, enforcement, leak tests": multi-tenant
     "audit-trail — what is audited, record shape, retention": audit-trail
     "user-interface — design tokens, accessibility, UI states, i18n, components, design workflow": user-interface
@@ -60,7 +60,7 @@ packs:
     "domain-model — aggregates, consistency boundaries, repository and unit-of-work patterns": domain-model
   default: []
   validator: >-
-    {% if 'webhooks' in packs and 'events' not in packs %}The webhooks pack requires the events pack{% elif 'ledger' in packs and 'money' not in packs %}The ledger pack requires the money pack{% elif 'web-ui' in packs and 'user-interface' not in packs %}The web-ui pack requires the user-interface pack{% endif %}
+    {% if 'webhooks' in packs and 'events' not in packs %}The webhooks pack requires the events pack{% elif 'ledger' in packs and ('money' not in packs or 'events' not in packs) %}The ledger pack requires the money and events packs{% elif 'web-ui' in packs and 'user-interface' not in packs %}The web-ui pack requires the user-interface pack{% endif %}
 
 tracker:
   type: str

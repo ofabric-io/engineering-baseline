@@ -67,12 +67,18 @@ migration, live tests of the GitHub Issues and ClickUp tracker adapters.
 
 ## M6 — Dogfood and release (v1.0.0)
 
-- [ ] Generate two contrasting projects (e.g. a SaaS product and an infrastructure tool) and run
-      the full bootstrap in each
+- [x] Generate two contrasting projects (a B2B SaaS and an edge-configuration platform) and run
+      the full bootstrap in each; plus a cold review of the whole template
+- [x] Fix what they exposed (wave 2): component kinds and scope tags, `not-applicable`
+      documents, `data-store` / `domain-model` / `web-ui` / `cli` packs, five new core
+      documents, one owner per rule, unique parameter names, generated debt table, ADR checks,
+      forbidden-terms scoping, offline numbering, bootstrap on a branch
+- [ ] Re-run one bootstrap on the wave-2 template to confirm the fixes
 - [ ] Run the bootstrap and the skill fixtures in **at least two different AI tools**
-- [ ] Fix what they expose; tag v1.0.0
+- [ ] Live-test the GitHub Issues and ClickUp tracker adapters
+- [ ] Tag v1.0.0
 
 ## Later
 
 - Packs grown in real projects and promoted: `fx`, `control-plane`,
-  `progressive-delivery`, `quotas-and-rate-limits`, `sre`, `client-surfaces`, `metering`.
+  `progressive-delivery` (the core now covers rollout basics), `quotas-and-rate-limits`, `sre`, `client-surfaces`, `metering`.

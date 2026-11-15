@@ -47,7 +47,7 @@ Log format, levels, correlation, content and volume. What must never be logged i
 
 - **R6.** A failure caused by invalid input from a caller MUST NOT be logged at `error`.
 - **R7.** An expected outcome (a documented business result such as a rejected request) MUST NOT be logged at `error`.
-- **R8.** An error MUST NOT be logged and rethrown; it MUST be logged once, where it is handled (`09-errors/taxonomy.md` R15).
+- **R8.** An error MUST NOT be logged and then propagated; it MUST be logged once, where it is handled (`09-errors/taxonomy.md` R15).
 
 ### Content
 

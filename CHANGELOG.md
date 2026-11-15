@@ -6,6 +6,51 @@ A change that alters a document a project may already have ratified is called ou
 
 ## [Unreleased]
 
+### Added — M6 fixes (wave 2)
+
+- **Component kinds**: `03-architecture/system.md` gains a Components table and
+  `component_kinds` (`service`, `daemon`, `cli`, `library`, `ui`, `batch`). Rules can carry a
+  scope tag `_(applies to: …)_`; documents can declare `applies-to:` and be `not-applicable`
+  with a `reason:`. `check.mjs` validates all three.
+- **New packs**: `data-store` (migrations, transactions), `domain-model` (aggregates, domain
+  patterns), `web-ui` (browser security, web accessibility, web styling; requires
+  `user-interface`), `cli` (command-line conventions). http-api gains
+  `long-running-operations.md`.
+- **New core documents**: `06-security/dependencies-and-supply-chain.md`,
+  `07-observability/incident-management.md`, `08-reliability/performance-and-capacity.md`,
+  `15-delivery/releases-and-distribution.md`, `15-delivery/product-documentation.md`.
+- **Machinery**: `scripts/queue.mjs` generates the enforcement-debt table; ADR index and
+  completeness checks; open-decision policy (`→ DECISION-QUEUE`); unique parameter names;
+  forbidden-terms scan limited to project prose, reporting every hit, with
+  `.baseline/forbidden-allow.txt`; unambiguous bare-name references; offline `next-number`.
+- Spec templates: "Components touched" and sections for the new packs; `spec_depth` (full |
+  lightweight) in `docs/workflow.yaml`. New fixtures for component kinds, bare references and a
+  judge case that edits a ratified document.
+
+### Changed — M6 fixes (wave 2)
+
+- **Projects must review**: many rule texts changed. Rules no longer hard-code what their
+  parameter offers (auto-merge, approvals with a new solo mode, standards, telemetry, test levels,
+  coverage, branch names, commit format, jitter). Each rule has one owner; others cite it.
+- Lifecycles are generic; aggregates and Unit of Work moved to `domain-model`. Schema migration
+  doctrine moved to `data-store`. Browser-only rules moved to `web-ui`.
+- Error categories are `domain`, `validation`, `authentication`, `authorization`,
+  `not_found`, `conflict`, `rate_limited`, `unavailable`, `internal`; flags are
+  `isRetryable` / `isExposable`; the error mechanism is a parameter.
+- Renamed parameters: `zone_of_record` → `business_time_zone`; `delivery_guarantee` →
+  `event_delivery_guarantee` / `audit_delivery_guarantee`; audit `retention` →
+  `audit_retention`; `staff_cross_access_roles` → `operator_cross_access_roles`. "staff" is
+  now "operator".
+- Fits real products found in the dogfood: future wall-clock times with a zone, pseudonymous audit
+  records for erasure, nested and per-principal isolation axes, platform-scoped workloads, one
+  currency per isolation unit, CLI stdout, supervisory reconnect loops, customer-configured
+  destinations, platform deployment vs. customer operations, progressive rollout and version skew.
+- The `ledger` pack requires `money` and `events`.
+- Bootstrap: phase order 0, 1, 2, 3, 4P, 4, 5, 6; component kinds asked first (0.5); runs on a
+  branch and ends with a PR; explicit ADR acceptance; batches of about 25 questions; reuses Copier
+  answers; `answers.yaml` phases are strings with a documented id scheme.
+- Node ≥ 20 is stated as a prerequisite everywhere.
+
 ### Added
 
 - **Core content (M2):** every core document (layers 01–17) now carries proposed default rules,
