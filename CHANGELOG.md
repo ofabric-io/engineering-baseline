@@ -6,6 +6,19 @@ A change that alters a document a project may already have ratified is called ou
 
 ## [Unreleased]
 
+### Added — data store naming (data-store pack)
+
+- **New `data-store/schema-naming.md`** fixes how store identifiers are named, by kind of store:
+  - relational: lowercase `snake_case`, singular tables, `<entity>_id` foreign keys, explicit
+    readable constraint and index names (`<kind>_<table>_<columns>`), no reliance on truncation;
+  - document: collections named like tables, static field names, `snake_case` by default;
+  - key-value: one key pattern (`<application>:<entity>:<id>[:<facet>]`), one builder per entity
+    and a key register;
+  - any other store kind records its pattern before first use.
+- **Parameters:** `store_name_case`, `table_plurality`, `constraint_name_format`,
+  `max_identifier_length`, `document_field_case`, `kv_key_pattern`, `other_store_naming`.
+- **Amends** `11-style/naming-and-style.md` R13 for store identifiers; the core document is unchanged.
+
 ### Added — DESIGN.md (user-interface pack)
 
 - **`scripts/design-md.mjs`** generates `DESIGN.md` in Google's open

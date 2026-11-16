@@ -4,10 +4,12 @@ version: 0.1.0
 requires: []
 amends:
   - 15-delivery/deployments-and-rollback.md  # R17 (irreversible data changes) is the generic rule this pack's migration doctrine specialises
+  - 11-style/naming-and-style.md  # R13 delegates casing per kind; schema-naming.md answers it for store identifiers
   - 15-delivery/pipeline-and-gates.md  # the migration-specific CI gates live here, not in the core gates
 documents:
   - migrations.md  # Schema Migrations
   - transactions.md  # Transactions
+  - schema-naming.md  # Data Store Naming
 ---
 
 # Pack: data-store
@@ -25,6 +27,8 @@ Documents in this folder depend on the core layers; no core document links here.
   generic. Whether migrations are forward-only is a parameter there.
 - **Transactions.** `transactions.md` covers transaction boundaries and store-level isolation
   mechanics.
+- **Naming.** `schema-naming.md` fixes how tables, columns, collections, fields and keys are
+  named across relational, document and key-value stores.
 - **Backups.** Backup and restore targets stay in `01-business/availability.md`; this pack adds
   only store-level mechanics where a document says so.
 
